@@ -1,5 +1,6 @@
 .gradle
 build/
+out/
 classes/
 */out/
 !gradle/wrapper/gradle-wrapper.jar
