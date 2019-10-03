@@ -8,6 +8,5 @@ public class Main {
         System.out.println("-----------------------------");
         System.out.println("MemorySize: " + MEMORY_SIZE_IN_KILOBYTES + "kb");
         Olc6502 cpu = new Olc6502(new Bus(MEMORY_SIZE_IN_KILOBYTES * NUMBER_OF_BYTES_IN_KILOBYTE));
-
     }
 }

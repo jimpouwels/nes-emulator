@@ -36,6 +36,7 @@ public class Olc6502 {
 
     public Olc6502(Bus bus) {
         this.bus = bus;
+        printInstructionSet();
     }
 
     public void write(int addr, byte data) {
@@ -53,23 +54,23 @@ public class Olc6502 {
     public void setFlag(Flag flag) {
     }
 
-    // clock signal
 
+    // clock signal
     public void clock() {
 
     }
-    // reset signal
 
+    // reset signal
     public void reset() {
 
     }
-    // interrupt request signal
 
+    // interrupt request signal
     public void irq() {
 
     }
-    // non maskable request
 
+    // non maskable request
     public void nmi() {
 
     }
@@ -94,6 +95,7 @@ public class Olc6502 {
             value = (byte) (1 << position);
         }
 
+
     }
 
     private Instruction unknown() {
@@ -102,5 +104,25 @@ public class Olc6502 {
 
     private Instruction instruction(String name, Opcode opcode, AddressingMode addressingMode, int cycles) {
         return new Instruction(name, opcode, addressingMode, cycles);
+    }
+
+    private void printInstructionSet() {
+        System.out.println("\nInstructionSet");
+        System.out.println("-----------------------------");
+        for (Instruction[] in : instructionLookup) {
+            for (Instruction instruction : in) {
+                System.out.print(instruction.opcode + "   ");
+            }
+            System.out.println();
+            for (Instruction instruction : in) {
+                System.out.print(instruction.addressingMode + "   ");
+            }
+            System.out.println();
+            for (Instruction instruction : in) {
+                System.out.print(instruction.cycles + "     ");
+            }
+            System.out.print(System.lineSeparator());
+            System.out.print(System.lineSeparator());
+        }
     }
 }
