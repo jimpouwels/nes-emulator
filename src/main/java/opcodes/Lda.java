@@ -2,7 +2,7 @@ package opcodes;
 
 public class Lda extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

@@ -5,7 +5,7 @@ package opcodes;
  */
 public class Cpy extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

@@ -5,7 +5,7 @@ package opcodes;
  */
 public class Cli extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

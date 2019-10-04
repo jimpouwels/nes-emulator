@@ -2,7 +2,7 @@ package addressmode;
 
 public abstract class AddressingMode {
 
-    public abstract byte set();
+    public abstract short set();
 
     @Override
     public String toString() {

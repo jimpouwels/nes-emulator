@@ -2,7 +2,7 @@ package opcodes;
 
 public class Nop extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

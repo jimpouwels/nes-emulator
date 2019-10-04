@@ -5,7 +5,7 @@ package opcodes;
  */
 public class Cmp extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

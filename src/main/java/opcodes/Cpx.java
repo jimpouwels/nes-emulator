@@ -5,7 +5,7 @@ package opcodes;
  */
 public class Cpx extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

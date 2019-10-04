@@ -2,7 +2,7 @@ package opcodes;
 
 public class Jsr extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

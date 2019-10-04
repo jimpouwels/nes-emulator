@@ -5,7 +5,7 @@ package opcodes;
  */
 public class Bmi extends Opcode {
     @Override
-    public byte operate() {
+    public short operate() {
         return 0;
     }
 }

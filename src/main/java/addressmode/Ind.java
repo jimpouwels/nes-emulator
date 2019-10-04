@@ -3,7 +3,7 @@ package addressmode;
 public class Ind extends AddressingMode {
 
     @Override
-    public byte set() {
+    public short set() {
         return 0;
     }
 }

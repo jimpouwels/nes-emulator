@@ -4,16 +4,16 @@ import opcodes.*;
 public class Olc6502 {
 
     private Bus bus;
-    private byte accumulatorRegister = 0x00;
-    private byte xRegister = 0x00;
-    private byte yRegister = 0x00;
-    private byte stackPointer = 0x00;
+    private short accumulatorRegister = 0x00;
+    private short xRegister = 0x00;
+    private short yRegister = 0x00;
+    private short stackPointer = 0x00;
     private short programCounter = 0x00;
-    private byte status = 0x00;
-    private byte fetched = 0x00;
+    private short status = 0x00;
+    private short fetched = 0x00;
     private short addrAbs = 0x0000;
     private short addrRel = 0x00;
-    private byte opcode = 0x00;
+    private short opcode = 0x00;
     private int cycles = 0;
     private Instruction[] instructionLookup = new Instruction[]{
             instruction("BRK", new Brk(), new Imp(), 7), instruction("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), instruction("ORA", new Ora(), new Zp0(), 3), instruction("ASL", new Asl(), new Zp0(), 5), unknown(), instruction("PHP", new Php(), new Imp(), 3), instruction("ORA", new Ora(), new Imm(), 2), instruction("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), instruction("ORA", new Ora(), new Abs(), 6), instruction("ASL", new Asl(), new Abs(), 6), unknown(),
@@ -39,11 +39,11 @@ public class Olc6502 {
         printInstructionSet();
     }
 
-    public void write(int addr, byte data) {
+    public void write(int addr, short data) {
         bus.write(addr, data);
     }
 
-    public byte read(int addr) {
+    public short read(int addr) {
         return bus.read(addr, false);
     }
 
@@ -58,12 +58,13 @@ public class Olc6502 {
     // clock signal
     public void clock() {
         if (cycles == 0) {
-            byte opcode = read(programCounter);
+            short opcode = read(programCounter);
             programCounter++;
             Instruction instruction = instructionLookup[opcode];
             cycles = instruction.cycles;
-            instruction.addressingMode.set();
-            instruction.opcode.operate();
+            short additionalCycle1 = instruction.addressingMode.set();
+            short additionalCycle2 = instruction.opcode.operate();
+            cycles += additionalCycle1 & additionalCycle2;
         }
     }
 
@@ -82,7 +83,7 @@ public class Olc6502 {
 
     }
 
-    public byte fetch() {
+    public short fetch() {
         return 0x0;
     }
 
@@ -96,10 +97,10 @@ public class Olc6502 {
         OVERFLOW(6),
         NEGATIVE(7);
 
-        private byte value;
+        private short value;
 
         Flag(int position) {
-            value = (byte) (1 << position);
+            value = (short) (1 << position);
         }
 
 
