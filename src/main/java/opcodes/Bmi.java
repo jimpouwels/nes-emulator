@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Branch on Result Minus.
+ */
 public class Bmi extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

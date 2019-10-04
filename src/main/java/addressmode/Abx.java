@@ -3,7 +3,7 @@ package addressmode;
 public class Abx extends AddressingMode {
 
     @Override
-    byte mode() {
+    public byte set() {
         return 0;
     }
 }

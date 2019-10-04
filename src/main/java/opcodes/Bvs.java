@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Branch on Overflow Set.
+ */
 public class Bvs extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

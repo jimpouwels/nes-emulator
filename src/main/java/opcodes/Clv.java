@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Clear Overflow Flag.
+ */
 public class Clv extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

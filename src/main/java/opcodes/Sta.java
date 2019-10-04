@@ -2,7 +2,7 @@ package opcodes;
 
 public class Sta extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

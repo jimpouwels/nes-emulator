@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Clear Decimal Mode.
+ */
 public class Cld extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

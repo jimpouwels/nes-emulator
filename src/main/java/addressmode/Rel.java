@@ -3,7 +3,7 @@ package addressmode;
 public class Rel extends AddressingMode {
 
     @Override
-    byte mode() {
+    public byte set() {
         return 0;
     }
 }

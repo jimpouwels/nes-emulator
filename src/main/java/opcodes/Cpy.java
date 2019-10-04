@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Compare Memory and Index Y.
+ */
 public class Cpy extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

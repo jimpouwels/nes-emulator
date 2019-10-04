@@ -3,7 +3,7 @@ package addressmode;
 public class Zp0 extends AddressingMode {
 
     @Override
-    byte mode() {
+    public byte set() {
         return 0;
     }
 }

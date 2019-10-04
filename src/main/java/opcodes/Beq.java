@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Branch on Result Zero.
+ */
 public class Beq extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

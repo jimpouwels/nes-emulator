@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Branch on Carry Clear.
+ */
 public class Bcc extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

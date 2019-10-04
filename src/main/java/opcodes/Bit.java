@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Test Bits in Memory with Accumulator.
+ */
 public class Bit extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

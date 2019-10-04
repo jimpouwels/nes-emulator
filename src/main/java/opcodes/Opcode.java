@@ -2,7 +2,7 @@ package opcodes;
 
 public abstract class Opcode {
 
-    abstract byte operate();
+    public abstract byte operate();
 
     @Override
     public String toString() {

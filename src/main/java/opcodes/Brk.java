@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Force Break.
+ */
 public class Brk extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }

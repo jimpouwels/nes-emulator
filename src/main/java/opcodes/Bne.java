@@ -1,8 +1,11 @@
 package opcodes;
 
+/**
+ * Branch on Result not Zero.
+ */
 public class Bne extends Opcode {
     @Override
-    byte operate() {
+    public byte operate() {
         return 0;
     }
 }
