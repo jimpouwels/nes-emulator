@@ -5,18 +5,19 @@ import nesemulator.cpu.addressmode.*;
 import nesemulator.cpu.opcodes.*;
 
 import static nesemulator.utils.ByteUtilities.sumAsUnsignedAndWiden;
+import static nesemulator.utils.ByteUtilities.widenAsUnsigned;
 
 public class Olc6502 {
 
     private Bus bus;
-    public byte accumulatorRegister = 0x00;
-    public byte xRegister = 0x00;
-    public byte yRegister = 0x00;
-    public byte stackPointer = 0x00;
-    public short programCounter = 0x0000;
-    public byte status = 0x00;
-    public byte fetched = 0x00;
-    public short addrAbs = 0x0000;
+    private byte accumulatorRegister = 0x00;
+    private byte xRegister = 0x00;
+    private byte yRegister = 0x00;
+    private byte stackPointer = 0x00;
+    private short programCounter = 0x0000;
+    private byte status = 0x00;
+    private byte fetched = 0x00;
+    private short addrAbs = 0x0000;
     public short addrRel = 0x00;
     public byte opcode = 0x00;
     private int remainingCycles = 0;
@@ -98,6 +99,129 @@ public class Olc6502 {
     public Instruction[] getInstructions() {
         return this.instructionLookup;
     }
+
+
+    //================================  ADDRESSING MODES ====================================
+
+    /**
+     * Immediate Address.
+     * The data of the instruction is in the second byte of the instruction.
+     * Set the addressAbsolute of the cpu to the incremented programCounter value.
+     */
+    private class Imm extends AddressingMode {
+        @Override
+        public byte set() {
+            addrAbs = programCounter++;
+            return 0;
+        }
+
+    }
+
+    /**
+     * Implied Addressing.
+     * <p>
+     * Operand is implicitly stated in the instruction's opcode.
+     * However, it could be operating on the accumulator, setting the fetched value to the accumulator register value.
+     */
+    private class Imp extends AddressingMode {
+        @Override
+        public byte set() {
+            fetched = accumulatorRegister;
+            return 0;
+        }
+
+    }
+
+    /**
+     * Zero Page Addressing.
+     */
+    private class Zp0 extends AddressingMode {
+        @Override
+        public byte set() {
+            addrAbs = read(programCounter++);
+            programCounter += 1;
+            addrAbs &= 0x00FF;
+            return 0;
+        }
+
+    }
+
+    /**
+     * Indexed (X) Zero Page Addressing.
+     */
+    private class Zpx extends AddressingMode {
+        @Override
+        public byte set() {
+            addrAbs = sumAsUnsignedAndWiden(read(programCounter++), xRegister);
+            addrAbs &= 0x00FF;
+            return 0;
+        }
+    }
+
+    /**
+     * Indexed (Y) Zero Page Addressing.
+     */
+    private class Zpy extends AddressingMode {
+        @Override
+        public byte set() {
+            addrAbs = sumAsUnsignedAndWiden(read(programCounter++), yRegister);
+            addrAbs &= 0x00FF;
+            return 0;
+        }
+    }
+
+    /**
+     * Absolute Addressing.
+     */
+    private class Abs extends AddressingMode {
+
+        private Abs(Olc6502 cpu) {
+            super();
+        }
+
+        @Override
+        public byte set() {
+            return read16BitAddressWithOffset((byte) 0);
+        }
+    }
+
+    /**
+     * Indexed (X) Absolute Addressing.
+     */
+    private class Abx extends AddressingMode {
+        @Override
+        public byte set() {
+            return read16BitAddressWithOffset(xRegister);
+        }
+    }
+
+    /**
+     * Indexed (Y) Absolute Addressing.
+     */
+    private class Aby extends AddressingMode {
+        @Override
+        public byte set() {
+            return read16BitAddressWithOffset(yRegister);
+        }
+    }
+
+    private byte read16BitAddressWithOffset(byte offset) {
+        short hi = read(programCounter++);
+        short lo = read(programCounter++);
+
+        addrAbs = (short) (hi << 8 | lo);
+        addrAbs += widenAsUnsigned(offset);
+
+        if ((addrAbs & 0xFF00) != (hi << 8)) {
+            return 1;
+        }
+        return 0;
+    }
+
+    //================================  OPCODES  ============================================
+
+
+    //================================  UTILITIES  ==========================================
 
     private Instruction unknown() {
         return instruction("???", new InvalidOpcode(), new Imp(this), 8);

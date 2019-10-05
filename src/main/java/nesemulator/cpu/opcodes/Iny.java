@@ -5,7 +5,7 @@ package nesemulator.cpu.opcodes;
  */
 public class Iny extends Opcode {
     @Override
-    public byte operate() {
+    public byte  operate() {
         return 0;
     }
 }
