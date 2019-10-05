@@ -2,7 +2,6 @@ package nesemulator.cpu;
 
 import nesemulator.Bus;
 import nesemulator.cpu.addressmode.AddressingMode;
-import nesemulator.cpu.addressmode.Rel;
 import nesemulator.cpu.opcodes.*;
 
 import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
@@ -244,10 +243,24 @@ public class Olc6502 {
      * Indexed (Y) Indirect Addressing.
      */
     private class Izy extends IndirectWithOffsetAddressMode {
-
         @Override
         public byte set() {
             return super.set(yRegister);
+        }
+    }
+
+    /**
+     * Relative Addressing.
+     */
+    private class Rel extends AddressingMode {
+        @Override
+        public byte set() {
+            byte operand = read(programCounter++);
+            addrRel = widenIgnoreSigning(operand);
+            if (operand < 0) {
+                addrRel |= 0xFF00;
+            }
+            return 0;
         }
     }
 
