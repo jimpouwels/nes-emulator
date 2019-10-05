@@ -4,7 +4,7 @@ import nesemulator.Bus;
 import nesemulator.cpu.addressmode.*;
 import nesemulator.cpu.opcodes.*;
 
-import static nesemulator.utils.ByteUtilities.sumUnsignedAndWiden;
+import static nesemulator.utils.ByteUtilities.sumAsUnsignedAndWiden;
 
 public class Olc6502 {
 
@@ -71,7 +71,7 @@ public class Olc6502 {
             remainingCycles = instruction.cycles;
             byte additionalCycle1 = instruction.addressingMode.set();
             byte additionalCycle2 = instruction.opcode.operate();
-            remainingCycles += sumUnsignedAndWiden(additionalCycle1, additionalCycle2);
+            remainingCycles += sumAsUnsignedAndWiden(additionalCycle1, additionalCycle2);
         }
         remainingCycles--;
     }
