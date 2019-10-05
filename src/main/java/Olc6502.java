@@ -14,7 +14,7 @@ public class Olc6502 {
     private short addrAbs = 0x0000;
     private short addrRel = 0x00;
     private short opcode = 0x00;
-    private int cycles = 0;
+    private int remainingCycles = 0;
     private Instruction[] instructionLookup = new Instruction[]{
             instruction("BRK", new Brk(), new Imp(), 7), instruction("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), instruction("ORA", new Ora(), new Zp0(), 3), instruction("ASL", new Asl(), new Zp0(), 5), unknown(), instruction("PHP", new Php(), new Imp(), 3), instruction("ORA", new Ora(), new Imm(), 2), instruction("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), instruction("ORA", new Ora(), new Abs(), 6), instruction("ASL", new Asl(), new Abs(), 6), unknown(),
             instruction("BPL", new Bpl(), new Rel(), 2), instruction("ORA", new Ora(), new Izy(), 5), unknown(), unknown(), unknown(), instruction("ORA", new Ora(), new Zpx(), 4), instruction("ASL", new Ora(), new Zpx(), 6), unknown(), instruction("CLC", new Clc(), new Imp(), 2), instruction("ORA", new Ora(), new Aby(), 4), unknown(), unknown(), unknown(), instruction("ORA", new Ora(), new Abx(), 4), instruction("ASL", new Asl(), new Abx(), 7), unknown(),
@@ -47,25 +47,31 @@ public class Olc6502 {
         return bus.read(addr, false);
     }
 
-    public Flag getFlag(Flag flag) {
-        return null;
+    public short getFlag(Flag flag) {
+        return (short) ((status & flag.value) > 0 ? 1 : 0);
     }
 
     public void setFlag(Flag flag) {
+        status |= flag.value;
+    }
+
+    public void clearFlag(Flag flag) {
+        status &= ~flag.value;
     }
 
 
     // clock signal
     public void clock() {
-        if (cycles == 0) {
+        if (remainingCycles == 0) {
             short opcode = read(programCounter);
             programCounter++;
             Instruction instruction = instructionLookup[opcode];
-            cycles = instruction.cycles;
+            remainingCycles = instruction.cycles;
             short additionalCycle1 = instruction.addressingMode.set();
             short additionalCycle2 = instruction.opcode.operate();
-            cycles += additionalCycle1 & additionalCycle2;
+            remainingCycles += additionalCycle1 & additionalCycle2;
         }
+        remainingCycles--;
     }
 
     // reset signal
@@ -103,7 +109,6 @@ public class Olc6502 {
             value = (short) (1 << position);
         }
 
-
     }
 
     private Instruction unknown() {
@@ -133,4 +138,5 @@ public class Olc6502 {
             System.out.print(System.lineSeparator());
         }
     }
+
 }
