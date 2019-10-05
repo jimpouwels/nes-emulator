@@ -6,7 +6,7 @@ public abstract class AddressingMode {
 
     protected final Olc6502 cpu;
 
-    public abstract short set();
+    public abstract byte set();
 
     public AddressingMode(Olc6502 cpu) {
         this.cpu = cpu;

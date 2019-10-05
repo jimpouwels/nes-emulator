@@ -4,19 +4,21 @@ import nesemulator.Bus;
 import nesemulator.cpu.addressmode.*;
 import nesemulator.cpu.opcodes.*;
 
+import static nesemulator.utils.ByteUtilities.sumUnsignedAndWiden;
+
 public class Olc6502 {
 
     private Bus bus;
-    private short accumulatorRegister = 0x00;
-    private short xRegister = 0x00;
-    private short yRegister = 0x00;
-    private short stackPointer = 0x00;
-    private short programCounter = 0x00;
-    private short status = 0x00;
-    private short fetched = 0x00;
-    private short addrAbs = 0x00;
-    private short addrRel = 0x00;
-    private short opcode = 0x00;
+    public byte accumulatorRegister = 0x00;
+    public byte xRegister = 0x00;
+    public byte yRegister = 0x00;
+    public byte stackPointer = 0x00;
+    public short programCounter = 0x0000;
+    public byte status = 0x00;
+    public byte fetched = 0x00;
+    public short addrAbs = 0x0000;
+    public short addrRel = 0x00;
+    public byte opcode = 0x00;
     private int remainingCycles = 0;
     private Instruction[] instructionLookup = new Instruction[]{
             instruction("BRK", new Brk(), new Imp(this), 7), instruction("ORA", new Ora(), new Izx(this), 6), unknown(), unknown(), unknown(), instruction("ORA", new Ora(), new Zp0(this), 3), instruction("ASL", new Asl(), new Zp0(this), 5), unknown(), instruction("PHP", new Php(), new Imp(this), 3), instruction("ORA", new Ora(), new Imm(this), 2), instruction("ASL", new Asl(), new Imp(this), 2), unknown(), unknown(), instruction("ORA", new Ora(), new Abs(this), 6), instruction("ASL", new Asl(), new Abs(this), 6), unknown(),
@@ -41,11 +43,11 @@ public class Olc6502 {
         this.bus = bus;
     }
 
-    public void write(int addr, short data) {
+    public void write(short addr, byte data) {
         bus.write(addr, data);
     }
 
-    public short read(int addr) {
+    public byte read(short addr) {
         return bus.read(addr, false);
     }
 
@@ -61,31 +63,15 @@ public class Olc6502 {
         status &= ~flag.value;
     }
 
-    public void setFetched(short value) {
-        this.fetched = value;
-    }
-
-    public short getAccumulatorRegister() {
-        return accumulatorRegister;
-    }
-
-    public short incrementProgramCounter() {
-        return ++programCounter;
-    }
-
-    public void setAddressAbsolute(short value) {
-        this.addrAbs = value;
-    }
-
     public void clock() {
         if (remainingCycles == 0) {
-            short opcode = read(programCounter);
+            byte opcode = read(programCounter);
             programCounter++;
-            nesemulator.cpu.Instruction instruction = instructionLookup[opcode];
+            Instruction instruction = instructionLookup[opcode];
             remainingCycles = instruction.cycles;
-            short additionalCycle1 = instruction.addressingMode.set();
-            short additionalCycle2 = instruction.opcode.operate();
-            remainingCycles += additionalCycle1 & additionalCycle2;
+            byte additionalCycle1 = instruction.addressingMode.set();
+            byte additionalCycle2 = instruction.opcode.operate();
+            remainingCycles += sumUnsignedAndWiden(additionalCycle1, additionalCycle2);
         }
         remainingCycles--;
     }

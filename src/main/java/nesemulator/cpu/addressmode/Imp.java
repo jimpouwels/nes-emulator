@@ -15,8 +15,8 @@ public class Imp extends AddressingMode {
     }
 
     @Override
-    public short set() {
-        cpu.setFetched(cpu.getAccumulatorRegister());
+    public byte set() {
+        cpu.fetched = cpu.accumulatorRegister;
         return 0;
     }
 }

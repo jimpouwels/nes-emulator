@@ -5,7 +5,7 @@ package nesemulator.cpu.opcodes;
  */
 public class Sta extends Opcode {
     @Override
-    public short operate() {
+    public byte operate() {
         return 0;
     }
 }

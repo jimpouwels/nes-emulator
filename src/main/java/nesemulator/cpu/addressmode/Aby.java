@@ -12,7 +12,7 @@ public class Aby extends AddressingMode {
     }
 
     @Override
-    public short set() {
+    public byte set() {
         return 0;
     }
 }

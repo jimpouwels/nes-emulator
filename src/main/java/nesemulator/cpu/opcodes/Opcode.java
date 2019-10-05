@@ -5,7 +5,7 @@ package nesemulator.cpu.opcodes;
  */
 public abstract class Opcode {
 
-    public abstract short operate();
+    public abstract byte operate();
 
     @Override
     public String toString() {

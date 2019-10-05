@@ -4,15 +4,15 @@ import nesemulator.exception.MemoryAddressExceedsMemoryException;
 
 public class Bus {
 
-    private short[] ram;
+    private byte[] ram;
     private long sizeInBytes;
 
     public Bus(int sizeInBytes) {
         this.sizeInBytes = sizeInBytes;
-        ram = new short[sizeInBytes];
+        ram = new byte[sizeInBytes];
     }
 
-    public void write(int addr, short data) {
+    public void write(int addr, byte data) {
         if (addr >= 0x0000 && addr <= sizeInBytes) {
             ram[addr] = data;
         } else {
@@ -20,7 +20,7 @@ public class Bus {
         }
     }
 
-    public short read(int addr, boolean readOnly) {
+    public byte read(short addr, boolean readOnly) {
         if (addr >= 0x0000 && addr <= sizeInBytes) {
             return ram[addr];
         } else {

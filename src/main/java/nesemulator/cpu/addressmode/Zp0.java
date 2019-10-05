@@ -12,7 +12,10 @@ public class Zp0 extends AddressingMode {
     }
 
     @Override
-    public short set() {
+    public byte set() {
+        cpu.addrAbs = cpu.read(cpu.programCounter);
+        cpu.programCounter += 1;
+        cpu.addrAbs &= 0x00FF;
         return 0;
     }
 }

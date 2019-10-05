@@ -14,8 +14,9 @@ public class Imm extends AddressingMode {
     }
 
     @Override
-    public short set() {
-        cpu.setAddressAbsolute(cpu.incrementProgramCounter());
+    public byte set() {
+        cpu.addrAbs = cpu.programCounter;
+        cpu.programCounter += 1;
         return 0;
     }
 }
