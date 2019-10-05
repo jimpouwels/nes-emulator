@@ -16,7 +16,7 @@ public class Olc6502 {
     private byte status = 0x00;
     private byte fetched = 0x00;
     private short addrAbs = 0x0000;
-    public short addrRel = 0x00;
+    private short addrRel = 0x00;
     public byte opcode = 0x00;
     private int remainingCycles = 0;
     private Instruction[] instructionLookup = new Instruction[]{
