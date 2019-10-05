@@ -1,11 +1,11 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.addressmode.*;
+import nesemulator.cpu.addressmode.AddressingMode;
+import nesemulator.cpu.addressmode.Rel;
 import nesemulator.cpu.opcodes.*;
 
-import static nesemulator.utils.ByteUtilities.sumAsUnsignedAndWiden;
-import static nesemulator.utils.ByteUtilities.widenAsUnsigned;
+import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
 
 public class Olc6502 {
 
@@ -70,9 +70,9 @@ public class Olc6502 {
             programCounter++;
             Instruction instruction = instructionLookup[opcode];
             remainingCycles = instruction.cycles;
-            byte additionalCycle1 = instruction.addressingMode.set();
-            byte additionalCycle2 = instruction.opcode.operate();
-            remainingCycles += sumAsUnsignedAndWiden(additionalCycle1, additionalCycle2);
+            short additionalCycle1 = widenIgnoreSigning(instruction.addressingMode.set());
+            short additionalCycle2 = widenIgnoreSigning(instruction.opcode.operate());
+            remainingCycles += additionalCycle1 + additionalCycle2;
         }
         remainingCycles--;
     }
@@ -138,7 +138,7 @@ public class Olc6502 {
     private class Zp0 extends AddressingMode {
         @Override
         public byte set() {
-            addrAbs = read(programCounter++);
+            addrAbs = widenIgnoreSigning(read(programCounter++));
             programCounter += 1;
             addrAbs &= 0x00FF;
             return 0;
@@ -152,7 +152,8 @@ public class Olc6502 {
     private class Zpx extends AddressingMode {
         @Override
         public byte set() {
-            addrAbs = sumAsUnsignedAndWiden(read(programCounter++), xRegister);
+            short value = widenIgnoreSigning(read(programCounter++));
+            addrAbs = (short) (value + widenIgnoreSigning(xRegister));
             addrAbs &= 0x00FF;
             return 0;
         }
@@ -164,7 +165,8 @@ public class Olc6502 {
     private class Zpy extends AddressingMode {
         @Override
         public byte set() {
-            addrAbs = sumAsUnsignedAndWiden(read(programCounter++), yRegister);
+            short value = widenIgnoreSigning(read(programCounter++));
+            addrAbs = (short) (value + widenIgnoreSigning(yRegister));
             addrAbs &= 0x00FF;
             return 0;
         }
@@ -200,12 +202,78 @@ public class Olc6502 {
         }
     }
 
+    /**
+     * Absolute Indirect.
+     */
+    private class Ind extends AddressingMode {
+        @Override
+        public byte set() {
+            short pointerHi = widenIgnoreSigning(read(programCounter++));
+            short pointerLo = widenIgnoreSigning(read(programCounter++));
+
+            short pointer = (short) (pointerHi << 8 | pointerLo);
+            if (isHardwareBug(pointerLo)) {
+                short newHigh = widenIgnoreSigning(read((short) (pointer & 0xFF00)));
+                short newLo = widenIgnoreSigning(read(pointer));
+                addrAbs = (short) (newHigh << 8 | newLo);
+            } else {
+                short newHigh = widenIgnoreSigning(read((short) (pointer + 1)));
+                short newLo = widenIgnoreSigning(read(pointer));
+                addrAbs = (short) (newHigh << 8 | newLo);
+            }
+            return 0;
+        }
+
+        private boolean isHardwareBug(short pointerLo) {
+            return pointerLo == 0x00FF;
+        }
+    }
+
+    /**
+     * Indexed (X) Indirect Addressing.
+     */
+    private class Izx extends IndirectWithOffsetAddressMode {
+
+        @Override
+        public byte set() {
+            return super.set(xRegister);
+        }
+    }
+
+    /**
+     * Indexed (Y) Indirect Addressing.
+     */
+    private class Izy extends IndirectWithOffsetAddressMode {
+
+        @Override
+        public byte set() {
+            return super.set(yRegister);
+        }
+    }
+
+    private abstract class IndirectWithOffsetAddressMode extends AddressingMode {
+        private byte set(byte offset) {
+            short pointer = widenIgnoreSigning(read(programCounter++));
+
+            short lo = widenIgnoreSigning(read((short) ((pointer + widenIgnoreSigning(offset)) & 0x00FF)));
+            short hi = widenIgnoreSigning(read((short) ((pointer + widenIgnoreSigning(offset) + 1) & 0x00FF)));
+
+            addrAbs = (short) ((hi << 8) | lo);
+            addrAbs += widenIgnoreSigning(xRegister);
+
+            if ((addrAbs & 0xFF00) != (hi << 8)) {
+                return 1;
+            }
+            return 0;
+        }
+    }
+
     private byte read16BitAddressWithOffset(byte offset) {
-        short hi = read(programCounter++);
-        short lo = read(programCounter++);
+        short hi = widenIgnoreSigning(read(programCounter++));
+        short lo = widenIgnoreSigning(read(programCounter++));
 
         addrAbs = (short) (hi << 8 | lo);
-        addrAbs += widenAsUnsigned(offset);
+        addrAbs += widenIgnoreSigning(offset);
 
         if ((addrAbs & 0xFF00) != (hi << 8)) {
             return 1;
