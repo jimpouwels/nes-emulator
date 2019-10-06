@@ -9,6 +9,8 @@ public class Olc6502 {
 
     private static final int STACK_ADDRESS = 0x0100;
     private static final int PROGRAM_COUNTER_ADDRESS = 0xFFFC;
+    private static final int PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT = 0xFFFE;
+    private static final int PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT = 0xFFFA;
     private Bus bus;
     private byte accumulatorRegister = 0x00;
     private byte xRegister = 0x00;
@@ -87,10 +89,7 @@ public class Olc6502 {
         stackPointer = (byte) 0xFD; // FIXME: NesDev says common practice to start at 0xFF --> try out later
         status = getFlag(Flag.UNUSED);
 
-        short programCounterAddress = (short) PROGRAM_COUNTER_ADDRESS;
-        short lo = widenIgnoreSigning(read(programCounterAddress));
-        short hi = widenIgnoreSigning(read((short) (programCounterAddress + 1)));
-        programCounter = (short) ((hi << 8) | lo);
+        readAndSetProgramCounter((short) PROGRAM_COUNTER_ADDRESS);
 
         addrRel = 0x0000;
         addrAbs = 0x0000;
@@ -98,18 +97,59 @@ public class Olc6502 {
 
         remainingCycles = 8;
     }
+
     // interrupt request signal
-
     public void irq() {
+        if (getFlag(Flag.DISABLE_INTERRUPTS) == 0) {
+            writeToStack(programCounter);
 
+            clearFlag(Flag.BREAK);
+            setFlag(Flag.UNUSED);
+            setFlag(Flag.DISABLE_INTERRUPTS);
+            writeToStack(status);
+
+            readAndSetProgramCounter((short) PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
+
+            remainingCycles = 7;
+        }
     }
 
     // non maskable request
     public void nmi() {
+        writeToStack(programCounter);
 
+        clearFlag(Flag.BREAK);
+        setFlag(Flag.UNUSED);
+        setFlag(Flag.DISABLE_INTERRUPTS);
+        writeToStack(status);
+
+        readAndSetProgramCounter((short) PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
+
+        remainingCycles = 8;
     }
 
-    public byte fetch() {
+    private void readAndSetProgramCounter(short address) {
+        addrAbs = address; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
+        short lo = widenIgnoreSigning(read(addrAbs));
+        short hi = widenIgnoreSigning(read((short) (addrAbs + 1)));
+        programCounter = (short) ((hi << 8) | lo);
+    }
+
+    private void writeToStack(short data) {
+        writeToStack((byte) ((data >> 8) & 0x00FF));
+        writeToStack((byte) (data & 0x00FF));
+    }
+
+    private void writeToStack(byte data) {
+        write((short) (STACK_ADDRESS + widenIgnoreSigning(stackPointer--)), data); // FIXME: is the mask on 0x00FF needed? Probably not, try out later.
+    }
+
+    private byte pullFromStack() {
+        stackPointer++;
+        return read((short) (STACK_ADDRESS + widenIgnoreSigning(stackPointer)));
+    }
+
+    private byte fetch() {
         if (!(operationLookup[opcode].addressingMode instanceof Imp)) {
             fetched = read(addrAbs);
         }
@@ -549,7 +589,7 @@ public class Olc6502 {
     private class Pha extends Instruction {
         @Override
         public byte execute() {
-            write((short) (STACK_ADDRESS + widenIgnoreSigning(stackPointer--)), accumulatorRegister);
+            writeToStack(accumulatorRegister);
             return 0;
         }
     }
@@ -560,8 +600,7 @@ public class Olc6502 {
     private class Pla extends Instruction {
         @Override
         public byte execute() {
-            stackPointer++;
-            byte value = read((short) (STACK_ADDRESS + stackPointer));
+            byte value = pullFromStack();
             updateZeroFlag(widenIgnoreSigning(value));
             updateNegativeFlag(value);
             return 0;
