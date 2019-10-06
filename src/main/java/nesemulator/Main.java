@@ -1,6 +1,6 @@
 package nesemulator;
 
-import nesemulator.cpu.Instruction;
+import nesemulator.cpu.Operation;
 import nesemulator.cpu.Olc6502;
 
 public class Main {
@@ -16,20 +16,20 @@ public class Main {
         printInstructionSet(cpu.getInstructions());
     }
 
-    private static void printInstructionSet(Instruction[] instructions) {
+    private static void printInstructionSet(Operation[] operations) {
         System.out.println("\nInstructionSet");
         System.out.println("-----------------------------");
-        for (int i = 0; i < instructions.length; i += 16) {
+        for (int i = 0; i < operations.length; i += 16) {
             for (int y = i; y < i + 16; y++) {
-                System.out.print(instructions[y].opcode + "   ");
+                System.out.print(operations[y].opcode + "   ");
             }
             System.out.println();
             for (int y = i; y < i + 16; y++) {
-                System.out.print(instructions[y].addressingMode + "   ");
+                System.out.print(operations[y].addressingMode + "   ");
             }
             System.out.println();
             for (int y = i; y < i + 16; y++) {
-                System.out.print(instructions[y].cycles + "     ");
+                System.out.print(operations[y].cycles + "     ");
             }
             System.out.print(System.lineSeparator());
             System.out.print(System.lineSeparator());

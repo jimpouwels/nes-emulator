@@ -3,7 +3,7 @@ package nesemulator.cpu.opcode;
 /**
  * Invalid Opcode.
  */
-public class InvalidOpcode extends Opcode {
+public class InvalidInstruction extends Instruction {
     @Override
     public byte operate() {
         return 0;

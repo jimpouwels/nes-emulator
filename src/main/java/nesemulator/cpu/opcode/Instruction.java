@@ -3,7 +3,7 @@ package nesemulator.cpu.opcode;
 /**
  * Opcode Base.
  */
-public abstract class Opcode {
+public abstract class Instruction {
 
     public abstract byte operate();
 
