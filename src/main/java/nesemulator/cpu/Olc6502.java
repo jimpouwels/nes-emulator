@@ -68,9 +68,12 @@ public class Olc6502 {
             programCounter++;
             Operation operation = operationLookup[opcode];
             remainingCycles = operation.cycles;
+            // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
             short additionalCycle1 = widenIgnoreSigning(operation.addressingMode.set());
-            short additionalCycle2 = widenIgnoreSigning(operation.opcode.operate());
-            remainingCycles += additionalCycle1 + additionalCycle2;
+            // the instruction returns 1, if one of its possible addressing modes needs an additional clockcycle.
+            short additionalCycle2 = widenIgnoreSigning(operation.instruction.execute());
+            // if both require an additional cycle, add it to the remaining cycles.
+            remainingCycles += additionalCycle1 & additionalCycle2;
         }
         remainingCycles--;
     }
@@ -311,6 +314,35 @@ public class Olc6502 {
 
     //================================  INSTRUCTIONS  =======================================
 
+    /**
+     * "AND" Memory with Accumulator.
+     */
+    private class And extends Instruction {
+        @Override
+        public byte execute() {
+            fetch();
+            accumulatorRegister &= fetched;
+            updateZeroFlag(accumulatorRegister);
+            updateNegativeFlag(accumulatorRegister);
+            return 1;
+        }
+    }
+
+    private void updateZeroFlag(byte accumulatorRegister) {
+        if (accumulatorRegister == 0x00) {
+            setFlag(Flag.ZERO);
+        } else {
+            clearFlag(Flag.ZERO);
+        }
+    }
+
+    private void updateNegativeFlag(byte accumulatorRegister) {
+        if (accumulatorRegister < 0) {
+            setFlag(Flag.NEGATIVE);
+        } else {
+            clearFlag(Flag.NEGATIVE);
+        }
+    }
 
     //================================  UTILITIES  ==========================================
 

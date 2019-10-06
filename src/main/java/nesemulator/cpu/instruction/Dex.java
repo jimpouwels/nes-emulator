@@ -5,7 +5,7 @@ package nesemulator.cpu.instruction;
  */
 public class Dex extends Instruction {
     @Override
-    public byte operate() {
+    public byte execute() {
         return 0;
     }
 }

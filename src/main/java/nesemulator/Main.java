@@ -21,7 +21,7 @@ public class Main {
         System.out.println("-----------------------------");
         for (int i = 0; i < operations.length; i += 16) {
             for (int y = i; y < i + 16; y++) {
-                System.out.print(operations[y].opcode + "   ");
+                System.out.print(operations[y].instruction + "   ");
             }
             System.out.println();
             for (int y = i; y < i + 16; y++) {

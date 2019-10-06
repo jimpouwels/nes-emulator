@@ -5,7 +5,7 @@ package nesemulator.cpu.instruction;
  */
 public class Cpx extends Instruction {
     @Override
-    public byte operate() {
+    public byte execute() {
         return 0;
     }
 }
