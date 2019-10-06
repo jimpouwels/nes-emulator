@@ -497,15 +497,31 @@ public class Olc6502 {
     /**
      * Add Memory to Accumulator with Carry.
      */
-    public class Adc extends Instruction {
+    private class Adc extends Instruction {
         @Override
         public byte execute() {
             fetch();
-            short temp = updateOverflowFlag(accumulatorRegister, fetched);
-            updateCarryBit(temp);
-            updateZeroFlag(temp);
-            updateNegativeFlag(temp);
-            accumulatorRegister = (byte) (temp & 0xFF);
+            short additionResult = addAndUpdateOverflowFlag(accumulatorRegister, fetched);
+            updateCarryBit(additionResult);
+            updateZeroFlag(additionResult);
+            updateNegativeFlag(additionResult);
+            accumulatorRegister = (byte) (additionResult & 0xFF);
+            return 1;
+        }
+    }
+
+    /**
+     * Subtract Memory from Accumulator with Borrow.
+     */
+    private class Sbc extends Instruction {
+        @Override
+        public byte execute() {
+            fetch();
+            short subtractionResult = subtractAndUpdateOverflowFlag();
+            updateCarryBit(subtractionResult);
+            updateZeroFlag(subtractionResult);
+            updateNegativeFlag(subtractionResult);
+            accumulatorRegister = (byte) (subtractionResult & 0x00FF);
             return 1;
         }
     }
@@ -526,13 +542,26 @@ public class Olc6502 {
         }
     }
 
-    private short updateOverflowFlag(byte byteA, byte byteB) {
+    private short addAndUpdateOverflowFlag(byte byteA, byte byteB) {
         short sum = (short) (widenIgnoreSigning(byteA) + widenIgnoreSigning(byteB) + widenIgnoreSigning(getFlag(Flag.CARRY)));
         if (byteA < 0 && byteB < 0 && (sum & 0x80) > 0 ||
                 byteA > 0 && byteB > 0 && (sum & 0x80) == 0) {
             setFlag(Flag.OVERFLOW);
+        } else {
+            clearFlag(Flag.OVERFLOW);
         }
         return sum;
+    }
+
+    private short subtractAndUpdateOverflowFlag() {
+        short value = (short) (widenIgnoreSigning(fetched) ^ 0x00FF);
+        short temp = (short) (widenIgnoreSigning(accumulatorRegister) + value + widenIgnoreSigning(getFlag(Flag.CARRY)));
+        if (((temp ^ widenIgnoreSigning(accumulatorRegister)) & (temp ^ value) & 0x0080) > 0) {
+            setFlag(Flag.OVERFLOW);
+        } else {
+            clearFlag(Flag.OVERFLOW);
+        }
+        return temp;
     }
 
     private void updateNegativeFlag(short value) {
