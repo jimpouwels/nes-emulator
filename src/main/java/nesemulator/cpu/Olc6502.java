@@ -50,8 +50,8 @@ public class Olc6502 {
         return bus.read(addr, false);
     }
 
-    public short getFlag(Flag flag) {
-        return (short) ((status & flag.value) > 0 ? 1 : 0);
+    public boolean getFlag(Flag flag) {
+        return (status & flag.value) > 0;
     }
 
     public void setFlag(Flag flag) {
@@ -325,6 +325,132 @@ public class Olc6502 {
             updateZeroFlag(accumulatorRegister);
             updateNegativeFlag(accumulatorRegister);
             return 1;
+        }
+    }
+
+    /**
+     * Branch on Carry Set.
+     */
+    private class Bcs extends Instruction {
+        @Override
+        public byte execute() {
+            if (getFlag(Flag.CARRY)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Branch on Carry Clear.
+     */
+    private class Bcc extends Instruction {
+        @Override
+        public byte execute() {
+            if (!getFlag(Flag.CARRY)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Branch on Result Zero.
+     */
+    private class Beq extends Instruction {
+        @Override
+        public byte execute() {
+            if (getFlag(Flag.ZERO)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Branch on Result not Zero.
+     */
+    private class Bne extends Instruction {
+        @Override
+        public byte execute() {
+            if (!getFlag(Flag.ZERO)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Branch on Result Plus.
+     */
+    private class Bpl extends Instruction {
+        @Override
+        public byte execute() {
+            if (!getFlag(Flag.NEGATIVE)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Branch on Overflow Clear.
+     */
+    private class Bvc extends Instruction {
+        @Override
+        public byte execute() {
+            if (!getFlag(Flag.OVERFLOW)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Branch on Overflow Set.
+     */
+    private class Bvs extends Instruction {
+        @Override
+        public byte execute() {
+            if (getFlag(Flag.OVERFLOW)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
         }
     }
 
