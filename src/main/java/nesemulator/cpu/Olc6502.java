@@ -85,19 +85,20 @@ public class Olc6502 {
     }
 
     // non maskable request
-
     public void nmi() {
 
     }
 
-    public short fetch() {
-        return 0x0;
+    public byte fetch() {
+        if (!(instructionLookup[opcode].addressingMode instanceof Imp)) {
+            fetched = read(addrAbs);
+        }
+        return fetched;
     }
 
     public Instruction[] getInstructions() {
         return this.instructionLookup;
     }
-
 
     //================================  ADDRESSING MODES ====================================
 
