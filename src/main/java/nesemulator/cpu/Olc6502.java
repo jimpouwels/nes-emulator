@@ -7,6 +7,7 @@ import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
 
 public class Olc6502 {
 
+    private static final int STACK_ADDRESS = 0x0100;
     private Bus bus;
     private byte accumulatorRegister = 0x00;
     private byte xRegister = 0x00;
@@ -17,7 +18,7 @@ public class Olc6502 {
     private byte fetched = 0x00;
     private short addrAbs = 0x0000;
     private short addrRel = 0x00;
-    public byte opcode = 0x00;
+    private byte opcode = 0x00;
     private int remainingCycles = 0;
     private Operation[] operationLookup = new Operation[]{
             operation("BRK", new Brk(), new Imp(), 7), operation("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zp0(), 3), operation("ASL", new Asl(), new Zp0(), 5), unknown(), operation("PHP", new Php(), new Imp(), 3), operation("ORA", new Ora(), new Imm(), 2), operation("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), operation("ORA", new Ora(), new Abs(), 6), operation("ASL", new Asl(), new Abs(), 6), unknown(),
@@ -523,6 +524,17 @@ public class Olc6502 {
             updateNegativeFlag(subtractionResult);
             accumulatorRegister = (byte) (subtractionResult & 0x00FF);
             return 1;
+        }
+    }
+
+    /**
+     * Push Accumulator on Stack.
+     */
+    private class Pha extends Instruction {
+        @Override
+        public byte execute() {
+            write((short) (STACK_ADDRESS + widenIgnoreSigning(stackPointer--)), accumulatorRegister);
+            return 0;
         }
     }
 
