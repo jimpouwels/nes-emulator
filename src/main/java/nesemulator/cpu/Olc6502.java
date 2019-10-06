@@ -8,6 +8,7 @@ import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
 public class Olc6502 {
 
     private static final int STACK_ADDRESS = 0x0100;
+    private static final int PROGRAM_COUNTER_ADDRESS = 0xFFFC;
     private Bus bus;
     private byte accumulatorRegister = 0x00;
     private byte xRegister = 0x00;
@@ -80,7 +81,22 @@ public class Olc6502 {
     }
 
     public void reset() {
+        accumulatorRegister = 0x00;
+        xRegister = 0x00;
+        yRegister = 0x00;
+        stackPointer = (byte) 0xFD; // FIXME: NesDev says common practice to start at 0xFF --> try out later
+        status = getFlag(Flag.UNUSED);
 
+        short programCounterAddress = (short) PROGRAM_COUNTER_ADDRESS;
+        short lo = widenIgnoreSigning(read(programCounterAddress));
+        short hi = widenIgnoreSigning(read((short) (programCounterAddress + 1)));
+        programCounter = (short) ((hi << 8) | lo);
+
+        addrRel = 0x0000;
+        addrAbs = 0x0000;
+        fetched = 0x00;
+
+        remainingCycles = 8;
     }
     // interrupt request signal
 
