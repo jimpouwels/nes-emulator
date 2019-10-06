@@ -1,7 +1,7 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.opcode.*;
+import nesemulator.cpu.instruction.*;
 
 import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
 
@@ -309,7 +309,7 @@ public class Olc6502 {
         }
     }
 
-    //================================  OPCODES  ============================================
+    //================================  INSTRUCTIONS  =======================================
 
 
     //================================  UTILITIES  ==========================================

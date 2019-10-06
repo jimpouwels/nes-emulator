@@ -1,6 +1,6 @@
 package nesemulator.cpu;
 
-import nesemulator.cpu.opcode.Instruction;
+import nesemulator.cpu.instruction.Instruction;
 
 public class Operation {
     public String name;
