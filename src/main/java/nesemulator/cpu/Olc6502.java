@@ -538,6 +538,20 @@ public class Olc6502 {
         }
     }
 
+    /**
+     * Pull Accumulator from Stack.
+     */
+    private class Pla extends Instruction {
+        @Override
+        public byte execute() {
+            stackPointer++;
+            byte value = read((short) (STACK_ADDRESS + stackPointer));
+            updateZeroFlag(widenIgnoreSigning(value));
+            updateNegativeFlag(value);
+            return 0;
+        }
+    }
+
     private void updateZeroFlag(short value) {
         if (value == 0x00) {
             setFlag(Flag.ZERO);
