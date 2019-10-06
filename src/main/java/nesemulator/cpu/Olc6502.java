@@ -419,6 +419,25 @@ public class Olc6502 {
     }
 
     /**
+     * Branch on Result Minus.
+     */
+    private class Bmi extends Instruction {
+        @Override
+        public byte execute() {
+            if (getFlag(Flag.NEGATIVE)) {
+                remainingCycles++;
+                addrAbs = (short) (programCounter + addrRel);
+                if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
+                    remainingCycles++;
+                }
+                programCounter = addrAbs;
+            }
+            return 0;
+        }
+    }
+
+
+    /**
      * Branch on Overflow Clear.
      */
     private class Bvc extends Instruction {
