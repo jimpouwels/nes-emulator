@@ -436,7 +436,6 @@ public class Olc6502 {
         }
     }
 
-
     /**
      * Branch on Overflow Clear.
      */
@@ -469,6 +468,28 @@ public class Olc6502 {
                 }
                 programCounter = addrAbs;
             }
+            return 0;
+        }
+    }
+
+    /**
+     * Clear Carry Flag.
+     */
+    private class Clc extends Instruction {
+        @Override
+        public byte execute() {
+            clearFlag(Flag.CARRY);
+            return 0;
+        }
+    }
+
+    /**
+     * Clear Decimal Mode.
+     */
+    public class Cld extends Instruction {
+        @Override
+        public byte execute() {
+            clearFlag(Flag.DECIMAL_MODE);
             return 0;
         }
     }
