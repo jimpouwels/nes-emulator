@@ -50,8 +50,8 @@ public class Olc6502 {
         return bus.read(addr, false);
     }
 
-    public boolean getFlag(Flag flag) {
-        return (status & flag.value) > 0;
+    public byte getFlag(Flag flag) {
+        return (byte) (widenIgnoreSigning((byte) (status & flag.value)) > 0 ? 1 : 0);
     }
 
     public void setFlag(Flag flag) {
@@ -322,7 +322,7 @@ public class Olc6502 {
         public byte execute() {
             fetch();
             accumulatorRegister &= fetched;
-            updateZeroFlag(accumulatorRegister);
+            updateZeroFlag(widenIgnoreSigning(accumulatorRegister));
             updateNegativeFlag(accumulatorRegister);
             return 1;
         }
@@ -334,7 +334,7 @@ public class Olc6502 {
     private class Bcs extends Instruction {
         @Override
         public byte execute() {
-            if (getFlag(Flag.CARRY)) {
+            if (getFlag(Flag.CARRY) == 1) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -352,7 +352,7 @@ public class Olc6502 {
     private class Bcc extends Instruction {
         @Override
         public byte execute() {
-            if (!getFlag(Flag.CARRY)) {
+            if (getFlag(Flag.CARRY) == 0) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -370,7 +370,7 @@ public class Olc6502 {
     private class Beq extends Instruction {
         @Override
         public byte execute() {
-            if (getFlag(Flag.ZERO)) {
+            if (getFlag(Flag.ZERO) == 1) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -388,7 +388,7 @@ public class Olc6502 {
     private class Bne extends Instruction {
         @Override
         public byte execute() {
-            if (!getFlag(Flag.ZERO)) {
+            if (getFlag(Flag.ZERO) == 0) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -406,7 +406,7 @@ public class Olc6502 {
     private class Bpl extends Instruction {
         @Override
         public byte execute() {
-            if (!getFlag(Flag.NEGATIVE)) {
+            if (getFlag(Flag.NEGATIVE) == 0) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -424,7 +424,7 @@ public class Olc6502 {
     private class Bmi extends Instruction {
         @Override
         public byte execute() {
-            if (getFlag(Flag.NEGATIVE)) {
+            if (getFlag(Flag.NEGATIVE) == 1) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -442,7 +442,7 @@ public class Olc6502 {
     private class Bvc extends Instruction {
         @Override
         public byte execute() {
-            if (!getFlag(Flag.OVERFLOW)) {
+            if (getFlag(Flag.OVERFLOW) == 0) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -460,7 +460,7 @@ public class Olc6502 {
     private class Bvs extends Instruction {
         @Override
         public byte execute() {
-            if (getFlag(Flag.OVERFLOW)) {
+            if (getFlag(Flag.OVERFLOW) == 1) {
                 remainingCycles++;
                 addrAbs = (short) (programCounter + addrRel);
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
@@ -494,19 +494,60 @@ public class Olc6502 {
         }
     }
 
-    private void updateZeroFlag(byte accumulatorRegister) {
-        if (accumulatorRegister == 0x00) {
+    /**
+     * Add Memory to Accumulator with Carry.
+     */
+    public class Adc extends Instruction {
+        @Override
+        public byte execute() {
+            fetch();
+            short temp = updateOverflowFlag(accumulatorRegister, fetched);
+            updateCarryBit(temp);
+            updateZeroFlag(temp);
+            updateNegativeFlag(temp);
+            accumulatorRegister = (byte) (temp & 0xFF);
+            return 1;
+        }
+    }
+
+    private void updateZeroFlag(short value) {
+        if (value == 0x00) {
             setFlag(Flag.ZERO);
         } else {
             clearFlag(Flag.ZERO);
         }
     }
 
-    private void updateNegativeFlag(byte accumulatorRegister) {
-        if (accumulatorRegister < 0) {
+    private void updateNegativeFlag(byte value) {
+        if (value < 0) {
             setFlag(Flag.NEGATIVE);
         } else {
             clearFlag(Flag.NEGATIVE);
+        }
+    }
+
+    private short updateOverflowFlag(byte byteA, byte byteB) {
+        short sum = (short) (widenIgnoreSigning(byteA) + widenIgnoreSigning(byteB) + widenIgnoreSigning(getFlag(Flag.CARRY)));
+        if (byteA < 0 && byteB < 0 && (sum & 0x80) > 0 ||
+                byteA > 0 && byteB > 0 && (sum & 0x80) == 0) {
+            setFlag(Flag.OVERFLOW);
+        }
+        return sum;
+    }
+
+    private void updateNegativeFlag(short value) {
+        if ((value & 0x80) > 0) {
+            setFlag(Flag.NEGATIVE);
+        } else {
+            clearFlag(Flag.NEGATIVE);
+        }
+    }
+
+    private void updateCarryBit(short value) {
+        if (value > 0xFF) {
+            setFlag(Flag.CARRY);
+        } else {
+            clearFlag(Flag.CARRY);
         }
     }
 
