@@ -1,7 +1,6 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.instruction.Asl;
 import nesemulator.cpu.instruction.Bit;
 import nesemulator.cpu.instruction.Brk;
 import nesemulator.cpu.instruction.Cli;
@@ -188,8 +187,8 @@ public class Olc6502 {
 
     private short read16BitValueFrom(short address) {
         addrAbs = address; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        short lo = widenIgnoreSigning(read(addrAbs));
-        short hi = widenIgnoreSigning(read((short) (addrAbs + 1)));
+        short lo = readWidened(addrAbs));
+        short hi = readWidened((short) (addrAbs + 1)));
         return (short) ((hi << 8) | lo);
     }
 
@@ -211,7 +210,8 @@ public class Olc6502 {
         if (!(operationLookup[opcode].addressingMode instanceof Imp)) {
             fetched = read(addrAbs);
         }
-        return fetched;
+        // FIXME: The addressing mode "IMP" sets the 'fetched' to the accumulator. Can't we just make that an else statement here? Try out later.
+        return fetched; // FIXME: Do we need this as a field? Can't we just have a local variable? Try out later.
     }
 
     public Operation[] getInstructions() {
@@ -223,10 +223,6 @@ public class Olc6502 {
     public abstract class AddressingMode {
 
         public abstract byte set();
-
-        short readWidened(short addr) {
-            return widenIgnoreSigning(read(addr));
-        }
 
         byte read16BitAddressWithOffset(byte offset) {
             short hi = readWidened(programCounter++);
@@ -270,7 +266,7 @@ public class Olc6502 {
     private class Imp extends AddressingMode {
         @Override
         public byte set() {
-            fetched = accumulatorRegister;
+            fetched = accumulatorRegister; // FIXME: Can't we just do this in the fetch() method? As part of the else.
             return 0;
         }
 
@@ -632,7 +628,7 @@ public class Olc6502 {
         @Override
         public byte execute() {
             fetch();
-            short subtractionResult = subtractAndUpdateOverflowFlag();
+            short subtractionResult = subtractAndUpdateOverflowFlag(fetched);
             updateCarryBit(subtractionResult);
             updateZeroFlag(subtractionResult);
             updateNegativeFlag(subtractionResult);
@@ -665,6 +661,28 @@ public class Olc6502 {
         }
     }
 
+    /**
+     * Shift Left One Bit (Memory or Accumulator).
+     */
+    public class Asl extends Instruction {
+        @Override
+        public byte execute() {
+            fetch();
+            short value = (short) (widenIgnoreSigning(fetched) << 1);
+            updateCarryBit(value);
+            updateZeroFlag(value);
+            updateNegativeFlag(value);
+            if (operationLookup[opcode].addressingMode instanceof Imp) { // FIXME: Can't we just pass the addressingMode on this method as a param? Try out later.
+                accumulatorRegister = (byte) (value & 0x00FF);
+            } else {
+                write(addrAbs, (byte) (value & 0x00FF));
+            }
+            return 0;
+        }
+    }
+
+    //================================  UTILITIES  ==========================================
+
     private void updateZeroFlag(short value) {
         if (value == 0x00) {
             setFlag(Flag.ZERO);
@@ -692,8 +710,8 @@ public class Olc6502 {
         return sum;
     }
 
-    private short subtractAndUpdateOverflowFlag() {
-        short value = (short) (widenIgnoreSigning(fetched) ^ 0x00FF);
+    private short subtractAndUpdateOverflowFlag(byte valueToSubtract) {
+        short value = (short) (widenIgnoreSigning(valueToSubtract) ^ 0x00FF);
         short temp = (short) (widenIgnoreSigning(accumulatorRegister) + value + widenIgnoreSigning(getFlag(Flag.CARRY)));
         if (((temp ^ widenIgnoreSigning(accumulatorRegister)) & (temp ^ value) & 0x0080) > 0) {
             setFlag(Flag.OVERFLOW);
@@ -719,7 +737,9 @@ public class Olc6502 {
         }
     }
 
-    //================================  UTILITIES  ==========================================
+    private short readWidened(short addr) {
+        return widenIgnoreSigning(read(addr));
+    }
 
     private Operation unknown() {
         return operation("???", new InvalidInstruction(), new Imp(), 8);
