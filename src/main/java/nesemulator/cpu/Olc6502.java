@@ -181,8 +181,8 @@ public class Olc6502 {
         status = pullFromStack();
         clearFlag(Flag.BREAK);
         clearFlag(Flag.UNUSED);
-        programCounter = pullFromStack(); // FIXME: Can we use the readAndSetProgramCounter() method here?
-        programCounter |= pullFromStack() << 8;
+        programCounter = widenIgnoreSigning(pullFromStack()); // FIXME: Can we use the readAndSetProgramCounter() method here?
+        programCounter |= widenIgnoreSigning(pullFromStack()) << 8;
         return 0;
     }
 
