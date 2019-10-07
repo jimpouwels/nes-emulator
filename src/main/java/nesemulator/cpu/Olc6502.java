@@ -1,7 +1,6 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.instruction.Bit;
 import nesemulator.cpu.instruction.Brk;
 import nesemulator.cpu.instruction.Cli;
 import nesemulator.cpu.instruction.Clv;
@@ -187,8 +186,8 @@ public class Olc6502 {
 
     private short read16BitValueFrom(short address) {
         addrAbs = address; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        short lo = readWidened(addrAbs));
-        short hi = readWidened((short) (addrAbs + 1)));
+        short lo = readWidened(addrAbs);
+        short hi = readWidened((short) (addrAbs + 1));
         return (short) ((hi << 8) | lo);
     }
 
@@ -664,7 +663,7 @@ public class Olc6502 {
     /**
      * Shift Left One Bit (Memory or Accumulator).
      */
-    public class Asl extends Instruction {
+    private class Asl extends Instruction {
         @Override
         public byte execute() {
             fetch();
@@ -677,6 +676,24 @@ public class Olc6502 {
             } else {
                 write(addrAbs, (byte) (value & 0x00FF));
             }
+            return 0;
+        }
+    }
+
+    /**
+     * Test Bits in Memory with Accumulator.
+     */
+    private class Bit extends Instruction {
+        @Override
+        public byte execute() {
+            fetch();
+            updateZeroFlag(widenIgnoreSigning((byte) (accumulatorRegister & fetched)));
+            if ((fetched & (1 << 6)) > 0) { // check if bit 6 is set
+                setFlag(Flag.OVERFLOW);
+            } else {
+                clearFlag(Flag.OVERFLOW);
+            }
+            updateNegativeFlag(fetched);
             return 0;
         }
     }
