@@ -1,7 +1,49 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.instruction.*;
+import nesemulator.cpu.instruction.Asl;
+import nesemulator.cpu.instruction.Bit;
+import nesemulator.cpu.instruction.Brk;
+import nesemulator.cpu.instruction.Cli;
+import nesemulator.cpu.instruction.Clv;
+import nesemulator.cpu.instruction.Cmp;
+import nesemulator.cpu.instruction.Cpx;
+import nesemulator.cpu.instruction.Cpy;
+import nesemulator.cpu.instruction.Dec;
+import nesemulator.cpu.instruction.Dex;
+import nesemulator.cpu.instruction.Dey;
+import nesemulator.cpu.instruction.Eor;
+import nesemulator.cpu.instruction.Inc;
+import nesemulator.cpu.instruction.Instruction;
+import nesemulator.cpu.instruction.InvalidInstruction;
+import nesemulator.cpu.instruction.Inx;
+import nesemulator.cpu.instruction.Iny;
+import nesemulator.cpu.instruction.Jmp;
+import nesemulator.cpu.instruction.Jsr;
+import nesemulator.cpu.instruction.Lda;
+import nesemulator.cpu.instruction.Ldx;
+import nesemulator.cpu.instruction.Ldy;
+import nesemulator.cpu.instruction.Lsr;
+import nesemulator.cpu.instruction.Nop;
+import nesemulator.cpu.instruction.Ora;
+import nesemulator.cpu.instruction.Php;
+import nesemulator.cpu.instruction.Plp;
+import nesemulator.cpu.instruction.Rol;
+import nesemulator.cpu.instruction.Ror;
+import nesemulator.cpu.instruction.Rti;
+import nesemulator.cpu.instruction.Rts;
+import nesemulator.cpu.instruction.Sec;
+import nesemulator.cpu.instruction.Sed;
+import nesemulator.cpu.instruction.Sei;
+import nesemulator.cpu.instruction.Sta;
+import nesemulator.cpu.instruction.Stx;
+import nesemulator.cpu.instruction.Sty;
+import nesemulator.cpu.instruction.Tax;
+import nesemulator.cpu.instruction.Tay;
+import nesemulator.cpu.instruction.Tsx;
+import nesemulator.cpu.instruction.Txa;
+import nesemulator.cpu.instruction.Txs;
+import nesemulator.cpu.instruction.Tya;
 
 import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
 
@@ -226,7 +268,7 @@ public class Olc6502 {
         public byte set() {
             addrAbs = readWidened(programCounter++);
             programCounter += 1;
-            addrAbs &= 0x00FF;
+            addrAbs &= 0x00FF; // FIXME: Is this mask really needed? It seems like the left-byte of the address is already 0x00, since the read() returns an 8-bit byte.
             return 0;
         }
 
@@ -411,7 +453,7 @@ public class Olc6502 {
         public byte execute() {
             if (getFlag(Flag.CARRY) == 0) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = (short) (programCounter + addrRel); // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -429,7 +471,7 @@ public class Olc6502 {
         public byte execute() {
             if (getFlag(Flag.ZERO) == 1) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = (short) (programCounter + addrRel); // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
