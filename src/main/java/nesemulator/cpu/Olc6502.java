@@ -131,7 +131,7 @@ public class Olc6502 {
         stackPointer = (byte) 0xFD; // FIXME: NesDev says common practice to start at 0xFF --> try out later
         status = getFlag(Flag.UNUSED);
 
-        readAndSetProgramCounter((short) PROGRAM_COUNTER_ADDRESS);
+        programCounter = read16BitValueFrom((short) PROGRAM_COUNTER_ADDRESS);
 
         addrRel = 0x0000;
         addrAbs = 0x0000;
@@ -140,7 +140,9 @@ public class Olc6502 {
         remainingCycles = 8;
     }
 
-    // interrupt request signal
+    /**
+     * Interrupt request.
+     */
     public void irq() {
         if (getFlag(Flag.DISABLE_INTERRUPTS) == 0) {
             writeToStack(programCounter);
@@ -150,13 +152,15 @@ public class Olc6502 {
             setFlag(Flag.DISABLE_INTERRUPTS);
             writeToStack(status);
 
-            readAndSetProgramCounter((short) PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
+            programCounter = read16BitValueFrom((short) PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
 
             remainingCycles = 7;
         }
     }
 
-    // non maskable request
+    /**
+     * Non maskable interrupt request.
+     */
     public void nmi() {
         writeToStack(programCounter);
 
@@ -165,16 +169,28 @@ public class Olc6502 {
         setFlag(Flag.DISABLE_INTERRUPTS);
         writeToStack(status);
 
-        readAndSetProgramCounter((short) PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
+        programCounter = read16BitValueFrom((short) PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
 
         remainingCycles = 8;
     }
 
-    private void readAndSetProgramCounter(short address) {
+    /**
+     * Return to program after interrupt
+     */
+    public byte rti() {
+        status = pullFromStack();
+        clearFlag(Flag.BREAK);
+        clearFlag(Flag.UNUSED);
+        programCounter = pullFromStack(); // FIXME: Can we use the readAndSetProgramCounter() method here?
+        programCounter |= pullFromStack() << 8;
+        return 0;
+    }
+
+    private short read16BitValueFrom(short address) {
         addrAbs = address; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
         short lo = widenIgnoreSigning(read(addrAbs));
         short hi = widenIgnoreSigning(read((short) (addrAbs + 1)));
-        programCounter = (short) ((hi << 8) | lo);
+        return (short) ((hi << 8) | lo);
     }
 
     private void writeToStack(short data) {
