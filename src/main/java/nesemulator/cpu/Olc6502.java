@@ -43,7 +43,7 @@ import nesemulator.cpu.instruction.Txa;
 import nesemulator.cpu.instruction.Txs;
 import nesemulator.cpu.instruction.Tya;
 
-import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
+import java.util.Arrays;
 
 public class Olc6502 {
 
@@ -52,16 +52,16 @@ public class Olc6502 {
     private static final int PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT = 0xFFFE;
     private static final int PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT = 0xFFFA;
     private Bus bus;
-    private byte accumulatorRegister = 0x00;
-    private byte xRegister = 0x00;
-    private byte yRegister = 0x00;
-    private byte stackPointer = 0x00;
-    private short programCounter = 0x0000;
-    private byte status = 0x00;
-    private byte fetched = 0x00;
-    private short addrAbs = 0x0000;
-    private short addrRel = 0x00;
-    private byte opcode = 0x00;
+    private int accumulatorRegister = 0x00;
+    private int xRegister = 0x00;
+    private int yRegister = 0x00;
+    private int stackPointer = 0x00;
+    private int programCounter = 0x0000;
+    private int status = 0x00;
+    private int fetched = 0x00;
+    private int addrAbs = 0x0000;
+    private int addrRel = 0x00;
+    private int opcode = 0x00;
     private int remainingCycles = 0;
     private Operation[] operationLookup = new Operation[]{
             operation("BRK", new Brk(), new Imp(), 7), operation("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zp0(), 3), operation("ASL", new Asl(), new Zp0(), 5), unknown(), operation("PHP", new Php(), new Imp(), 3), operation("ORA", new Ora(), new Imm(), 2), operation("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), operation("ORA", new Ora(), new Abs(), 6), operation("ASL", new Asl(), new Abs(), 6), unknown(),
@@ -82,20 +82,37 @@ public class Olc6502 {
             operation("BEQ", new Beq(), new Rel(), 2), operation("SBC", new Sbc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4), operation("INC", new Inc(), new Zpx(), 6), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4), operation("INC", new Inc(), new Abx(), 7), unknown()
     };
 
-    public Olc6502(Bus bus) {
+    public Olc6502(Bus bus, byte[] data) {
         this.bus = bus;
+        // Write into the correct memory location (write twice while we don't have a mapper)
+        bus.writeRomAt(0x8000, Arrays.copyOfRange(data, 0x0010, 0x4000));
+        bus.writeRomAt(0xC000, Arrays.copyOfRange(data, 0x0010, 0x4000));
     }
 
-    public void write(short addr, byte data) {
+    public void start() {
+        programCounter = 0xC000;
+        try {
+            while (programCounter < 0xC000 + (0x4000 - 0x0010)) {
+                clock();
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("ERROR");
+        }
+        for (int i = 0; i < 0x0300; i++) {
+            System.out.println(read(0x0200 + i));
+        }
+    }
+
+    public void write(int addr, int data) {
         bus.write(addr, data);
     }
 
-    public byte read(short addr) {
+    public int read(int addr) {
         return bus.read(addr, false);
     }
 
-    public byte getFlag(Flag flag) {
-        return (byte) (widenIgnoreSigning((byte) (status & flag.value)) > 0 ? 1 : 0);
+    public int getFlag(Flag flag) {
+        return (status & flag.value) > 0 ? 1 : 0;
     }
 
     public void setFlag(Flag flag) {
@@ -108,14 +125,15 @@ public class Olc6502 {
 
     public void clock() {
         if (remainingCycles == 0) {
-            byte opcode = read(programCounter);
+            int opcode = read(programCounter);
             programCounter++;
             Operation operation = operationLookup[opcode];
+            System.out.println(operation.name);
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
-            short additionalCycle1 = widenIgnoreSigning(operation.addressingMode.set());
+            int additionalCycle1 = operation.addressingMode.set();
             // the instruction returns 1, if one of its possible addressing modes needs an additional clockcycle.
-            short additionalCycle2 = widenIgnoreSigning(operation.instruction.execute());
+            int additionalCycle2 = operation.instruction.execute();
             // if both require an additional cycle, add it to the remaining cycles.
             remainingCycles += additionalCycle1 & additionalCycle2;
         }
@@ -143,7 +161,7 @@ public class Olc6502 {
      */
     public void irq() {
         if (getFlag(Flag.DISABLE_INTERRUPTS) == 0) {
-            writeToStack(programCounter);
+            write16BitToStack(programCounter);
 
             clearFlag(Flag.BREAK);
             setFlag(Flag.UNUSED);
@@ -175,37 +193,37 @@ public class Olc6502 {
     /**
      * Return to program after interrupt
      */
-    public byte rti() {
+    public int rti() {
         status = pullFromStack();
         clearFlag(Flag.BREAK);
         clearFlag(Flag.UNUSED);
-        programCounter = widenIgnoreSigning(pullFromStack()); // FIXME: Can we use the readAndSetProgramCounter() method here?
-        programCounter |= widenIgnoreSigning(pullFromStack()) << 8;
+        programCounter = pullFromStack(); // FIXME: Can we use the readAndSetProgramCounter() method here?
+        programCounter |= pullFromStack() << 8;
         return 0;
     }
 
-    private short read16BitValueFrom(short address) {
+    private int read16BitValueFrom(int address) {
         addrAbs = address; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        short lo = readWidened(addrAbs);
-        short hi = readWidened((short) (addrAbs + 1));
-        return (short) ((hi << 8) | lo);
+        int lo = addrAbs;
+        int hi = addrAbs + 1;
+        return (hi << 8) | lo;
     }
 
-    private void writeToStack(short data) {
-        writeToStack((byte) ((data >> 8) & 0x00FF));
-        writeToStack((byte) (data & 0x00FF));
+    private void write16BitToStack(int data) {
+        writeToStack((data >> 8) & 0x00FF);
+        writeToStack(data & 0x00FF);
     }
 
-    private void writeToStack(byte data) {
-        write((short) (STACK_ADDRESS + widenIgnoreSigning(stackPointer--)), data); // FIXME: is the mask on 0x00FF needed? Probably not, try out later.
+    private void writeToStack(int data) {
+        write(STACK_ADDRESS + stackPointer--, data); // FIXME: is the mask on 0x00FF needed? Probably not, try out later.
     }
 
-    private byte pullFromStack() {
+    private int pullFromStack() {
         stackPointer++;
-        return read((short) (STACK_ADDRESS + widenIgnoreSigning(stackPointer)));
+        return read(STACK_ADDRESS + stackPointer);
     }
 
-    private byte fetch() {
+    private int fetch() {
         if (!(operationLookup[opcode].addressingMode instanceof Imp)) {
             fetched = read(addrAbs);
         }
@@ -221,14 +239,14 @@ public class Olc6502 {
 
     public abstract class AddressingMode {
 
-        public abstract byte set();
+        public abstract int set();
 
-        byte read16BitAddressWithOffset(byte offset) {
-            short hi = readWidened(programCounter++);
-            short lo = readWidened(programCounter++);
+        int read16BitAddressWithOffset(int offset) {
+            int hi = programCounter++;
+            int lo = programCounter++;
 
             addrAbs = (short) (hi << 8 | lo);
-            addrAbs += widenIgnoreSigning(offset);
+            addrAbs += offset;
 
             if ((addrAbs & 0xFF00) != (hi << 8)) {
                 return 1;
@@ -249,7 +267,7 @@ public class Olc6502 {
      */
     private class Imm extends AddressingMode {
         @Override
-        public byte set() {
+        public int set() {
             addrAbs = programCounter++;
             return 0;
         }
@@ -264,7 +282,7 @@ public class Olc6502 {
      */
     private class Imp extends AddressingMode {
         @Override
-        public byte set() {
+        public int set() {
             fetched = accumulatorRegister; // FIXME: Can't we just do this in the fetch() method? As part of the else.
             return 0;
         }
@@ -276,8 +294,8 @@ public class Olc6502 {
      */
     private class Zp0 extends AddressingMode {
         @Override
-        public byte set() {
-            addrAbs = readWidened(programCounter++);
+        public int set() {
+            addrAbs = programCounter++;
             programCounter += 1;
             addrAbs &= 0x00FF; // FIXME: Is this mask really needed? It seems like the left-byte of the address is already 0x00, since the read() returns an 8-bit byte.
             return 0;
@@ -290,9 +308,9 @@ public class Olc6502 {
      */
     private class Zpx extends AddressingMode {
         @Override
-        public byte set() {
-            short value = readWidened(programCounter++);
-            addrAbs = (short) (value + widenIgnoreSigning(xRegister));
+        public int set() {
+            int value = programCounter++;
+            addrAbs = value + xRegister;
             addrAbs &= 0x00FF;
             return 0;
         }
@@ -303,9 +321,9 @@ public class Olc6502 {
      */
     private class Zpy extends AddressingMode {
         @Override
-        public byte set() {
-            short value = readWidened(programCounter++);
-            addrAbs = (short) (value + widenIgnoreSigning(yRegister));
+        public int set() {
+            int value = programCounter++;
+            addrAbs = value + yRegister;
             addrAbs &= 0x00FF;
             return 0;
         }
@@ -316,7 +334,7 @@ public class Olc6502 {
      */
     private class Abs extends AddressingMode {
         @Override
-        public byte set() {
+        public int set() {
             return read16BitAddressWithOffset((byte) 0);
         }
     }
@@ -326,7 +344,7 @@ public class Olc6502 {
      */
     private class Abx extends AddressingMode {
         @Override
-        public byte set() {
+        public int set() {
             return read16BitAddressWithOffset(xRegister);
         }
     }
@@ -336,7 +354,7 @@ public class Olc6502 {
      */
     private class Aby extends AddressingMode {
         @Override
-        public byte set() {
+        public int set() {
             return read16BitAddressWithOffset(yRegister);
         }
     }
@@ -346,24 +364,24 @@ public class Olc6502 {
      */
     private class Ind extends AddressingMode {
         @Override
-        public byte set() {
-            short pointerHi = readWidened(programCounter++);
-            short pointerLo = readWidened(programCounter++);
+        public int set() {
+            int pointerHi = programCounter++;
+            int pointerLo = programCounter++;
 
-            short pointer = (short) (pointerHi << 8 | pointerLo);
+            int pointer = pointerHi << 8 | pointerLo;
             if (isHardwareBug(pointerLo)) {
-                short newHigh = readWidened((short) (pointer & 0xFF00));
-                short newLo = readWidened(pointer);
-                addrAbs = (short) (newHigh << 8 | newLo);
+                int newHigh = pointer & 0xFF00;
+                int newLo = pointer;
+                addrAbs = newHigh << 8 | newLo;
             } else {
-                short newHigh = readWidened((short) (pointer + 1));
-                short newLo = readWidened(pointer);
-                addrAbs = (short) (newHigh << 8 | newLo);
+                int newHigh = pointer + 1;
+                int newLo = pointer;
+                addrAbs = newHigh << 8 | newLo;
             }
             return 0;
         }
 
-        private boolean isHardwareBug(short pointerLo) {
+        private boolean isHardwareBug(int pointerLo) {
             return pointerLo == 0x00FF;
         }
     }
@@ -374,7 +392,7 @@ public class Olc6502 {
     private class Izx extends IndirectWithOffsetAddressMode {
 
         @Override
-        public byte set() {
+        public int set() {
             return super.set(xRegister);
         }
     }
@@ -384,7 +402,7 @@ public class Olc6502 {
      */
     private class Izy extends IndirectWithOffsetAddressMode {
         @Override
-        public byte set() {
+        public int set() {
             return super.set(yRegister);
         }
     }
@@ -394,9 +412,9 @@ public class Olc6502 {
      */
     private class Rel extends AddressingMode {
         @Override
-        public byte set() {
-            byte operand = read(programCounter++);
-            addrRel = widenIgnoreSigning(operand);
+        public int set() {
+            int operand = read(programCounter++);
+            addrRel = operand;
             if (operand < 0) {
                 addrRel |= 0xFF00;
             }
@@ -405,15 +423,15 @@ public class Olc6502 {
     }
 
     private abstract class IndirectWithOffsetAddressMode extends AddressingMode {
-        private byte set(byte offset) {
-            short pointer = readWidened(programCounter++);
+        private int set(int offset) {
+            int pointer = programCounter++;
 
-            short widenedOffset = widenIgnoreSigning(offset);
-            short lo = readWidened((short) ((pointer + widenedOffset) & 0x00FF));
-            short hi = readWidened((short) ((pointer + widenedOffset + 1) & 0x00FF));
+            int widenedOffset = offset;
+            int lo = (pointer + widenedOffset) & 0x00FF;
+            int hi = (pointer + widenedOffset + 1) & 0x00FF;
 
-            addrAbs = (short) ((hi << 8) | lo);
-            addrAbs += widenIgnoreSigning(xRegister);
+            addrAbs = (hi << 8) | lo;
+            addrAbs += xRegister;
 
             if ((addrAbs & 0xFF00) != (hi << 8)) {
                 return 1;
@@ -429,10 +447,10 @@ public class Olc6502 {
      */
     private class And extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             fetch();
             accumulatorRegister &= fetched;
-            updateZeroFlag(widenIgnoreSigning(accumulatorRegister));
+            updateZeroFlag(accumulatorRegister);
             updateNegativeFlag(accumulatorRegister);
             return 1;
         }
@@ -443,10 +461,10 @@ public class Olc6502 {
      */
     private class Bcs extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.CARRY) == 1) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = programCounter + addrRel;
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -461,10 +479,10 @@ public class Olc6502 {
      */
     private class Bcc extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.CARRY) == 0) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel); // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
+                addrAbs = programCounter + addrRel; // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -479,10 +497,10 @@ public class Olc6502 {
      */
     private class Beq extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.ZERO) == 1) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel); // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
+                addrAbs = programCounter + addrRel; // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -497,10 +515,10 @@ public class Olc6502 {
      */
     private class Bne extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.ZERO) == 0) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = programCounter + addrRel;
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -515,10 +533,10 @@ public class Olc6502 {
      */
     private class Bpl extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.NEGATIVE) == 0) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = programCounter + addrRel;
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -533,10 +551,10 @@ public class Olc6502 {
      */
     private class Bmi extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.NEGATIVE) == 1) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = programCounter + addrRel;
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -551,10 +569,10 @@ public class Olc6502 {
      */
     private class Bvc extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.OVERFLOW) == 0) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = programCounter + addrRel;
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -569,10 +587,10 @@ public class Olc6502 {
      */
     private class Bvs extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             if (getFlag(Flag.OVERFLOW) == 1) {
                 remainingCycles++;
-                addrAbs = (short) (programCounter + addrRel);
+                addrAbs = programCounter + addrRel;
                 if ((addrAbs & 0xFF00) != (programCounter & 0xFF00)) {
                     remainingCycles++;
                 }
@@ -587,7 +605,7 @@ public class Olc6502 {
      */
     private class Clc extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             clearFlag(Flag.CARRY);
             return 0;
         }
@@ -598,7 +616,7 @@ public class Olc6502 {
      */
     public class Cld extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             clearFlag(Flag.DECIMAL_MODE);
             return 0;
         }
@@ -609,13 +627,13 @@ public class Olc6502 {
      */
     private class Adc extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             fetch();
-            short additionResult = addAndUpdateOverflowFlag(accumulatorRegister, fetched);
+            int additionResult = addAndUpdateOverflowFlag(accumulatorRegister, fetched);
             updateCarryBit(additionResult);
             updateZeroFlag(additionResult);
             updateNegativeFlag(additionResult);
-            accumulatorRegister = (byte) (additionResult & 0xFF);
+            accumulatorRegister = additionResult & 0xFF;
             return 1;
         }
     }
@@ -625,13 +643,13 @@ public class Olc6502 {
      */
     private class Sbc extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             fetch();
-            short subtractionResult = subtractAndUpdateOverflowFlag(fetched);
+            int subtractionResult = subtractAndUpdateOverflowFlag(fetched);
             updateCarryBit(subtractionResult);
             updateZeroFlag(subtractionResult);
             updateNegativeFlag(subtractionResult);
-            accumulatorRegister = (byte) (subtractionResult & 0x00FF);
+            accumulatorRegister = subtractionResult & 0x00FF;
             return 1;
         }
     }
@@ -641,7 +659,7 @@ public class Olc6502 {
      */
     private class Pha extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             writeToStack(accumulatorRegister);
             return 0;
         }
@@ -652,9 +670,9 @@ public class Olc6502 {
      */
     private class Pla extends Instruction {
         @Override
-        public byte execute() {
-            byte value = pullFromStack();
-            updateZeroFlag(widenIgnoreSigning(value));
+        public int execute() {
+            int value = pullFromStack();
+            updateZeroFlag(value);
             updateNegativeFlag(value);
             return 0;
         }
@@ -665,16 +683,16 @@ public class Olc6502 {
      */
     private class Asl extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             fetch();
-            short value = (short) (widenIgnoreSigning(fetched) << 1);
+            int value = fetched << 1;
             updateCarryBit(value);
             updateZeroFlag(value);
             updateNegativeFlag(value);
             if (operationLookup[opcode].addressingMode instanceof Imp) { // FIXME: Can't we just pass the addressingMode on this method as a param? Try out later.
-                accumulatorRegister = (byte) (value & 0x00FF);
+                accumulatorRegister = value & 0x00FF;
             } else {
-                write(addrAbs, (byte) (value & 0x00FF));
+                write(addrAbs, value & 0x00FF);
             }
             return 0;
         }
@@ -685,9 +703,9 @@ public class Olc6502 {
      */
     private class Bit extends Instruction {
         @Override
-        public byte execute() {
+        public int execute() {
             fetch();
-            updateZeroFlag(widenIgnoreSigning((byte) (accumulatorRegister & fetched)));
+            updateZeroFlag(accumulatorRegister & fetched);
             if ((fetched & (1 << 6)) > 0) { // check if bit 6 is set
                 setFlag(Flag.OVERFLOW);
             } else {
@@ -700,7 +718,7 @@ public class Olc6502 {
 
     //================================  UTILITIES  ==========================================
 
-    private void updateZeroFlag(short value) {
+    private void updateZeroFlag(int value) {
         if (value == 0x00) {
             setFlag(Flag.ZERO);
         } else {
@@ -708,18 +726,10 @@ public class Olc6502 {
         }
     }
 
-    private void updateNegativeFlag(byte value) {
-        if (value < 0) {
-            setFlag(Flag.NEGATIVE);
-        } else {
-            clearFlag(Flag.NEGATIVE);
-        }
-    }
-
-    private short addAndUpdateOverflowFlag(byte byteA, byte byteB) {
-        short sum = (short) (widenIgnoreSigning(byteA) + widenIgnoreSigning(byteB) + widenIgnoreSigning(getFlag(Flag.CARRY)));
-        if (byteA < 0 && byteB < 0 && (sum & 0x80) > 0 ||
-                byteA > 0 && byteB > 0 && (sum & 0x80) == 0) {
+    private int addAndUpdateOverflowFlag(int byteA, int byteB) {
+        int sum = byteA + byteB + getFlag(Flag.CARRY);
+        if ((byteA & 0x80) > 0 && (byteB & 0x80) > 0 && (sum & 0x80) > 0 ||
+                (byteA & 0x80) == 0 && (byteB & 0x80) == 0 && (sum & 0x80) == 0) {
             setFlag(Flag.OVERFLOW);
         } else {
             clearFlag(Flag.OVERFLOW);
@@ -727,10 +737,10 @@ public class Olc6502 {
         return sum;
     }
 
-    private short subtractAndUpdateOverflowFlag(byte valueToSubtract) {
-        short value = (short) (widenIgnoreSigning(valueToSubtract) ^ 0x00FF);
-        short temp = (short) (widenIgnoreSigning(accumulatorRegister) + value + widenIgnoreSigning(getFlag(Flag.CARRY)));
-        if (((temp ^ widenIgnoreSigning(accumulatorRegister)) & (temp ^ value) & 0x0080) > 0) {
+    private int subtractAndUpdateOverflowFlag(int valueToSubtract) {
+        int value = valueToSubtract ^ 0x00FF;
+        int temp = accumulatorRegister + value + getFlag(Flag.CARRY);
+        if (((temp ^ accumulatorRegister) & (temp ^ value) & 0x0080) > 0) {
             setFlag(Flag.OVERFLOW);
         } else {
             clearFlag(Flag.OVERFLOW);
@@ -738,7 +748,7 @@ public class Olc6502 {
         return temp;
     }
 
-    private void updateNegativeFlag(short value) {
+    private void updateNegativeFlag(int value) {
         if ((value & 0x80) > 0) {
             setFlag(Flag.NEGATIVE);
         } else {
@@ -746,16 +756,12 @@ public class Olc6502 {
         }
     }
 
-    private void updateCarryBit(short value) {
+    private void updateCarryBit(int value) {
         if (value > 0xFF) {
             setFlag(Flag.CARRY);
         } else {
             clearFlag(Flag.CARRY);
         }
-    }
-
-    private short readWidened(short addr) {
-        return widenIgnoreSigning(read(addr));
     }
 
     private Operation unknown() {

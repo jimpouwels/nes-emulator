@@ -5,7 +5,7 @@ package nesemulator.cpu.instruction;
  */
 public class Cli extends Instruction {
     @Override
-    public byte execute() {
+    public int execute() {
         return 0;
     }
 }

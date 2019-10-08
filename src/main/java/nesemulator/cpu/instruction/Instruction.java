@@ -5,7 +5,7 @@ package nesemulator.cpu.instruction;
  */
 public abstract class Instruction {
 
-    public abstract byte execute();
+    public abstract int execute();
 
     @Override
     public String toString() {

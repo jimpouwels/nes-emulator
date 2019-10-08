@@ -5,7 +5,7 @@ package nesemulator.cpu.instruction;
  */
 public class Brk extends Instruction {
     @Override
-    public byte execute() {
+    public int execute() {
         return 0;
     }
 }

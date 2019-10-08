@@ -1,7 +1,11 @@
 package nesemulator;
 
-import nesemulator.cpu.Operation;
 import nesemulator.cpu.Olc6502;
+import nesemulator.cpu.Operation;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Main {
 
@@ -12,8 +16,16 @@ public class Main {
         System.out.println("Starting Jim's NES Emulator!");
         System.out.println("-----------------------------");
         System.out.println("MemorySize: " + MEMORY_SIZE_IN_KILOBYTES + "kb");
-        Olc6502 cpu = new Olc6502(new Bus(MEMORY_SIZE_IN_KILOBYTES * NUMBER_OF_BYTES_IN_KILOBYTE));
+        Bus bus = new Bus(MEMORY_SIZE_IN_KILOBYTES * NUMBER_OF_BYTES_IN_KILOBYTE);
+        Olc6502 cpu = null;
+        try {
+            cpu = new Olc6502(bus, Files.readAllBytes(Paths.get("./nestest.nes")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         printInstructionSet(cpu.getInstructions());
+        System.out.println("Starting testrom...");
+        cpu.start();
     }
 
     private static void printInstructionSet(Operation[] operations) {
