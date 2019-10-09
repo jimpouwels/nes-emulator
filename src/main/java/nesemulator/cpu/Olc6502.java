@@ -3,8 +3,6 @@ package nesemulator.cpu;
 import nesemulator.Bus;
 import nesemulator.cpu.instruction.Instruction;
 import nesemulator.cpu.instruction.InvalidInstruction;
-import nesemulator.cpu.instruction.Lsr;
-import nesemulator.cpu.instruction.Nop;
 import nesemulator.cpu.instruction.Ora;
 import nesemulator.cpu.instruction.Php;
 import nesemulator.cpu.instruction.Plp;
@@ -935,6 +933,41 @@ public class Olc6502 {
             return 1;
         }
     }
+
+    /**
+     * Shift One Bit Right (Memory or Accumulator).
+     */
+    private class Lsr extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            if ((fetched_8 & 0x0001) > 0) {
+                setFlag(Flag.CARRY);
+            } else {
+                clearFlag(Flag.CARRY);
+            }
+            int temp = fetched_8 >> 1;
+            updateZeroFlag(temp);
+            updateNegativeFlag(temp);
+            if (operationLookup[opcode_8].addressingMode instanceof Imp) {
+                accumulatorRegister_8 = temp;
+            } else {
+                write(addrAbs_16, temp);
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * No Operation.
+     */
+    private class Nop extends Instruction {
+        @Override
+        public int execute() {
+            return 0;
+        }
+    }
+
 
     //================================  UTILITIES  ==========================================
 
