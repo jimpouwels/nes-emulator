@@ -3,10 +3,6 @@ package nesemulator.cpu;
 import nesemulator.Bus;
 import nesemulator.cpu.instruction.Instruction;
 import nesemulator.cpu.instruction.InvalidInstruction;
-import nesemulator.cpu.instruction.Jsr;
-import nesemulator.cpu.instruction.Lda;
-import nesemulator.cpu.instruction.Ldx;
-import nesemulator.cpu.instruction.Ldy;
 import nesemulator.cpu.instruction.Lsr;
 import nesemulator.cpu.instruction.Nop;
 import nesemulator.cpu.instruction.Ora;
@@ -882,6 +878,61 @@ public class Olc6502 {
             updateZeroFlag(yRegister_8);
             updateNegativeFlag(yRegister_8);
             return 0;
+        }
+    }
+
+    /**
+     * Jump to New Location Saving Return Address.
+     */
+    private class Jsr extends Instruction {
+        @Override
+        public int execute() {
+            programCounter_16--;
+            write2BytesToStack(programCounter_16);
+            programCounter_16 = addrAbs_16;
+            return 0;
+        }
+    }
+
+    /**
+     * Load Accumulator with Memory.
+     */
+    private class Lda extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            accumulatorRegister_8 = fetched_8;
+            updateNegativeFlag(accumulatorRegister_8);
+            updateZeroFlag(accumulatorRegister_8);
+            return 1;
+        }
+    }
+
+    /**
+     * Load Index X with Memory.
+     */
+    private class Ldx extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            xRegister_8 = fetched_8;
+            updateNegativeFlag(xRegister_8);
+            updateZeroFlag(xRegister_8);
+            return 1;
+        }
+    }
+
+    /**
+     * Load Index Y with Memory.
+     */
+    private class Ldy extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            yRegister_8 = fetched_8;
+            updateNegativeFlag(yRegister_8);
+            updateZeroFlag(yRegister_8);
+            return 1;
         }
     }
 
