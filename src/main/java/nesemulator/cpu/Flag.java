@@ -10,10 +10,10 @@ public enum Flag {
     OVERFLOW(6),
     NEGATIVE(7);
 
-    public int value;
+    public int value_8;
 
     Flag(int position) {
-        value = (byte) (1 << position);
+        value_8 = 1 << position;
     }
 
 }

@@ -2,6 +2,8 @@ package nesemulator;
 
 import nesemulator.exception.MemoryAddressExceedsMemoryException;
 
+import static nesemulator.utils.ByteUtilities.widenIgnoreSigning;
+
 public class Bus {
 
     private int[] ram;
@@ -34,7 +36,19 @@ public class Bus {
 
     public void writeRomAt(int startAddr, byte[] copyOfRange) {
         for (int i = 0; i < copyOfRange.length; i++) {
-            ram[startAddr + i] = copyOfRange[i];
+            ram[startAddr + i] = widenIgnoreSigning(copyOfRange[i]);
+        }
+    }
+
+    public void printRam() {
+        System.out.println("\nRAM");
+        System.out.println("-----------------------------");
+        for (int i = 0; i < ram.length; i += 16) {
+            for (int y = i; y < i + 16; y++) {
+                System.out.print(ram[y] + "   ");
+            }
+            System.out.print(System.lineSeparator());
+            System.out.print(System.lineSeparator());
         }
     }
 }
