@@ -1,10 +1,6 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.instruction.Brk;
-import nesemulator.cpu.instruction.Cli;
-import nesemulator.cpu.instruction.Clv;
-import nesemulator.cpu.instruction.Cmp;
 import nesemulator.cpu.instruction.Cpx;
 import nesemulator.cpu.instruction.Cpy;
 import nesemulator.cpu.instruction.Dec;
@@ -144,12 +140,12 @@ public class Olc6502 {
         if (getFlag(Flag.DISABLE_INTERRUPTS) == 0) {
             write2BytesToStack(programCounter_16);
 
-            clearFlag(Flag.BREAK);
+            setFlag(Flag.BREAK);
             setFlag(Flag.UNUSED);
             setFlag(Flag.DISABLE_INTERRUPTS);
             writeByteToStack(status_8);
 
-            programCounter_16 = read16BitValueFrom((short) PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
+            programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
 
             remainingCycles = 7;
         }
@@ -166,7 +162,7 @@ public class Olc6502 {
         setFlag(Flag.DISABLE_INTERRUPTS);
         writeByteToStack(status_8);
 
-        programCounter_16 = read16BitValueFrom((short) PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
+        programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
 
         remainingCycles = 8;
     }
@@ -704,6 +700,63 @@ public class Olc6502 {
         public int execute() {
             programCounter_16 = addrAbs_16;
             return 0;
+        }
+    }
+
+    /**
+     * Force Break.
+     */
+    private class Brk extends Instruction {
+        @Override
+        public int execute() {
+            programCounter_16++;
+            write2BytesToStack(programCounter_16);
+            setFlag(Flag.BREAK);
+            writeByteToStack(status_8);
+            clearFlag(Flag.BREAK);
+            programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
+            return 0;
+        }
+    }
+
+    /**
+     * Clear Interrupt Disable Bit.
+     */
+    private class Cli extends Instruction {
+        @Override
+        public int execute() {
+            clearFlag(Flag.DISABLE_INTERRUPTS);
+            return 0;
+        }
+    }
+
+    /**
+     * Clear Overflow Flag.
+     */
+    private class Clv extends Instruction {
+        @Override
+        public int execute() {
+            clearFlag(Flag.OVERFLOW);
+            return 0;
+        }
+    }
+
+    /**
+     * Compare Memory and Accumulator.
+     */
+    private class Cmp extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            int value_8 = accumulatorRegister_8 - fetched_8;
+            if (accumulatorRegister_8 >= fetched_8) {
+                setFlag(Flag.CARRY);
+            } else {
+                clearFlag(Flag.CARRY);
+            }
+            updateNegativeFlag(value_8);
+            updateZeroFlag(value_8);
+            return 1;
         }
     }
 
