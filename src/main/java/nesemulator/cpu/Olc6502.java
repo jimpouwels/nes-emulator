@@ -41,9 +41,6 @@ import nesemulator.cpu.instruction.Tsx;
 import nesemulator.cpu.instruction.Txa;
 import nesemulator.cpu.instruction.Txs;
 import nesemulator.cpu.instruction.Tya;
-import nesemulator.exception.MemoryAddressExceedsMemoryException;
-
-import java.util.Arrays;
 
 public class Olc6502 {
 
@@ -64,7 +61,7 @@ public class Olc6502 {
     private int opcode_8 = 0x00;
     private int remainingCycles = 0;
     private Operation[] operationLookup = new Operation[]{
-            operation("BRK", new Brk(), new Imp(), 7), operation("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zp0(), 3), operation("ASL", new Asl(), new Zp0(), 5), unknown(), operation("PHP", new Php(), new Imp(), 3), operation("ORA", new Ora(), new Imm(), 2), operation("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), operation("ORA", new Ora(), new Abs(), 6), operation("ASL", new Asl(), new Abs(), 6), unknown(),
+            operation("BRK", new Brk(), new Imm(), 7), operation("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zp0(), 3), operation("ASL", new Asl(), new Zp0(), 5), unknown(), operation("PHP", new Php(), new Imp(), 3), operation("ORA", new Ora(), new Imm(), 2), operation("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), operation("ORA", new Ora(), new Abs(), 6), operation("ASL", new Asl(), new Abs(), 6), unknown(),
             operation("BPL", new Bpl(), new Rel(), 2), operation("ORA", new Ora(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zpx(), 4), operation("ASL", new Ora(), new Zpx(), 6), unknown(), operation("CLC", new Clc(), new Imp(), 2), operation("ORA", new Ora(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Abx(), 4), operation("ASL", new Asl(), new Abx(), 7), unknown(),
             operation("JSR", new Jsr(), new Abs(), 6), operation("AND", new And(), new Izx(), 6), unknown(), unknown(), operation("BIT", new Bit(), new Zp0(), 3), operation("AND", new And(), new Zp0(), 3), operation("ROL", new Rol(), new Zp0(), 5), unknown(), operation("PLP", new Plp(), new Imp(), 4), operation("AND", new And(), new Imm(), 2), operation("ROL", new Rol(), new Imp(), 2), unknown(), operation("BIT", new Bit(), new Abs(), 4), operation("AND", new And(), new Abs(), 4), operation("ROL", new Rol(), new Abs(), 6), unknown(),
             operation("BMI", new Bmi(), new Rel(), 2), operation("AND", new And(), new Izy(), 5), unknown(), unknown(), unknown(), operation("AND", new And(), new Zpx(), 4), operation("ROL", new Rol(), new Zpx(), 6), unknown(), operation("SEC", new Sec(), new Imp(), 2), operation("AND", new And(), new Aby(), 4), unknown(), unknown(), unknown(), operation("AND", new And(), new Abx(), 4), operation("ROL", new Rol(), new Abx(), 7), unknown(),
@@ -82,26 +79,8 @@ public class Olc6502 {
             operation("BEQ", new Beq(), new Rel(), 2), operation("SBC", new Sbc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4), operation("INC", new Inc(), new Zpx(), 6), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4), operation("INC", new Inc(), new Abx(), 7), unknown()
     };
 
-    public Olc6502(Bus bus, byte[] data) {
+    public Olc6502(Bus bus) {
         this.bus = bus;
-        // Write into the correct memory location (write twice while we don't have a mapper)
-        bus.writeRomAt(0x8000, Arrays.copyOfRange(data, 0x0010, 0x4000));
-        bus.writeRomAt(0xC000, Arrays.copyOfRange(data, 0x0010, 0x4000));
-    }
-
-    public void start() {
-        programCounter_16 = 0xC000;
-        try {
-            while (programCounter_16 < 0xC000 + (0x4000 - 0x0010)) {
-                clock();
-            }
-        } catch (ArrayIndexOutOfBoundsException | MemoryAddressExceedsMemoryException e) {
-            System.out.println("ERROR");
-        }
-//        bus.printRam();
-        System.out.println("Byte1: " + readByte(0x0001));
-        System.out.println("Byte2: " + readByte(0x0002));
-        System.out.println("Byte3: " + readByte(0x0003));
     }
 
     public void write(int address_16, int data_8) {
@@ -128,7 +107,9 @@ public class Olc6502 {
         if (remainingCycles == 0) {
             int opcode = readByte(programCounter_16++);
             Operation operation = operationLookup[opcode];
-            System.out.println(operation.name);
+            if (operation.instruction instanceof InvalidInstruction) {
+                throw new RuntimeException("Invalid instruction, opcode: " + opcode);
+            }
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
             int additionalCycle1 = operation.addressingMode.set();
