@@ -126,8 +126,7 @@ public class Olc6502 {
 
     public void clock() {
         if (remainingCycles == 0) {
-            int opcode = readByte(programCounter_16);
-            programCounter_16++;
+            int opcode = readByte(programCounter_16++);
             Operation operation = operationLookup[opcode];
             System.out.println(operation.name);
             remainingCycles = operation.cycles;
@@ -251,8 +250,9 @@ public class Olc6502 {
 
             if ((addrAbs_16 & 0xFF00) != (high_8 << 8)) {
                 return 1;
+            } else {
+                return 0;
             }
-            return 0;
         }
 
         @Override
@@ -296,8 +296,7 @@ public class Olc6502 {
     private class Zp0 extends AddressingMode {
         @Override
         public int set() {
-            addrAbs_16 = programCounter_16++;
-            programCounter_16 += 1;
+            addrAbs_16 = readByte(programCounter_16++);
             addrAbs_16 &= 0x00FF; // FIXME: Is this mask really needed? It seems like the left-byte of the address is already 0x00, since the read() returns an 8-bit byte.
             return 0;
         }
@@ -310,9 +309,8 @@ public class Olc6502 {
     private class Zpx extends AddressingMode {
         @Override
         public int set() {
-            int value = programCounter_16++;
-            addrAbs_16 = value + xRegister_8;
-            addrAbs_16 &= 0x00FF;
+            int value_8 = readByte(programCounter_16++) + xRegister_8;
+            addrAbs_16 = value_8 & 0x00FF;
             return 0;
         }
     }
@@ -323,9 +321,8 @@ public class Olc6502 {
     private class Zpy extends AddressingMode {
         @Override
         public int set() {
-            int value = programCounter_16++;
-            addrAbs_16 = value + yRegister_8;
-            addrAbs_16 &= 0x00FF;
+            int value_8 = readByte(programCounter_16++) + yRegister_8;
+            addrAbs_16 = value_8 & 0x00FF;
             return 0;
         }
     }
@@ -383,28 +380,43 @@ public class Olc6502 {
         }
     }
 
-    private boolean isHardwareBug(int pointerLow_8) {
-        return pointerLow_8 == 0x00FF; // FIXME: Can the mask be 0xFF? Try out later.
-    }
-
     /**
      * Indexed (X) Indirect Addressing.
      */
-    private class Izx extends IndirectWithOffsetAddressMode {
-
+    private class Izx extends AddressingMode {
         @Override
         public int set() {
-            return super.set(xRegister_8);
+            int pointer_8 = readByte(programCounter_16++);
+
+            int low_8 = readByte((pointer_8 + xRegister_8) & 0x00FF);
+            int high_8 = readByte((pointer_8 + xRegister_8 + 1) & 0x00FF);
+
+            addrAbs_16 = (high_8 << 8) | low_8;
+            addrAbs_16 += xRegister_8;
+
+            return 0;
         }
     }
 
     /**
      * Indexed (Y) Indirect Addressing.
      */
-    private class Izy extends IndirectWithOffsetAddressMode {
+    private class Izy extends AddressingMode {
         @Override
         public int set() {
-            return super.set(yRegister_8);
+            int pointer_8 = readByte(programCounter_16++);
+
+            int low_8 = readByte((pointer_8 + yRegister_8) & 0x00FF);
+            int high_8 = readByte((pointer_8 + yRegister_8 + 1) & 0x00FF);
+
+            addrAbs_16 = (high_8 << 8) | low_8;
+            addrAbs_16 += xRegister_8;
+
+            if ((addrAbs_16 & 0xFF00) != (high_8 << 8)) {
+                return 1;
+            } else {
+                return 0;
+            }
         }
     }
 
@@ -423,21 +435,8 @@ public class Olc6502 {
         }
     }
 
-    private abstract class IndirectWithOffsetAddressMode extends AddressingMode {
-        private int set(int offset) {
-            int pointer_8 = readByte(programCounter_16++);
-
-            int low_8 = (pointer_8 + offset) & 0x00FF;
-            int high_8 = (pointer_8 + offset + 1) & 0x00FF;
-
-            addrAbs_16 = (high_8 << 8) | low_8;
-            addrAbs_16 += xRegister_8;
-
-            if ((addrAbs_16 & 0xFF00) != (high_8 << 8)) {
-                return 1;
-            }
-            return 0;
-        }
+    private boolean isHardwareBug(int pointerLow_8) {
+        return pointerLow_8 == 0x00FF; // FIXME: Can the mask be 0xFF? Try out later.
     }
 
     //================================  INSTRUCTIONS  =======================================
