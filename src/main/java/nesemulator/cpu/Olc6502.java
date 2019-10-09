@@ -1,9 +1,6 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.instruction.Cpx;
-import nesemulator.cpu.instruction.Cpy;
-import nesemulator.cpu.instruction.Dec;
 import nesemulator.cpu.instruction.Dex;
 import nesemulator.cpu.instruction.Dey;
 import nesemulator.cpu.instruction.Eor;
@@ -757,6 +754,59 @@ public class Olc6502 {
             updateNegativeFlag(value_8);
             updateZeroFlag(value_8);
             return 1;
+        }
+    }
+
+    /**
+     * Compare Memory and Index X.
+     */
+    private class Cpx extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            int value_8 = xRegister_8 - fetched_8;
+            if (xRegister_8 >= fetched_8) {
+                setFlag(Flag.CARRY);
+            } else {
+                clearFlag(Flag.CARRY);
+            }
+            updateZeroFlag(value_8); // FIXME: http://obelisk.me.uk/6502/reference.html#CPX --> Says zero flag is set if X = M?
+            updateNegativeFlag(value_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Compare Memory and Index Y.
+     */
+    private class Cpy extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            int value_8 = yRegister_8 - fetched_8;
+            if (yRegister_8 >= fetched_8) {
+                setFlag(Flag.CARRY);
+            } else {
+                clearFlag(Flag.CARRY);
+            }
+            updateZeroFlag(value_8); // FIXME: http://obelisk.me.uk/6502/reference.html#CPY --> Says zero flag is set if X = M?
+            updateNegativeFlag(value_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Decrement Memory by One.
+     */
+    private class Dec extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            int decrementedValue_8 = fetched_8 - 1;
+            write(addrAbs_16, decrementedValue_8);
+            updateZeroFlag(decrementedValue_8);
+            updateNegativeFlag(decrementedValue_8);
+            return 0;
         }
     }
 
