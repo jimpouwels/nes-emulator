@@ -1,14 +1,8 @@
 package nesemulator.cpu;
 
 import nesemulator.Bus;
-import nesemulator.cpu.instruction.Dex;
-import nesemulator.cpu.instruction.Dey;
-import nesemulator.cpu.instruction.Eor;
-import nesemulator.cpu.instruction.Inc;
 import nesemulator.cpu.instruction.Instruction;
 import nesemulator.cpu.instruction.InvalidInstruction;
-import nesemulator.cpu.instruction.Inx;
-import nesemulator.cpu.instruction.Iny;
 import nesemulator.cpu.instruction.Jsr;
 import nesemulator.cpu.instruction.Lda;
 import nesemulator.cpu.instruction.Ldx;
@@ -806,6 +800,87 @@ public class Olc6502 {
             write(addrAbs_16, decrementedValue_8);
             updateZeroFlag(decrementedValue_8);
             updateNegativeFlag(decrementedValue_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Decrement Index X by One.
+     */
+    private class Dex extends Instruction {
+        @Override
+        public int execute() {
+            xRegister_8--;
+            updateNegativeFlag(xRegister_8);
+            updateZeroFlag(xRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Decrement Index Y by One
+     */
+    private class Dey extends Instruction {
+        @Override
+        public int execute() {
+            yRegister_8--;
+            updateNegativeFlag(yRegister_8);
+            updateZeroFlag(yRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * "Exclusive-OR" Memory with Accumulator.
+     */
+    private class Eor extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            accumulatorRegister_8 = accumulatorRegister_8 ^ fetched_8;
+            updateZeroFlag(accumulatorRegister_8);
+            updateNegativeFlag(accumulatorRegister_8);
+            return 1;
+        }
+    }
+
+    /**
+     * Increment Memory by One.
+     */
+    private class Inc extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            int value_8 = fetched_8 + 1;
+            write(addrAbs_16, value_8);
+            updateZeroFlag(value_8);
+            updateNegativeFlag(value_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Increment Index X by One.
+     */
+    private class Inx extends Instruction {
+        @Override
+        public int execute() {
+            xRegister_8++;
+            updateZeroFlag(xRegister_8);
+            updateNegativeFlag(xRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Increment Index Y by One.
+     */
+    private class Iny extends Instruction {
+        @Override
+        public int execute() {
+            xRegister_8++;
+            updateZeroFlag(yRegister_8);
+            updateNegativeFlag(yRegister_8);
             return 0;
         }
     }
