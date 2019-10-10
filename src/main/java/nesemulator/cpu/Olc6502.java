@@ -3,12 +3,6 @@ package nesemulator.cpu;
 import nesemulator.Bus;
 import nesemulator.cpu.instruction.Instruction;
 import nesemulator.cpu.instruction.InvalidInstruction;
-import nesemulator.cpu.instruction.Ora;
-import nesemulator.cpu.instruction.Php;
-import nesemulator.cpu.instruction.Plp;
-import nesemulator.cpu.instruction.Rol;
-import nesemulator.cpu.instruction.Ror;
-import nesemulator.cpu.instruction.Rti;
 import nesemulator.cpu.instruction.Rts;
 import nesemulator.cpu.instruction.Sec;
 import nesemulator.cpu.instruction.Sed;
@@ -156,11 +150,11 @@ public class Olc6502 {
      * Return to program after interrupt
      */
     public int rti() {
-        status_8 = pullFromStack();
+        status_8 = pullByteFromStack();
         clearFlag(Flag.BREAK);
         clearFlag(Flag.UNUSED);
-        programCounter_16 = pullFromStack(); // FIXME: Can we use the readAndSetProgramCounter() method here?
-        programCounter_16 |= pullFromStack() << 8;
+        programCounter_16 = pullByteFromStack(); // FIXME: Can we use the readAndSetProgramCounter() method here?
+        programCounter_16 |= pullByteFromStack() << 8;
         return 0;
     }
 
@@ -180,9 +174,17 @@ public class Olc6502 {
         write(STACK_ADDRESS + stackPointer_8--, data_8); // FIXME: is the mask on 0x00FF needed? Probably not, try out later.
     }
 
-    private int pullFromStack() {
+    private int pullByteFromStack() {
         stackPointer_8++;
         return readByte(STACK_ADDRESS + stackPointer_8);
+    }
+
+    private int pullTwoBytesFromStack() {
+        stackPointer_8++;
+        int value = readByte(STACK_ADDRESS + stackPointer_8);
+        stackPointer_8++;
+        value |= read16BitValueFrom(STACK_ADDRESS + stackPointer_8) << 8;
+        return value;
     }
 
     private int fetch() {
@@ -591,7 +593,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int additionResult = addAndUpdateOverflowFlag(accumulatorRegister_8, fetched_8);
-            updateCarryBit(additionResult);
+            updateCarryBitToValueOfBit7(additionResult);
             updateZeroFlag(additionResult);
             updateNegativeFlag(additionResult);
             accumulatorRegister_8 = additionResult & 0xFF;
@@ -607,7 +609,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int subtractionResult = subtractAndUpdateOverflowFlag(fetched_8);
-            updateCarryBit(subtractionResult);
+            updateCarryBitToValueOfBit7(subtractionResult);
             updateZeroFlag(subtractionResult);
             updateNegativeFlag(subtractionResult);
             accumulatorRegister_8 = subtractionResult & 0x00FF;
@@ -632,7 +634,7 @@ public class Olc6502 {
     private class Pla extends Instruction {
         @Override
         public int execute() {
-            int value = pullFromStack();
+            int value = pullByteFromStack();
             updateZeroFlag(value);
             updateNegativeFlag(value);
             return 0;
@@ -647,7 +649,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int value = fetched_8 << 1;
-            updateCarryBit(value);
+            updateCarryBitToValueOfBit7(value);
             updateZeroFlag(value);
             updateNegativeFlag(value);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) { // FIXME: Can't we just pass the addressingMode on this method as a param? Try out later.
@@ -968,6 +970,103 @@ public class Olc6502 {
         }
     }
 
+    /**
+     * "OR" Memory with Accumulator.
+     */
+    private class Ora extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            accumulatorRegister_8 |= fetched_8;
+            updateZeroFlag(accumulatorRegister_8);
+            updateNegativeFlag(accumulatorRegister_8);
+            return 1;
+        }
+    }
+
+    /**
+     * Push Processor Status on Stack.
+     */
+    private class Php extends Instruction {
+        @Override
+        public int execute() {
+            writeByteToStack(status_8 | Flag.BREAK.value_8 | Flag.UNUSED.value_8);
+            clearFlag(Flag.BREAK); // FIXME: NEEDED?
+            clearFlag(Flag.UNUSED); // FIXME: NEEDED?
+            return 0;
+        }
+    }
+
+    /**
+     * Pull Processor Status from Stack.
+     */
+    private class Plp extends Instruction {
+        @Override
+        public int execute() {
+            status_8 = pullByteFromStack();
+            setFlag(Flag.UNUSED);
+            return 0;
+        }
+    }
+
+    /**
+     * Rotate One Bit Left (Memory or Accumulator).
+     */
+    private class Rol extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            if ((fetched_8 & 0xFF) > 0) {
+                setFlag(Flag.CARRY);
+            } else {
+                clearFlag(Flag.CARRY); // FIXME: Javidx9 is doing "SetFlag(C, temp & 0xFF00);" here... after the temp assignment, is that correct/better?
+            }
+            int temp = (fetched_8 << 1 | getFlag(Flag.CARRY)) & 0xFF;
+            updateNegativeFlag(temp);
+            updateZeroFlag(temp);
+            if (operationLookup[opcode_8].addressingMode instanceof Imp) {
+                accumulatorRegister_8 = temp;
+            } else {
+                write(addrAbs_16, temp);
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Rotate One Bit Right (Memory or Accumulator).
+     */
+    private class Ror extends Instruction {
+        @Override
+        public int execute() {
+            fetch();
+            int temp = (getFlag(Flag.CARRY) << 7) | (fetched_8 >> 1);
+            updateCarryBitToValueOfBit1(temp);
+            updateZeroFlag(temp);
+            updateNegativeFlag(temp);
+            if (operationLookup[opcode_8].addressingMode instanceof Imp) {
+                accumulatorRegister_8 = temp;
+            } else {
+                write(addrAbs_16, temp);
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Return from Interrupt.
+     */
+    private class Rti extends Instruction {
+        @Override
+        public int execute() {
+            status_8 = pullByteFromStack();
+            clearFlag(Flag.UNUSED);
+            clearFlag(Flag.BREAK);
+            programCounter_16 = pullTwoBytesFromStack();
+            return 0;
+        }
+    }
+
 
     //================================  UTILITIES  ==========================================
 
@@ -1009,8 +1108,16 @@ public class Olc6502 {
         }
     }
 
-    private void updateCarryBit(int value) {
+    private void updateCarryBitToValueOfBit7(int value) {
         if (value > 0xFF) {
+            setFlag(Flag.CARRY);
+        } else {
+            clearFlag(Flag.CARRY);
+        }
+    }
+
+    private void updateCarryBitToValueOfBit1(int value) {
+        if ((value & 0x01) > 0) {
             setFlag(Flag.CARRY);
         } else {
             clearFlag(Flag.CARRY);
