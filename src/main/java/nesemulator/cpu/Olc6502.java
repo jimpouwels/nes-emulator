@@ -44,32 +44,6 @@ public class Olc6502 {
         this.bus = bus;
     }
 
-    private void write(int address_16, int data_8) {
-        bus.write(address_16, data_8);
-    }
-
-    private int readByte(int address_16) {
-        return bus.read(address_16, false);
-    }
-
-    private int read2Bytes(int address_16) {
-        addrAbs_16 = address_16; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        int lo = readByte(addrAbs_16);
-        int hi = readByte(addrAbs_16 + 1);
-        return (hi << 8) | lo;
-    }
-
-    private int getFlag(Flag flag) {
-        return (status_8 & flag.value_8) > 0 ? 1 : 0;
-    }
-
-    private void setFlag(Flag flag) {
-        status_8 |= flag.value_8;
-    }
-
-    private void clearFlag(Flag flag) {
-        status_8 &= ~flag.value_8;
-    }
 
     public void clock() {
         if (remainingCycles == 0) {
@@ -151,6 +125,33 @@ public class Olc6502 {
         return 0;
     }
 
+    private void write(int address_16, int data_8) {
+        bus.write(address_16, data_8);
+    }
+
+    private int readByte(int address_16) {
+        return bus.read(address_16, false);
+    }
+
+    private int read2Bytes(int address_16) {
+        addrAbs_16 = address_16; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
+        int lo = readByte(addrAbs_16);
+        int hi = readByte(addrAbs_16 + 1);
+        return (hi << 8) | lo;
+    }
+
+    private int getFlag(Flag flag) {
+        return (status_8 & flag.value_8) > 0 ? 1 : 0;
+    }
+
+    private void setFlag(Flag flag) {
+        status_8 |= flag.value_8;
+    }
+
+    private void clearFlag(Flag flag) {
+        status_8 &= ~flag.value_8;
+    }
+
     private void write2BytesToStack(int data_16) {
         writeByteToStack((data_16 >> 8) & 0x00FF);
         writeByteToStack(data_16 & 0x00FF);
@@ -165,7 +166,7 @@ public class Olc6502 {
         return readByte(STACK_ADDRESS + stackPointer_8);
     }
 
-    private int pullTwoBytesFromStack() {
+    private int pull2BytesFromStack() {
         stackPointer_8++;
         int value = readByte(STACK_ADDRESS + stackPointer_8);
         stackPointer_8++;
@@ -1048,7 +1049,7 @@ public class Olc6502 {
             status_8 = pullByteFromStack();
             clearFlag(Flag.UNUSED);
             clearFlag(Flag.BREAK);
-            programCounter_16 = pullTwoBytesFromStack();
+            programCounter_16 = pull2BytesFromStack();
             return 0;
         }
     }
@@ -1063,7 +1064,7 @@ public class Olc6502 {
             clearFlag(Flag.BREAK);
             clearFlag(Flag.UNUSED);
 
-            programCounter_16 = pullTwoBytesFromStack();
+            programCounter_16 = pull2BytesFromStack();
             return 0;
         }
     }
