@@ -1,5 +1,7 @@
 package nesemulator;
 
+import nesemulator.cartridge.Cartridge;
+import nesemulator.cpu.Olc6502;
 import nesemulator.ppu.Olc2c02;
 
 public class Bus {
@@ -7,12 +9,30 @@ public class Bus {
     private static final int RAM_RANGE_END = 0x1FFF;
     private static final int PPU_RANGE_START = 0x2000;
     private static final int PPU_RANGE_END = 0x3FFF;
-    private Olc2c02 ppu;
     private final Ram ram;
+    private int systemClockCounter;
+    private Olc6502 cpu;
+    private Olc2c02 ppu;
+    private Cartridge cartridge;
 
-    public Bus(Olc2c02 ppu) {
+    public Bus(Olc6502 cpu, Olc2c02 ppu) {
+        this.cpu = cpu;
         this.ppu = ppu;
         this.ram = new Ram();
+    }
+
+    public void reset() {
+        cpu.reset();
+        systemClockCounter = 0;
+    }
+
+    public void clock() {
+
+    }
+
+    public void insertCartridge(Cartridge cartridge) {
+        this.cartridge = cartridge;
+        ppu.connectCartridge(cartridge);
     }
 
     public void cpuWriteByte(int address_16, int data_8) {
