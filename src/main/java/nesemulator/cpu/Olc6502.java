@@ -3,7 +3,6 @@ package nesemulator.cpu;
 import nesemulator.Bus;
 import nesemulator.cpu.instruction.Instruction;
 import nesemulator.cpu.instruction.InvalidInstruction;
-import nesemulator.cpu.instruction.Rts;
 import nesemulator.cpu.instruction.Sec;
 import nesemulator.cpu.instruction.Sed;
 import nesemulator.cpu.instruction.Sei;
@@ -1067,6 +1066,20 @@ public class Olc6502 {
         }
     }
 
+    /**
+     * Return from Subroutine.
+     */
+    public class Rts extends Instruction {
+        @Override
+        public int execute() {
+            status_8 = pullByteFromStack();
+            clearFlag(Flag.BREAK);
+            clearFlag(Flag.UNUSED);
+
+            programCounter_16 = pullTwoBytesFromStack();
+            return 0;
+        }
+    }
 
     //================================  UTILITIES  ==========================================
 
