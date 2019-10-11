@@ -1,41 +1,35 @@
 package nesemulator;
 
-import nesemulator.exception.MemoryAddressExceedsMemoryException;
 import nesemulator.ppu.Olc2c02;
 
 public class Bus {
-    private static final int RAM_SIZE_IN_BYTES = 2048;
     private static final int RAM_RANGE_START = 0x0000;
     private static final int RAM_RANGE_END = 0x1FFF;
-    private int[] cpuRam;
+    private static final int PPU_RANGE_START = 0x2000;
+    private static final int PPU_RANGE_END = 0x3FFF;
     private Olc2c02 ppu;
+    private final Ram ram;
 
     public Bus(Olc2c02 ppu) {
         this.ppu = ppu;
-        cpuRam = new int[RAM_SIZE_IN_BYTES];
+        this.ram = new Ram();
     }
 
     public void cpuWriteByte(int address_16, int data_8) {
         if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
-            cpuRam[mapToInternalRange(address_16)] = data_8;
-        } else if (ppu.isAddressInRange(address_16)) {
+            ram.cpuWrite(address_16, data_8);
+        } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             ppu.cpuWrite(address_16, data_8);
-        } else {
-            throw new MemoryAddressExceedsMemoryException("address " + address_16 + " exceeds memory size");
         }
     }
 
     public int cpuReadByte(int address_16, boolean readOnly) {
         if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
-            return cpuRam[mapToInternalRange(address_16)];
-        } else if (ppu.isAddressInRange(address_16)) {
+            return ram.cpuRead(address_16);
+        } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             ppu.cpuRead(address_16);
-        } else {
-            throw new MemoryAddressExceedsMemoryException("address " + address_16 + " exceeds memory size");
         }
+        return 0x00;
     }
 
-    private int mapToInternalRange(int addr) {
-        return addr & (RAM_SIZE_IN_BYTES - 1);
-    }
 }
