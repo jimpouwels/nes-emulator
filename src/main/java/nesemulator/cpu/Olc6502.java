@@ -40,10 +40,9 @@ public class Olc6502 {
             operation("BEQ", new Beq(), new Rel(), 2), operation("SBC", new Sbc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4), operation("INC", new Inc(), new Zpx(), 6), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4), operation("INC", new Inc(), new Abx(), 7), unknown()
     };
 
-    public Olc6502(Bus bus) {
+    public void connectToBus(Bus bus) {
         this.bus = bus;
     }
-
 
     public void clock() {
         if (remainingCycles == 0) {
@@ -52,6 +51,7 @@ public class Olc6502 {
             if (operation.instruction instanceof InvalidInstruction) {
                 throw new RuntimeException("Invalid instruction, opcode: " + opcode);
             }
+            System.out.println(operation.name);
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
             int additionalCycle1 = operation.addressingMode.set();

@@ -27,7 +27,7 @@ public class Bus {
     }
 
     public void clock() {
-
+        cpu.clock();
     }
 
     public void insertCartridge(Cartridge cartridge) {
@@ -36,7 +36,9 @@ public class Bus {
     }
 
     public void cpuWriteByte(int address_16, int data_8) {
-        if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
+        if (cartridge.cpuWriteByte(address_16, data_8)) { // FIXME: Ugly, needs refactor
+
+        } else if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
             ram.cpuWrite(address_16, data_8);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             ppu.cpuWrite(address_16, data_8);
@@ -44,8 +46,11 @@ public class Bus {
     }
 
     public int cpuReadByte(int address_16, boolean readOnly) {
-        if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
-            return ram.cpuRead(address_16);
+        int cartridgeData = cartridge.cpuReadByte(address_16);
+        if (cartridgeData != -1) {
+            return cartridgeData;
+        } else if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
+            return ram.cpuReadByte(address_16);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             ppu.cpuRead(address_16);
         }

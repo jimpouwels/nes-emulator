@@ -1,11 +1,15 @@
 package nesemulator.cartridge;
 
+import nesemulator.mappers.Mapper;
+import nesemulator.mappers.Mapper0;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Cartridge {
 
+    private Mapper mapper;
     private int[] programMemory;
     private int[] characterMemory;
     private INesFormatHeader header = new INesFormatHeader();
@@ -42,9 +46,51 @@ public class Cartridge {
             nrOfCharacterBanks = header.characterRomChunks;
             characterMemory = new int[8192];
             characterMemory = reader.readNextBytes(characterMemory.length);
+
+            switch (mapperId) {
+                case 0:
+                    mapper = new Mapper0(nrOfProgramBanks, nrOfCharacterBanks);
+                    break;
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error loading ROM '" + filename + "'", e);
         }
+    }
+
+    public int cpuReadByte(int address_16) {
+        int data = -1;
+        int mappedAddress = mapper.cpuMapRead(address_16);
+        if (mappedAddress != -1) {
+            data = programMemory[mappedAddress];
+        }
+        return data;
+    }
+
+    public boolean cpuWriteByte(int address_16, int data_8) {
+        int mappedAddress = mapper.cpuMapWrite(address_16);
+        if (mappedAddress != -1) {
+            programMemory[mappedAddress] = data_8;
+            return true;
+        }
+        return false;
+    }
+
+    public int ppuReadByte(int address_16) {
+        int data = -1;
+        int mappedAddress = mapper.ppuMapRead(address_16);
+        if (mappedAddress != -1) {
+            data = characterMemory[mappedAddress];
+        }
+        return data;
+    }
+
+    public boolean ppuWriteByte(int address_16, int data_8) {
+        int mappedAddress = mapper.ppuMapWrite(address_16);
+        if (mappedAddress != -1) {
+            characterMemory[mappedAddress] = data_8;
+            return true;
+        }
+        return false;
     }
 
     private static class INesFormatHeader {

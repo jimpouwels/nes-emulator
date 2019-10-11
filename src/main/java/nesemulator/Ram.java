@@ -9,7 +9,7 @@ public class Ram {
         memory[mapToInternalRange(address_16)] = data_8;
     }
 
-    public int cpuRead(int address_16) {
+    public int cpuReadByte(int address_16) {
         return memory[mapToInternalRange(address_16)];
     }
 

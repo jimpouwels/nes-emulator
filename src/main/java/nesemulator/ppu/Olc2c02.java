@@ -10,11 +10,9 @@ public class Olc2c02 {
     private int[] paletteTable = new int[32];
 
     public void clock() {
-
     }
 
     public void connectCartridge(Cartridge cartridge) {
-
     }
 
     public int cpuRead(int address_16) {
@@ -27,10 +25,15 @@ public class Olc2c02 {
     }
 
     public int ppuRead(int address_16) {
+        int data = cartridge.ppuReadByte(address_16);
+        if (data != -1) {
+        }
         return 0x00;
     }
 
     public void ppuWrite(int address_16, int data_8) {
+        if (cartridge.ppuWriteByte(address_16, data_8)) {
+        }
     }
 
     private int mapToInternalRange(int address_16) {

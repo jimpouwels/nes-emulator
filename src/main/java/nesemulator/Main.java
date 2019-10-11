@@ -1,7 +1,9 @@
 package nesemulator;
 
+import nesemulator.cartridge.Cartridge;
 import nesemulator.cpu.Olc6502;
 import nesemulator.cpu.Operation;
+import nesemulator.ppu.Olc2c02;
 
 public class Main {
 
@@ -10,9 +12,16 @@ public class Main {
     public static void main(String... args) {
         System.out.println("Starting Jim's NES Emulator!");
         System.out.println("-----------------------------");
-        Bus bus = new Bus();
-        Olc6502 cpu = new Olc6502(bus);
+        Cartridge cartridge = new Cartridge("./nestest.nes");
+        Olc6502 cpu = new Olc6502();
+        Bus bus = new Bus(cpu, new Olc2c02());
+        cpu.connectToBus(bus);
+        bus.insertCartridge(cartridge);
         System.out.println("Starting testrom...");
+        bus.reset();
+        while (true) {
+            bus.clock();
+        }
     }
 
     private static void printInstructionSet(Operation[] operations) {
