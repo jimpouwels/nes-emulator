@@ -2,19 +2,6 @@ package nesemulator.cpu;
 
 import nesemulator.Bus;
 import nesemulator.cpu.instruction.Instruction;
-import nesemulator.cpu.instruction.InvalidInstruction;
-import nesemulator.cpu.instruction.Sec;
-import nesemulator.cpu.instruction.Sed;
-import nesemulator.cpu.instruction.Sei;
-import nesemulator.cpu.instruction.Sta;
-import nesemulator.cpu.instruction.Stx;
-import nesemulator.cpu.instruction.Sty;
-import nesemulator.cpu.instruction.Tax;
-import nesemulator.cpu.instruction.Tay;
-import nesemulator.cpu.instruction.Tsx;
-import nesemulator.cpu.instruction.Txa;
-import nesemulator.cpu.instruction.Txs;
-import nesemulator.cpu.instruction.Tya;
 
 public class Olc6502 {
 
@@ -1069,7 +1056,7 @@ public class Olc6502 {
     /**
      * Return from Subroutine.
      */
-    public class Rts extends Instruction {
+    private class Rts extends Instruction {
         @Override
         public int execute() {
             status_8 = pullByteFromStack();
@@ -1078,6 +1065,163 @@ public class Olc6502 {
 
             programCounter_16 = pullTwoBytesFromStack();
             return 0;
+        }
+    }
+
+    /**
+     * Set Carry Flag.
+     */
+    private class Sec extends Instruction {
+        @Override
+        public int execute() {
+            setFlag(Flag.CARRY);
+            return 0;
+        }
+    }
+
+    /**
+     * Set Decimal Mode.
+     */
+    private class Sed extends Instruction {
+        @Override
+        public int execute() {
+            setFlag(Flag.DECIMAL_MODE);
+            return 0;
+        }
+    }
+
+    /**
+     * Set Interrupt Disable Status.
+     */
+    private class Sei extends Instruction {
+        @Override
+        public int execute() {
+            setFlag(Flag.DISABLE_INTERRUPTS);
+            return 0;
+        }
+    }
+
+    /**
+     * Store Accumulator in Memory.
+     */
+    private class Sta extends Instruction {
+        @Override
+        public int execute() {
+            write(addrAbs_16, accumulatorRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Store Index X in Memory.
+     */
+    private class Stx extends Instruction {
+        @Override
+        public int execute() {
+            write(addrAbs_16, xRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Store Index Y in Memory.
+     */
+    private class Sty extends Instruction {
+        @Override
+        public int execute() {
+            write(addrAbs_16, yRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Transfer Accumulator to Index X.
+     */
+    private class Tax extends Instruction {
+        @Override
+        public int execute() {
+            xRegister_8 = accumulatorRegister_8;
+            updateZeroFlag(xRegister_8);
+            updateNegativeFlag(xRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Transfer Accumulator to Index Y.
+     */
+    private class Tay extends Instruction {
+        @Override
+        public int execute() {
+            yRegister_8 = accumulatorRegister_8;
+            updateZeroFlag(yRegister_8);
+            updateNegativeFlag(yRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Transfer Stack Pointer to Index X.
+     */
+    private class Tsx extends Instruction {
+        @Override
+        public int execute() {
+            xRegister_8 = stackPointer_8;
+            updateZeroFlag(xRegister_8);
+            updateNegativeFlag(xRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Transfer Index X to Accumulator.
+     */
+    private class Txa extends Instruction {
+        @Override
+        public int execute() {
+            accumulatorRegister_8 = xRegister_8;
+            updateZeroFlag(accumulatorRegister_8);
+            updateNegativeFlag(accumulatorRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Transfer Index X to Stack Register.
+     */
+    private class Txs extends Instruction {
+        @Override
+        public int execute() {
+            stackPointer_8 = xRegister_8;
+            return 0;
+        }
+    }
+
+    /**
+     * Transfer Index Y to Accumulator.
+     */
+    private class Tya extends Instruction {
+        @Override
+        public int execute() {
+            accumulatorRegister_8 = yRegister_8;
+            updateZeroFlag(accumulatorRegister_8);
+            updateNegativeFlag(accumulatorRegister_8);
+            return 0;
+        }
+    }
+
+    /**
+     * Invalid Opcode.
+     */
+    private class InvalidInstruction extends Instruction {
+        @Override
+        public int execute() {
+            return 0;
+        }
+
+        @Override
+        public String toString() {
+            return "???";
         }
     }
 
