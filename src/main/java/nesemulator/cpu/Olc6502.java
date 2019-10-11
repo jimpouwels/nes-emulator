@@ -126,11 +126,11 @@ public class Olc6502 {
     }
 
     private void write(int address_16, int data_8) {
-        bus.cpuWrite(address_16, data_8);
+        bus.cpuWriteByte(address_16, data_8);
     }
 
     private int readByte(int address_16) {
-        return bus.cpuRead(address_16, false);
+        return bus.cpuReadByte(address_16, false);
     }
 
     private int read2Bytes(int address_16) {
