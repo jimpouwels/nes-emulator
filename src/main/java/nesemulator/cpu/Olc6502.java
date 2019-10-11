@@ -44,23 +44,30 @@ public class Olc6502 {
         this.bus = bus;
     }
 
-    public void write(int address_16, int data_8) {
+    private void write(int address_16, int data_8) {
         bus.write(address_16, data_8);
     }
 
-    public int readByte(int address_16) {
+    private int readByte(int address_16) {
         return bus.read(address_16, false);
     }
 
-    public int getFlag(Flag flag) {
+    private int read2Bytes(int address_16) {
+        addrAbs_16 = address_16; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
+        int lo = readByte(addrAbs_16);
+        int hi = readByte(addrAbs_16 + 1);
+        return (hi << 8) | lo;
+    }
+
+    private int getFlag(Flag flag) {
         return (status_8 & flag.value_8) > 0 ? 1 : 0;
     }
 
-    public void setFlag(Flag flag) {
+    private void setFlag(Flag flag) {
         status_8 |= flag.value_8;
     }
 
-    public void clearFlag(Flag flag) {
+    private void clearFlag(Flag flag) {
         status_8 &= ~flag.value_8;
     }
 
@@ -89,7 +96,7 @@ public class Olc6502 {
         stackPointer_8 = 0xFD; // FIXME: NesDev says common practice to start at 0xFF --> try out later
         status_8 = getFlag(Flag.UNUSED);
 
-        programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS);
+        programCounter_16 = read2Bytes(PROGRAM_COUNTER_ADDRESS);
 
         addrRel_16 = 0x0000;
         addrAbs_16 = 0x0000;
@@ -110,7 +117,7 @@ public class Olc6502 {
             setFlag(Flag.DISABLE_INTERRUPTS);
             writeByteToStack(status_8);
 
-            programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
+            programCounter_16 = read2Bytes(PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
 
             remainingCycles = 7;
         }
@@ -127,7 +134,7 @@ public class Olc6502 {
         setFlag(Flag.DISABLE_INTERRUPTS);
         writeByteToStack(status_8);
 
-        programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
+        programCounter_16 = read2Bytes(PROGRAM_COUNTER_ADDRESS_AFTER_NON_MASKABLE_INTERRUPT);
 
         remainingCycles = 8;
     }
@@ -142,13 +149,6 @@ public class Olc6502 {
         programCounter_16 = pullByteFromStack(); // FIXME: Can we use the readAndSetProgramCounter() method here?
         programCounter_16 |= pullByteFromStack() << 8;
         return 0;
-    }
-
-    private int read16BitValueFrom(int address_16) {
-        addrAbs_16 = address_16; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        int lo = readByte(addrAbs_16);
-        int hi = readByte(addrAbs_16 + 1);
-        return (hi << 8) | lo;
     }
 
     private void write2BytesToStack(int data_16) {
@@ -169,7 +169,7 @@ public class Olc6502 {
         stackPointer_8++;
         int value = readByte(STACK_ADDRESS + stackPointer_8);
         stackPointer_8++;
-        value |= read16BitValueFrom(STACK_ADDRESS + stackPointer_8) << 8;
+        value |= read2Bytes(STACK_ADDRESS + stackPointer_8) << 8;
         return value;
     }
 
@@ -687,7 +687,7 @@ public class Olc6502 {
             setFlag(Flag.BREAK);
             writeByteToStack(status_8);
             clearFlag(Flag.BREAK);
-            programCounter_16 = read16BitValueFrom(PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
+            programCounter_16 = read2Bytes(PROGRAM_COUNTER_ADDRESS_POST_INTERRUPT);
             return 0;
         }
     }
