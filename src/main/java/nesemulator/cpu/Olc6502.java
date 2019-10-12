@@ -33,7 +33,7 @@ public class Olc6502 {
             operation("BVS", new Bvs(), new Rel(), 2), operation("ADC", new Adc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4), operation("ROR", new Ror(), new Zpx(), 6), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4), operation("ROR", new Ror(), new Abx(), 7), unknown(),
             unknown(), operation("STA", new Sta(), new Izx(), 6), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3), operation("STA", new Sta(), new Zp0(), 3), operation("STX", new Stx(), new Zp0(), 3), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4), operation("STA", new Sta(), new Abs(), 4), operation("STX", new Stx(), new Abs(), 4), unknown(),
             operation("BCC", new Bcc(), new Rel(), 2), operation("STA", new Sta(), new Izy(), 6), unknown(), unknown(), operation("STY", new Sty(), new Zpx(), 4), operation("STA", new Sta(), new Zpx(), 4), operation("STX", new Stx(), new Zpy(), 4), unknown(), operation("TYA", new Tya(), new Imp(), 2), operation("STA", new Sta(), new Aby(), 5), operation("TXS", new Txs(), new Imp(), 2), unknown(), unknown(), operation("STA", new Sta(), new Abx(), 5), unknown(), unknown(),
-            operation("LDY", new Ldy(), new Imm(), 2), operation("LDA", new Lda(), new Izx(), 6), operation("LDX", new Ldx(), new Imm(), 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3), operation("LDA", new Lda(), new Zp0(), 3), operation("LDX", new Ldx(), new Zp0(), 3), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4), operation("LDA", new Lda(), new Abs(), 4), operation("LDX", new Ldx(), new Abs(), 4), unknown(),
+            operation("LDY", new Ldy(), new Imm(), 2), operation("LDA", new Lda(), new Izx(), 6), operation("LDX", new Ldx(), new Imm(), 2, 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3), operation("LDA", new Lda(), new Zp0(), 3), operation("LDX", new Ldx(), new Zp0(), 3), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4), operation("LDA", new Lda(), new Abs(), 4), operation("LDX", new Ldx(), new Abs(), 4), unknown(),
             operation("BCS", new Bcs(), new Rel(), 2), operation("LDA", new Lda(), new Izy(), 5), unknown(), unknown(), operation("LDY", new Ldy(), new Zpx(), 4), operation("LDA", new Lda(), new Zpx(), 4), operation("LDX", new Ldx(), new Zpy(), 4), unknown(), operation("CLV", new Clv(), new Imp(), 2), operation("LDA", new Lda(), new Aby(), 4), operation("TSX", new Tsx(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abx(), 4), operation("LDA", new Lda(), new Abx(), 4), operation("LDX", new Ldx(), new Aby(), 4), unknown(),
             operation("CPY", new Cpy(), new Imm(), 2), operation("CMP", new Cmp(), new Izx(), 6), unknown(), unknown(), operation("CPY", new Cpy(), new Zp0(), 3), operation("CMP", new Cmp(), new Zp0(), 3), operation("DEC", new Dec(), new Zp0(), 5), unknown(), operation("INY", new Iny(), new Imp(), 2), operation("CMP", new Cmp(), new Imm(), 2), operation("DEX", new Dex(), new Imp(), 2), unknown(), operation("CPY", new Cpy(), new Abs(), 4), operation("CMP", new Cmp(), new Abs(), 4), operation("DEC", new Dec(), new Abs(), 6), unknown(),
             operation("BNE", new Bne(), new Rel(), 2), operation("CMP", new Cmp(), new Izy(), 5), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Zpx(), 4), operation("DEC", new Dec(), new Zpx(), 6), unknown(), operation("CLD", new Cld(), new Imp(), 2), operation("CMP", new Cmp(), new Aby(), 4), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Abx(), 4), operation("DEC", new Dec(), new Abx(), 7), unknown(),
@@ -64,15 +64,17 @@ public class Olc6502 {
             remainingCycles += additionalCycle1 & additionalCycle2;
             System.out.println(
                     printAsHex(programCounterToLog) +
-                            " " + printAsHex(opcode_8) +
+                            "  " + printAsHex(opcode_8) +
                             printInstructionOperandBytes(operation, programCounterToLog) +
-                            " " + printAsHex(addrAbs_16) +
-                            " " + operation.name +
+//                            " " + printAsHex(addrAbs_16) +
+                            "  " + operation.name +
                             " A:" + printAsHex(accumulatorRegister_8) +
                             " X:" + printAsHex(xRegister_8) +
                             " Y:" + printAsHex(yRegister_8) +
                             " P:" + printAsHex(status_8) +
-                            " SP:" + printAsHex(stackPointer_8)
+                            " SP:" + printAsHex(stackPointer_8) +
+                            " CYC:" + clockCount +
+                            " (AddressingMode: " + operation.addressingMode.getClass().getSimpleName() + ")"
             );
         }
         clockCount++;
@@ -81,14 +83,14 @@ public class Olc6502 {
 
     private String printInstructionOperandBytes(Operation operation, int programCounter_16) {
         String result = "";
-        for (int i = 1; i < operation.nrOfBytes; i++) {
-            result += " " + printAsHex(readByte(programCounter_16 + i));
+        for (int i = 1; i < 3; i++) {
+            result += i <= operation.nrOfBytes ? " " + printAsHex(readByte(programCounter_16 + i)) : "   ";
         }
         return result;
     }
 
     private String printAsHex(int value) {
-        return String.format("%x", value).toUpperCase();
+        return String.format("%02x", value).toUpperCase();
     }
 
     public void reset() {
@@ -216,7 +218,7 @@ public class Olc6502 {
         return this.operationLookup;
     }
 
-    //================================  ADDRESSING MODES ====================================
+//================================  ADDRESSING MODES ====================================
 
     public abstract class AddressingMode {
 
@@ -420,7 +422,7 @@ public class Olc6502 {
         return pointerLow_8 == 0x00FF; // FIXME: Can the mask be 0xFF? Try out later.
     }
 
-    //================================  INSTRUCTIONS  =======================================
+//================================  INSTRUCTIONS  =======================================
 
     /**
      * "AND" Memory with Accumulator.
@@ -1254,6 +1256,7 @@ public class Olc6502 {
         public String toString() {
             return "???";
         }
+
     }
 
     //================================  UTILITIES  ==========================================
