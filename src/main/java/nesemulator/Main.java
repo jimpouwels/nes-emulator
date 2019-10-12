@@ -19,7 +19,8 @@ public class Main {
         bus.insertCartridge(cartridge);
         System.out.println("Starting testrom...");
         bus.reset();
-        while (true) {
+        int i = 0;
+        while (i++ < 100) {
             bus.clock();
         }
     }

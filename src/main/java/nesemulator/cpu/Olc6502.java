@@ -21,12 +21,13 @@ public class Olc6502 {
     private int addrRel_16 = 0x00;
     private int opcode_8 = 0x00;
     private int remainingCycles = 0;
+    private int clockCount;
     private Operation[] operationLookup = new Operation[]{
             operation("BRK", new Brk(), new Imm(), 7), operation("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zp0(), 3), operation("ASL", new Asl(), new Zp0(), 5), unknown(), operation("PHP", new Php(), new Imp(), 3), operation("ORA", new Ora(), new Imm(), 2), operation("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), operation("ORA", new Ora(), new Abs(), 6), operation("ASL", new Asl(), new Abs(), 6), unknown(),
             operation("BPL", new Bpl(), new Rel(), 2), operation("ORA", new Ora(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zpx(), 4), operation("ASL", new Ora(), new Zpx(), 6), unknown(), operation("CLC", new Clc(), new Imp(), 2), operation("ORA", new Ora(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Abx(), 4), operation("ASL", new Asl(), new Abx(), 7), unknown(),
             operation("JSR", new Jsr(), new Abs(), 6), operation("AND", new And(), new Izx(), 6), unknown(), unknown(), operation("BIT", new Bit(), new Zp0(), 3), operation("AND", new And(), new Zp0(), 3), operation("ROL", new Rol(), new Zp0(), 5), unknown(), operation("PLP", new Plp(), new Imp(), 4), operation("AND", new And(), new Imm(), 2), operation("ROL", new Rol(), new Imp(), 2), unknown(), operation("BIT", new Bit(), new Abs(), 4), operation("AND", new And(), new Abs(), 4), operation("ROL", new Rol(), new Abs(), 6), unknown(),
             operation("BMI", new Bmi(), new Rel(), 2), operation("AND", new And(), new Izy(), 5), unknown(), unknown(), unknown(), operation("AND", new And(), new Zpx(), 4), operation("ROL", new Rol(), new Zpx(), 6), unknown(), operation("SEC", new Sec(), new Imp(), 2), operation("AND", new And(), new Aby(), 4), unknown(), unknown(), unknown(), operation("AND", new And(), new Abx(), 4), operation("ROL", new Rol(), new Abx(), 7), unknown(),
-            operation("RTI", new Rti(), new Imp(), 6), operation("EOR", new Eor(), new Izx(), 6), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zp0(), 3), operation("LSR", new Lsr(), new Zp0(), 5), unknown(), operation("PHA", new Pha(), new Imp(), 3), operation("EOR", new Eor(), new Imm(), 2), operation("LSR", new Lsr(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Abs(), 3), operation("EOR", new Eor(), new Abs(), 4), operation("LSR", new Lsr(), new Abs(), 6), unknown(),
+            operation("RTI", new Rti(), new Imp(), 6), operation("EOR", new Eor(), new Izx(), 6), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zp0(), 3), operation("LSR", new Lsr(), new Zp0(), 5), unknown(), operation("PHA", new Pha(), new Imp(), 3), operation("EOR", new Eor(), new Imm(), 2), operation("LSR", new Lsr(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Abs(), 3, 3), operation("EOR", new Eor(), new Abs(), 4), operation("LSR", new Lsr(), new Abs(), 6), unknown(),
             operation("BVC", new Bvc(), new Rel(), 2), operation("EOR", new Eor(), new Izy(), 5), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4), operation("LSR", new Lsr(), new Zpx(), 6), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4), operation("LSR", new Lsr(), new Abx(), 7), unknown(),
             operation("RTS", new Rts(), new Imp(), 6), operation("ADC", new Adc(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3), operation("ROR", new Ror(), new Zp0(), 5), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5), operation("ADC", new Adc(), new Abs(), 4), operation("ROR", new Ror(), new Abs(), 6), unknown(),
             operation("BVS", new Bvs(), new Rel(), 2), operation("ADC", new Adc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4), operation("ROR", new Ror(), new Zpx(), 6), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4), operation("ROR", new Ror(), new Abx(), 7), unknown(),
@@ -46,12 +47,14 @@ public class Olc6502 {
 
     public void clock() {
         if (remainingCycles == 0) {
-            int opcode = readByte(programCounter_16++);
-            Operation operation = operationLookup[opcode];
+            opcode_8 = readByte(programCounter_16);
+            Operation operation = operationLookup[opcode_8];
             if (operation.instruction instanceof InvalidInstruction) {
-                throw new RuntimeException("Invalid instruction, opcode: " + opcode);
+                throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
             }
-            System.out.println(operation.name);
+            setFlag(Flag.UNUSED);
+            int programCounterToLog = programCounter_16;
+            programCounter_16++;
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
             int additionalCycle1 = operation.addressingMode.set();
@@ -59,8 +62,32 @@ public class Olc6502 {
             int additionalCycle2 = operation.instruction.execute();
             // if both require an additional cycle, add it to the remaining cycles.
             remainingCycles += additionalCycle1 & additionalCycle2;
+            System.out.println(
+                    printAsHex(programCounterToLog) +
+                            " " + printAsHex(opcode_8) +
+                            printInstructionBytes(operation, programCounterToLog) +
+                            " " + operation.name +
+                            " A:" + printAsHex(accumulatorRegister_8) +
+                            " X:" + printAsHex(xRegister_8) +
+                            " Y:" + printAsHex(yRegister_8) +
+                            " P:" + printAsHex(status_8) +
+                            " SP:" + printAsHex(stackPointer_8)
+            );
         }
+        clockCount++;
         remainingCycles--;
+    }
+
+    private String printInstructionBytes(Operation operation, int programCounter_16) {
+        String result = "";
+        for (int i = 0; i < operation.nrOfBytes; i++) {
+            result += " " + printAsHex(readByte(programCounter_16 + i));
+        }
+        return result;
+    }
+
+    private String printAsHex(int value) {
+        return String.format("%x", value).toUpperCase();
     }
 
     public void reset() {
@@ -68,9 +95,11 @@ public class Olc6502 {
         xRegister_8 = 0x00;
         yRegister_8 = 0x00;
         stackPointer_8 = 0xFD; // FIXME: NesDev says common practice to start at 0xFF --> try out later
-        status_8 = getFlag(Flag.UNUSED);
+        status_8 = 0x00;
+        setFlag(Flag.UNUSED);
+        setFlag(Flag.DISABLE_INTERRUPTS);
 
-        programCounter_16 = read2Bytes(PROGRAM_COUNTER_ADDRESS);
+        programCounter_16 = 0xC000;//read2Bytes(PROGRAM_COUNTER_ADDRESS);
 
         addrRel_16 = 0x0000;
         addrAbs_16 = 0x0000;
@@ -145,7 +174,9 @@ public class Olc6502 {
     }
 
     private void setFlag(Flag flag) {
+        System.out.println(Integer.toBinaryString(status_8));
         status_8 |= flag.value_8;
+        System.out.println(Integer.toBinaryString(status_8));
     }
 
     private void clearFlag(Flag flag) {
@@ -1287,6 +1318,10 @@ public class Olc6502 {
     }
 
     private Operation operation(String name, Instruction instruction, AddressingMode addressingMode, int cycles) {
-        return new Operation(name, instruction, addressingMode, cycles);
+        return operation(name, instruction, addressingMode, cycles, -1);
+    }
+
+    private Operation operation(String name, Instruction instruction, AddressingMode addressingMode, int cycles, int nrOfBytes) {
+        return new Operation(name, instruction, addressingMode, cycles, nrOfBytes);
     }
 }
