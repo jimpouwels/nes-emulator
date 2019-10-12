@@ -65,7 +65,8 @@ public class Olc6502 {
             System.out.println(
                     printAsHex(programCounterToLog) +
                             " " + printAsHex(opcode_8) +
-                            printInstructionBytes(operation, programCounterToLog) +
+                            printInstructionOperandBytes(operation, programCounterToLog) +
+                            " " + printAsHex(addrAbs_16) +
                             " " + operation.name +
                             " A:" + printAsHex(accumulatorRegister_8) +
                             " X:" + printAsHex(xRegister_8) +
@@ -78,9 +79,9 @@ public class Olc6502 {
         remainingCycles--;
     }
 
-    private String printInstructionBytes(Operation operation, int programCounter_16) {
+    private String printInstructionOperandBytes(Operation operation, int programCounter_16) {
         String result = "";
-        for (int i = 0; i < operation.nrOfBytes; i++) {
+        for (int i = 1; i < operation.nrOfBytes; i++) {
             result += " " + printAsHex(readByte(programCounter_16 + i));
         }
         return result;
@@ -174,9 +175,7 @@ public class Olc6502 {
     }
 
     private void setFlag(Flag flag) {
-        System.out.println(Integer.toBinaryString(status_8));
         status_8 |= flag.value_8;
-        System.out.println(Integer.toBinaryString(status_8));
     }
 
     private void clearFlag(Flag flag) {
@@ -224,8 +223,8 @@ public class Olc6502 {
         public abstract int set();
 
         int read16BitAddressWithOffset(int offset) {
-            int high_8 = readByte(programCounter_16++);
             int low_8 = readByte(programCounter_16++);
+            int high_8 = readByte(programCounter_16++);
 
             addrAbs_16 = high_8 << 8 | low_8;
             addrAbs_16 += offset;
