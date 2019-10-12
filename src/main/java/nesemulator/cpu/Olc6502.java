@@ -1256,8 +1256,8 @@ public class Olc6502 {
 
     private int addAndUpdateOverflowFlag(int byteA, int byteB) {
         int sum = byteA + byteB + getFlag(Flag.CARRY);
-        if ((byteA & 0x80) > 0 && (byteB & 0x80) > 0 && (sum & 0x80) > 0 ||
-                (byteA & 0x80) == 0 && (byteB & 0x80) == 0 && (sum & 0x80) == 0) {
+        if ((byteA & 0x80) > 0 && (byteB & 0x80) > 0 && (sum & 0x80) == 0 ||
+                (byteA & 0x80) == 0 && (byteB & 0x80) == 0 && (sum & 0x80) > 0) {
             setFlag(Flag.OVERFLOW);
         } else {
             clearFlag(Flag.OVERFLOW);
