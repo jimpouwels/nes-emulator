@@ -638,9 +638,9 @@ public class Olc6502 {
     private class Pla extends Instruction {
         @Override
         public int execute() {
-            int value = pullByteFromStack();
-            updateZeroFlag(value);
-            updateNegativeFlag(value);
+            accumulatorRegister_8 = pullByteFromStack();
+            updateZeroFlag(accumulatorRegister_8);
+            updateNegativeFlag(accumulatorRegister_8);
             return 0;
         }
     }
