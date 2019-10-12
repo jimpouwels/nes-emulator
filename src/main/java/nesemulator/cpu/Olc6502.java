@@ -31,7 +31,7 @@ public class Olc6502 {
             operation("BVC", new Bvc(), new Rel(), 2), operation("EOR", new Eor(), new Izy(), 5), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4), operation("LSR", new Lsr(), new Zpx(), 6), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4), operation("LSR", new Lsr(), new Abx(), 7), unknown(),
             operation("RTS", new Rts(), new Imp(), 6), operation("ADC", new Adc(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3), operation("ROR", new Ror(), new Zp0(), 5), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5), operation("ADC", new Adc(), new Abs(), 4), operation("ROR", new Ror(), new Abs(), 6), unknown(),
             operation("BVS", new Bvs(), new Rel(), 2), operation("ADC", new Adc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4), operation("ROR", new Ror(), new Zpx(), 6), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4), operation("ROR", new Ror(), new Abx(), 7), unknown(),
-            unknown(), operation("STA", new Sta(), new Izx(), 6), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3), operation("STA", new Sta(), new Zp0(), 3), operation("STX", new Stx(), new Zp0(), 3), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4), operation("STA", new Sta(), new Abs(), 4), operation("STX", new Stx(), new Abs(), 4), unknown(),
+            unknown(), operation("STA", new Sta(), new Izx(), 6), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3), operation("STA", new Sta(), new Zp0(), 3), operation("STX", new Stx(), new Zp0(), 3, 2), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4), operation("STA", new Sta(), new Abs(), 4), operation("STX", new Stx(), new Abs(), 4), unknown(),
             operation("BCC", new Bcc(), new Rel(), 2), operation("STA", new Sta(), new Izy(), 6), unknown(), unknown(), operation("STY", new Sty(), new Zpx(), 4), operation("STA", new Sta(), new Zpx(), 4), operation("STX", new Stx(), new Zpy(), 4), unknown(), operation("TYA", new Tya(), new Imp(), 2), operation("STA", new Sta(), new Aby(), 5), operation("TXS", new Txs(), new Imp(), 2), unknown(), unknown(), operation("STA", new Sta(), new Abx(), 5), unknown(), unknown(),
             operation("LDY", new Ldy(), new Imm(), 2), operation("LDA", new Lda(), new Izx(), 6), operation("LDX", new Ldx(), new Imm(), 2, 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3), operation("LDA", new Lda(), new Zp0(), 3), operation("LDX", new Ldx(), new Zp0(), 3), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4), operation("LDA", new Lda(), new Abs(), 4), operation("LDX", new Ldx(), new Abs(), 4), unknown(),
             operation("BCS", new Bcs(), new Rel(), 2), operation("LDA", new Lda(), new Izy(), 5), unknown(), unknown(), operation("LDY", new Ldy(), new Zpx(), 4), operation("LDA", new Lda(), new Zpx(), 4), operation("LDX", new Ldx(), new Zpy(), 4), unknown(), operation("CLV", new Clv(), new Imp(), 2), operation("LDA", new Lda(), new Aby(), 4), operation("TSX", new Tsx(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abx(), 4), operation("LDA", new Lda(), new Abx(), 4), operation("LDX", new Ldx(), new Aby(), 4), unknown(),
@@ -40,6 +40,11 @@ public class Olc6502 {
             operation("CPX", new Cpx(), new Imm(), 2), operation("SBC", new Sbc(), new Izx(), 6), unknown(), unknown(), operation("CPX", new Cpx(), new Zp0(), 3), operation("SBC", new Sbc(), new Zp0(), 3), operation("INC", new Inc(), new Zp0(), 5), unknown(), operation("INX", new Inx(), new Imp(), 2), operation("SBC", new Sbc(), new Imm(), 2), operation("NOP", new Nop(), new Imp(), 2), unknown(), operation("CPX", new Cpx(), new Abs(), 4), operation("SBC", new Sbc(), new Abs(), 4), operation("INC", new Inc(), new Abs(), 6), unknown(),
             operation("BEQ", new Beq(), new Rel(), 2), operation("SBC", new Sbc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4), operation("INC", new Inc(), new Zpx(), 6), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4), operation("INC", new Inc(), new Abx(), 7), unknown()
     };
+    private EventPrinter eventPrinter;
+
+    public Olc6502(EventPrinter eventPrinter) {
+        this.eventPrinter = eventPrinter;
+    }
 
     public void connectToBus(Bus bus) {
         this.bus = bus;
@@ -62,35 +67,22 @@ public class Olc6502 {
             int additionalCycle2 = operation.instruction.execute();
             // if both require an additional cycle, add it to the remaining cycles.
             remainingCycles += additionalCycle1 & additionalCycle2;
-            System.out.println(
-                    printAsHex(programCounterToLog) +
-                            "  " + printAsHex(opcode_8) +
-                            printInstructionOperandBytes(operation, programCounterToLog) +
-//                            " " + printAsHex(addrAbs_16) +
-                            "  " + operation.name +
-                            " A:" + printAsHex(accumulatorRegister_8) +
-                            " X:" + printAsHex(xRegister_8) +
-                            " Y:" + printAsHex(yRegister_8) +
-                            " P:" + printAsHex(status_8) +
-                            " SP:" + printAsHex(stackPointer_8) +
-                            " CYC:" + clockCount +
-                            " (AddressingMode: " + operation.addressingMode.getClass().getSimpleName() + ")"
-            );
+            eventPrinter.onNewInstruction(operation, opcode_8, programCounterToLog, readInstructionOperands(programCounterToLog, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
+
         }
         clockCount++;
         remainingCycles--;
     }
 
-    private String printInstructionOperandBytes(Operation operation, int programCounter_16) {
-        String result = "";
-        for (int i = 1; i < 3; i++) {
-            result += i <= operation.nrOfBytes ? " " + printAsHex(readByte(programCounter_16 + i)) : "   ";
+    private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
+        if (nrOfBytes == -1) {
+            return new int[0];
         }
-        return result;
-    }
-
-    private String printAsHex(int value) {
-        return String.format("%02x", value).toUpperCase();
+        int[] bytes = new int[nrOfBytes - 1];
+        for (int i = 1; i < nrOfBytes; i++) {
+            bytes[i - 1] = readByte(startAddress_16 + i);
+        }
+        return bytes;
     }
 
     public void reset() {

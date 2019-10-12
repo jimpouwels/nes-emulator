@@ -13,7 +13,7 @@ public class Main {
         System.out.println("Starting Jim's NES Emulator!");
         System.out.println("-----------------------------");
         Cartridge cartridge = new Cartridge("./nestest.nes");
-        Olc6502 cpu = new Olc6502();
+        Olc6502 cpu = new Olc6502(new InstructionPrinter());
         Bus bus = new Bus(cpu, new Olc2c02());
         cpu.connectToBus(bus);
         bus.insertCartridge(cartridge);
