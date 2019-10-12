@@ -31,7 +31,7 @@ public class Olc6502 {
             operation("BVC", new Bvc(), new Rel(), 2, 2), operation("EOR", new Eor(), new Izy(), 5), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4, 2), operation("LSR", new Lsr(), new Zpx(), 6), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4, 3), operation("LSR", new Lsr(), new Abx(), 7), unknown(),
             operation("RTS", new Rts(), new Imp(), 6, 1), operation("ADC", new Adc(), new Izx(), 6, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3, 2), operation("ROR", new Ror(), new Zp0(), 5), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2, 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5), operation("ADC", new Adc(), new Abs(), 4), operation("ROR", new Ror(), new Abs(), 6), unknown(),
             operation("BVS", new Bvs(), new Rel(), 2, 2), operation("ADC", new Adc(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4, 2), operation("ROR", new Ror(), new Zpx(), 6), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4, 3), operation("ROR", new Ror(), new Abx(), 7), unknown(),
-            unknown(), operation("STA", new Sta(), new Izx(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3), operation("STA", new Sta(), new Zp0(), 3, 2), operation("STX", new Stx(), new Zp0(), 3, 2), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4), operation("STA", new Sta(), new Abs(), 4, 3), operation("STX", new Stx(), new Abs(), 4), unknown(),
+            unknown(), operation("STA", new Sta(), new Izx(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3), operation("STA", new Sta(), new Zp0(), 3, 2), operation("STX", new Stx(), new Zp0(), 3, 2), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4), operation("STA", new Sta(), new Abs(), 4, 3), operation("STX", new Stx(), new Abs(), 4, 3), unknown(),
             operation("BCC", new Bcc(), new Rel(), 2, 2), operation("STA", new Sta(), new Izy(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zpx(), 4), operation("STA", new Sta(), new Zpx(), 4, 2), operation("STX", new Stx(), new Zpy(), 4), unknown(), operation("TYA", new Tya(), new Imp(), 2), operation("STA", new Sta(), new Aby(), 5, 3), operation("TXS", new Txs(), new Imp(), 2), unknown(), unknown(), operation("STA", new Sta(), new Abx(), 5, 3), unknown(), unknown(),
             operation("LDY", new Ldy(), new Imm(), 2, 2), operation("LDA", new Lda(), new Izx(), 6, 2), operation("LDX", new Ldx(), new Imm(), 2, 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3), operation("LDA", new Lda(), new Zp0(), 3, 2), operation("LDX", new Ldx(), new Zp0(), 3, 2), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2, 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4), operation("LDA", new Lda(), new Abs(), 4, 3), operation("LDX", new Ldx(), new Abs(), 4, 3), unknown(),
             operation("BCS", new Bcs(), new Rel(), 2, 2), operation("LDA", new Lda(), new Izy(), 5, 2), unknown(), unknown(), operation("LDY", new Ldy(), new Zpx(), 4), operation("LDA", new Lda(), new Zpx(), 4, 2), operation("LDX", new Ldx(), new Zpy(), 4, 2), unknown(), operation("CLV", new Clv(), new Imp(), 2), operation("LDA", new Lda(), new Aby(), 4, 3), operation("TSX", new Tsx(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abx(), 4), operation("LDA", new Lda(), new Abx(), 4, 3), operation("LDX", new Ldx(), new Aby(), 4, 3), unknown(),
@@ -615,9 +615,10 @@ public class Olc6502 {
             fetch();
             int subtractionResult = subtractAndUpdateOverflowFlag(fetched_8);
             updateCarryBitToValueOfBit7(subtractionResult);
+            subtractionResult &= 0x00FF; // remove overflow bit
             updateZeroFlag(subtractionResult);
             updateNegativeFlag(subtractionResult);
-            accumulatorRegister_8 = subtractionResult & 0x00FF;
+            accumulatorRegister_8 = subtractionResult;
             return 1;
         }
     }
@@ -812,7 +813,11 @@ public class Olc6502 {
     private class Dex extends Instruction {
         @Override
         public int execute() {
-            xRegister_8--;
+            if (xRegister_8 == 0x00) {
+                xRegister_8 = 0xFF;
+            } else {
+                xRegister_8--;
+            }
             updateNegativeFlag(xRegister_8);
             updateZeroFlag(xRegister_8);
             return 0;
@@ -825,7 +830,11 @@ public class Olc6502 {
     private class Dey extends Instruction {
         @Override
         public int execute() {
-            yRegister_8--;
+            if (yRegister_8 == 0x00) {
+                yRegister_8 = 0xFF;
+            } else {
+                yRegister_8--;
+            }
             updateNegativeFlag(yRegister_8);
             updateZeroFlag(yRegister_8);
             return 0;
@@ -867,7 +876,11 @@ public class Olc6502 {
     private class Inx extends Instruction {
         @Override
         public int execute() {
-            xRegister_8++;
+            if (xRegister_8 == 0xFF) {
+                xRegister_8 = 0x00;
+            } else {
+                xRegister_8++;
+            }
             updateZeroFlag(xRegister_8);
             updateNegativeFlag(xRegister_8);
             return 0;
@@ -880,7 +893,11 @@ public class Olc6502 {
     private class Iny extends Instruction {
         @Override
         public int execute() {
-            xRegister_8++;
+            if (yRegister_8 == 0xFF) {
+                yRegister_8 = 0;
+            } else {
+                yRegister_8++;
+            }
             updateZeroFlag(yRegister_8);
             updateNegativeFlag(yRegister_8);
             return 0;
