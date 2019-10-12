@@ -1,0 +1,13 @@
+apply plugin: "java"
+
+group = "com.pouwels.nesemulator"
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repository.cloudera.com/artifactory/cloudera-repos/"
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
