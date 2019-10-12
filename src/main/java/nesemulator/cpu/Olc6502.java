@@ -25,18 +25,18 @@ public class Olc6502 {
     private Operation[] operationLookup = new Operation[]{
             operation("BRK", new Brk(), new Imm(), 7, 1), operation("ORA", new Ora(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zp0(), 3), operation("ASL", new Asl(), new Zp0(), 5), unknown(), operation("PHP", new Php(), new Imp(), 3), operation("ORA", new Ora(), new Imm(), 2), operation("ASL", new Asl(), new Imp(), 2), unknown(), unknown(), operation("ORA", new Ora(), new Abs(), 6), operation("ASL", new Asl(), new Abs(), 6), unknown(),
             operation("BPL", new Bpl(), new Rel(), 2, 2), operation("ORA", new Ora(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Zpx(), 4), operation("ASL", new Ora(), new Zpx(), 6), unknown(), operation("CLC", new Clc(), new Imp(), 2), operation("ORA", new Ora(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ORA", new Ora(), new Abx(), 4), operation("ASL", new Asl(), new Abx(), 7), unknown(),
-            operation("JSR", new Jsr(), new Abs(), 6, 3), operation("AND", new And(), new Izx(), 6), unknown(), unknown(), operation("BIT", new Bit(), new Zp0(), 3, 2), operation("AND", new And(), new Zp0(), 3), operation("ROL", new Rol(), new Zp0(), 5), unknown(), operation("PLP", new Plp(), new Imp(), 4), operation("AND", new And(), new Imm(), 2), operation("ROL", new Rol(), new Imp(), 2), unknown(), operation("BIT", new Bit(), new Abs(), 4, 3), operation("AND", new And(), new Abs(), 4), operation("ROL", new Rol(), new Abs(), 6), unknown(),
-            operation("BMI", new Bmi(), new Rel(), 2), operation("AND", new And(), new Izy(), 5), unknown(), unknown(), unknown(), operation("AND", new And(), new Zpx(), 4), operation("ROL", new Rol(), new Zpx(), 6), unknown(), operation("SEC", new Sec(), new Imp(), 2), operation("AND", new And(), new Aby(), 4), unknown(), unknown(), unknown(), operation("AND", new And(), new Abx(), 4), operation("ROL", new Rol(), new Abx(), 7), unknown(),
+            operation("JSR", new Jsr(), new Abs(), 6, 3), operation("AND", new And(), new Izx(), 6, 2), unknown(), unknown(), operation("BIT", new Bit(), new Zp0(), 3, 2), operation("AND", new And(), new Zp0(), 3), operation("ROL", new Rol(), new Zp0(), 5), unknown(), operation("PLP", new Plp(), new Imp(), 4), operation("AND", new And(), new Imm(), 2, 2), operation("ROL", new Rol(), new Imp(), 2), unknown(), operation("BIT", new Bit(), new Abs(), 4, 3), operation("AND", new And(), new Abs(), 4), operation("ROL", new Rol(), new Abs(), 6), unknown(),
+            operation("BMI", new Bmi(), new Rel(), 2), operation("AND", new And(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("AND", new And(), new Zpx(), 4, 2), operation("ROL", new Rol(), new Zpx(), 6), unknown(), operation("SEC", new Sec(), new Imp(), 2), operation("AND", new And(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("AND", new And(), new Abx(), 4, 3), operation("ROL", new Rol(), new Abx(), 7), unknown(),
             operation("RTI", new Rti(), new Imp(), 6), operation("EOR", new Eor(), new Izx(), 6), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zp0(), 3), operation("LSR", new Lsr(), new Zp0(), 5), unknown(), operation("PHA", new Pha(), new Imp(), 3), operation("EOR", new Eor(), new Imm(), 2), operation("LSR", new Lsr(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Abs(), 3, 3), operation("EOR", new Eor(), new Abs(), 4), operation("LSR", new Lsr(), new Abs(), 6), unknown(),
             operation("BVC", new Bvc(), new Rel(), 2, 2), operation("EOR", new Eor(), new Izy(), 5), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4), operation("LSR", new Lsr(), new Zpx(), 6), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4), operation("LSR", new Lsr(), new Abx(), 7), unknown(),
-            operation("RTS", new Rts(), new Imp(), 6), operation("ADC", new Adc(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3), operation("ROR", new Ror(), new Zp0(), 5), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5), operation("ADC", new Adc(), new Abs(), 4), operation("ROR", new Ror(), new Abs(), 6), unknown(),
+            operation("RTS", new Rts(), new Imp(), 6, 1), operation("ADC", new Adc(), new Izx(), 6), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3), operation("ROR", new Ror(), new Zp0(), 5), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5), operation("ADC", new Adc(), new Abs(), 4), operation("ROR", new Ror(), new Abs(), 6), unknown(),
             operation("BVS", new Bvs(), new Rel(), 2, 2), operation("ADC", new Adc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4), operation("ROR", new Ror(), new Zpx(), 6), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4), operation("ROR", new Ror(), new Abx(), 7), unknown(),
             unknown(), operation("STA", new Sta(), new Izx(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3), operation("STA", new Sta(), new Zp0(), 3, 2), operation("STX", new Stx(), new Zp0(), 3, 2), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4), operation("STA", new Sta(), new Abs(), 4, 3), operation("STX", new Stx(), new Abs(), 4), unknown(),
             operation("BCC", new Bcc(), new Rel(), 2, 2), operation("STA", new Sta(), new Izy(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zpx(), 4), operation("STA", new Sta(), new Zpx(), 4, 2), operation("STX", new Stx(), new Zpy(), 4), unknown(), operation("TYA", new Tya(), new Imp(), 2), operation("STA", new Sta(), new Aby(), 5, 3), operation("TXS", new Txs(), new Imp(), 2), unknown(), unknown(), operation("STA", new Sta(), new Abx(), 5, 3), unknown(), unknown(),
-            operation("LDY", new Ldy(), new Imm(), 2), operation("LDA", new Lda(), new Izx(), 6, 2), operation("LDX", new Ldx(), new Imm(), 2, 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3), operation("LDA", new Lda(), new Zp0(), 3, 2), operation("LDX", new Ldx(), new Zp0(), 3), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2, 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4), operation("LDA", new Lda(), new Abs(), 4, 3), operation("LDX", new Ldx(), new Abs(), 4), unknown(),
-            operation("BCS", new Bcs(), new Rel(), 2, 2), operation("LDA", new Lda(), new Izy(), 5, 2), unknown(), unknown(), operation("LDY", new Ldy(), new Zpx(), 4), operation("LDA", new Lda(), new Zpx(), 4, 2), operation("LDX", new Ldx(), new Zpy(), 4), unknown(), operation("CLV", new Clv(), new Imp(), 2), operation("LDA", new Lda(), new Aby(), 4, 3), operation("TSX", new Tsx(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abx(), 4), operation("LDA", new Lda(), new Abx(), 4, 3), operation("LDX", new Ldx(), new Aby(), 4), unknown(),
-            operation("CPY", new Cpy(), new Imm(), 2), operation("CMP", new Cmp(), new Izx(), 6), unknown(), unknown(), operation("CPY", new Cpy(), new Zp0(), 3), operation("CMP", new Cmp(), new Zp0(), 3), operation("DEC", new Dec(), new Zp0(), 5), unknown(), operation("INY", new Iny(), new Imp(), 2), operation("CMP", new Cmp(), new Imm(), 2), operation("DEX", new Dex(), new Imp(), 2), unknown(), operation("CPY", new Cpy(), new Abs(), 4), operation("CMP", new Cmp(), new Abs(), 4), operation("DEC", new Dec(), new Abs(), 6), unknown(),
-            operation("BNE", new Bne(), new Rel(), 2, 2), operation("CMP", new Cmp(), new Izy(), 5), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Zpx(), 4), operation("DEC", new Dec(), new Zpx(), 6), unknown(), operation("CLD", new Cld(), new Imp(), 2), operation("CMP", new Cmp(), new Aby(), 4), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Abx(), 4), operation("DEC", new Dec(), new Abx(), 7), unknown(),
+            operation("LDY", new Ldy(), new Imm(), 2), operation("LDA", new Lda(), new Izx(), 6, 2), operation("LDX", new Ldx(), new Imm(), 2, 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3), operation("LDA", new Lda(), new Zp0(), 3, 2), operation("LDX", new Ldx(), new Zp0(), 3, 2), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2, 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4), operation("LDA", new Lda(), new Abs(), 4, 3), operation("LDX", new Ldx(), new Abs(), 4, 3), unknown(),
+            operation("BCS", new Bcs(), new Rel(), 2, 2), operation("LDA", new Lda(), new Izy(), 5, 2), unknown(), unknown(), operation("LDY", new Ldy(), new Zpx(), 4), operation("LDA", new Lda(), new Zpx(), 4, 2), operation("LDX", new Ldx(), new Zpy(), 4, 2), unknown(), operation("CLV", new Clv(), new Imp(), 2), operation("LDA", new Lda(), new Aby(), 4, 3), operation("TSX", new Tsx(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abx(), 4), operation("LDA", new Lda(), new Abx(), 4, 3), operation("LDX", new Ldx(), new Aby(), 4, 3), unknown(),
+            operation("CPY", new Cpy(), new Imm(), 2), operation("CMP", new Cmp(), new Izx(), 6, 2), unknown(), unknown(), operation("CPY", new Cpy(), new Zp0(), 3), operation("CMP", new Cmp(), new Zp0(), 3, 2), operation("DEC", new Dec(), new Zp0(), 5), unknown(), operation("INY", new Iny(), new Imp(), 2), operation("CMP", new Cmp(), new Imm(), 2, 2), operation("DEX", new Dex(), new Imp(), 2), unknown(), operation("CPY", new Cpy(), new Abs(), 4), operation("CMP", new Cmp(), new Abs(), 4), operation("DEC", new Dec(), new Abs(), 6), unknown(),
+            operation("BNE", new Bne(), new Rel(), 2, 2), operation("CMP", new Cmp(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Zpx(), 4, 2), operation("DEC", new Dec(), new Zpx(), 6), unknown(), operation("CLD", new Cld(), new Imp(), 2), operation("CMP", new Cmp(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Abx(), 4, 3), operation("DEC", new Dec(), new Abx(), 7), unknown(),
             operation("CPX", new Cpx(), new Imm(), 2), operation("SBC", new Sbc(), new Izx(), 6), unknown(), unknown(), operation("CPX", new Cpx(), new Zp0(), 3), operation("SBC", new Sbc(), new Zp0(), 3), operation("INC", new Inc(), new Zp0(), 5), unknown(), operation("INX", new Inx(), new Imp(), 2), operation("SBC", new Sbc(), new Imm(), 2), operation("NOP", new Nop(), new Imp(), 2), unknown(), operation("CPX", new Cpx(), new Abs(), 4), operation("SBC", new Sbc(), new Abs(), 4), operation("INC", new Inc(), new Abs(), 6), unknown(),
             operation("BEQ", new Beq(), new Rel(), 2, 2), operation("SBC", new Sbc(), new Izy(), 5), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4), operation("INC", new Inc(), new Zpx(), 6), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4), operation("INC", new Inc(), new Abx(), 7), unknown()
     };
@@ -58,7 +58,7 @@ public class Olc6502 {
                 throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
             }
             setFlag(Flag.UNUSED);
-            int programCounterToLog = programCounter_16;
+            eventPrinter.onNewInstruction(operation, opcode_8, programCounter_16, readInstructionOperands(programCounter_16, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
             programCounter_16++;
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
@@ -67,8 +67,6 @@ public class Olc6502 {
             int additionalCycle2 = operation.instruction.execute();
             // if both require an additional cycle, add it to the remaining cycles.
             remainingCycles += additionalCycle1 & additionalCycle2;
-            eventPrinter.onNewInstruction(operation, opcode_8, programCounterToLog, readInstructionOperands(programCounterToLog, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
-
         }
         clockCount++;
         remainingCycles--;
@@ -192,10 +190,10 @@ public class Olc6502 {
 
     private int pull2BytesFromStack() {
         stackPointer_8++;
-        int value = readByte(STACK_ADDRESS + stackPointer_8);
+        int lowByte = readByte(STACK_ADDRESS + stackPointer_8);
         stackPointer_8++;
-        value |= read2Bytes(STACK_ADDRESS + stackPointer_8) << 8;
-        return value;
+        int highByte = read2Bytes(STACK_ADDRESS + stackPointer_8);
+        return lowByte | highByte << 8;
     }
 
     private int fetch() {
@@ -206,11 +204,7 @@ public class Olc6502 {
         return fetched_8; // FIXME: Do we need this as a field? Can't we just have a local variable? Try out later.
     }
 
-    public Operation[] getInstructions() {
-        return this.operationLookup;
-    }
-
-//================================  ADDRESSING MODES ====================================
+    //================================  ADDRESSING MODES ====================================
 
     public abstract class AddressingMode {
 
@@ -401,9 +395,8 @@ public class Olc6502 {
     private class Rel extends AddressingMode {
         @Override
         public int set() {
-            int operand_8 = readByte(programCounter_16++);
-            addrRel_16 = operand_8;
-            if ((operand_8 & 0x80) > 0) {
+            addrRel_16 = readByte(programCounter_16++);
+            if ((addrRel_16 & 0x80) > 0) {
                 addrRel_16 |= 0xFF00;
             }
             return 0;
@@ -1084,11 +1077,8 @@ public class Olc6502 {
     private class Rts extends Instruction {
         @Override
         public int execute() {
-            status_8 = pullByteFromStack();
-            clearFlag(Flag.BREAK);
-            clearFlag(Flag.UNUSED);
-
             programCounter_16 = pull2BytesFromStack();
+            programCounter_16++;
             return 0;
         }
     }

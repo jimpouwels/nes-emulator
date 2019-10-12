@@ -57,6 +57,7 @@ public class NesTest {
                     fail("Expected more lines");
                 }
                 assertEquals("Error at instruction " + (j + 1) + ": ", expectedLines.get(j).substring(0, 19), line.substring(0, 19));
+                assertEquals("Error at instruction " + (j + 1) + ": ", expectedLines.get(j).substring(48, 73), line.substring(20, 45));
             }
         }
     }
