@@ -598,9 +598,10 @@ public class Olc6502 {
             fetch();
             int additionResult = addAndUpdateOverflowFlag(accumulatorRegister_8, fetched_8);
             updateCarryBitToValueOfBit7(additionResult);
+            additionResult &= 0xFF; // remove overflown bit
             updateZeroFlag(additionResult);
             updateNegativeFlag(additionResult);
-            accumulatorRegister_8 = additionResult & 0xFF;
+            accumulatorRegister_8 = additionResult;
             return 1;
         }
     }
