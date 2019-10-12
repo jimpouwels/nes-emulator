@@ -157,9 +157,9 @@ public class Olc6502 {
 
     private int read2Bytes(int address_16) {
         addrAbs_16 = address_16; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        int lo = readByte(addrAbs_16);
-        int hi = readByte(addrAbs_16 + 1);
-        return (hi << 8) | lo;
+        int lowByte = readByte(addrAbs_16);
+        int highByte = readByte(addrAbs_16 + 1);
+        return (highByte << 8) | lowByte;
     }
 
     private int getFlag(Flag flag) {
@@ -701,6 +701,7 @@ public class Olc6502 {
         @Override
         public int execute() {
             programCounter_16++;
+            setFlag(Flag.DISABLE_INTERRUPTS);
             write2BytesToStack(programCounter_16);
             setFlag(Flag.BREAK);
             writeByteToStack(status_8);
@@ -994,7 +995,9 @@ public class Olc6502 {
     private class Php extends Instruction {
         @Override
         public int execute() {
-            writeByteToStack(status_8 | Flag.BREAK.value_8 | Flag.UNUSED.value_8);
+            setFlag(Flag.BREAK);
+            setFlag(Flag.UNUSED);
+            writeByteToStack(status_8);
             clearFlag(Flag.BREAK); // FIXME: NEEDED?
             clearFlag(Flag.UNUSED); // FIXME: NEEDED?
             return 0;
@@ -1007,7 +1010,7 @@ public class Olc6502 {
     private class Plp extends Instruction {
         @Override
         public int execute() {
-            status_8 = pullByteFromStack();
+            status_8 = pullByteFromStack() & 0xEF; // keep BREAK flag untouched
             setFlag(Flag.UNUSED);
             return 0;
         }
