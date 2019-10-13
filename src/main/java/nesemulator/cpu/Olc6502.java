@@ -373,11 +373,11 @@ public class Olc6502 {
         public int set() {
             int pointer_8 = readByte(programCounter_16++);
 
-            int low_8 = readByte((pointer_8 + yRegister_8) & 0x00FF);
-            int high_8 = readByte((pointer_8 + yRegister_8 + 1) & 0x00FF);
+            int low_8 = readByte(pointer_8 & 0x00FF);
+            int high_8 = readByte((pointer_8 + 1) & 0x00FF);
 
             addrAbs_16 = (high_8 << 8) | low_8;
-            addrAbs_16 += xRegister_8;
+            addrAbs_16 += yRegister_8;
 
             if ((addrAbs_16 & 0xFF00) != (high_8 << 8)) {
                 return 1;
