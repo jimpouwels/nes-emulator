@@ -29,16 +29,16 @@ public class Olc6502 {
             operation("BMI", new Bmi(), new Rel(), 2, 2), operation("AND", new And(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("AND", new And(), new Zpx(), 4, 2), operation("ROL", new Rol(), new Zpx(), 6, 2), unknown(), operation("SEC", new Sec(), new Imp(), 2, 1), operation("AND", new And(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("AND", new And(), new Abx(), 4, 3), operation("ROL", new Rol(), new Abx(), 7, 3), unknown(),
             operation("RTI", new Rti(), new Imp(), 6), operation("EOR", new Eor(), new Izx(), 6, 2), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zp0(), 3, 2), operation("LSR", new Lsr(), new Zp0(), 5, 2), unknown(), operation("PHA", new Pha(), new Imp(), 3), operation("EOR", new Eor(), new Imm(), 2, 2), operation("LSR", new Lsr(), new Imp(), 2, 1), unknown(), operation("JMP", new Jmp(), new Abs(), 3, 3), operation("EOR", new Eor(), new Abs(), 4, 3), operation("LSR", new Lsr(), new Abs(), 6, 3), unknown(),
             operation("BVC", new Bvc(), new Rel(), 2, 2), operation("EOR", new Eor(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4, 2), operation("LSR", new Lsr(), new Zpx(), 6, 2), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4, 3), operation("LSR", new Lsr(), new Abx(), 7, 3), unknown(),
-            operation("RTS", new Rts(), new Imp(), 6, 1), operation("ADC", new Adc(), new Izx(), 6, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3, 2), operation("ROR", new Ror(), new Zp0(), 5, 2), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2, 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5, 3), operation("ADC", new Adc(), new Abs(), 4, 3), operation("ROR", new Ror(), new Abs(), 6, 3), unknown(),
-            operation("BVS", new Bvs(), new Rel(), 2, 2), operation("ADC", new Adc(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4, 2), operation("ROR", new Ror(), new Zpx(), 6, 2), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4, 3), operation("ROR", new Ror(), new Abx(), 7), unknown(),
+            operation("RTS", new Rts(), new Imp(), 6, 1), operation("ADC", new Adc(), new Izx(), 6, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3, 2), operation("ROR", new Ror(), new Zp0(), 5, 2), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2, 2), operation("ROR", new Ror(), new Imp(), 2, 1), unknown(), operation("JMP", new Jmp(), new Ind(), 5, 3), operation("ADC", new Adc(), new Abs(), 4, 3), operation("ROR", new Ror(), new Abs(), 6, 3), unknown(),
+            operation("BVS", new Bvs(), new Rel(), 2, 2), operation("ADC", new Adc(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4, 2), operation("ROR", new Ror(), new Zpx(), 6, 2), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4, 3), operation("ROR", new Ror(), new Abx(), 7, 3), unknown(),
             unknown(), operation("STA", new Sta(), new Izx(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3, 2), operation("STA", new Sta(), new Zp0(), 3, 2), operation("STX", new Stx(), new Zp0(), 3, 2), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4, 3), operation("STA", new Sta(), new Abs(), 4, 3), operation("STX", new Stx(), new Abs(), 4, 3), unknown(),
-            operation("BCC", new Bcc(), new Rel(), 2, 2), operation("STA", new Sta(), new Izy(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zpx(), 4, 2), operation("STA", new Sta(), new Zpx(), 4, 2), operation("STX", new Stx(), new Zpy(), 4), unknown(), operation("TYA", new Tya(), new Imp(), 2), operation("STA", new Sta(), new Aby(), 5, 3), operation("TXS", new Txs(), new Imp(), 2), unknown(), unknown(), operation("STA", new Sta(), new Abx(), 5, 3), unknown(), unknown(),
+            operation("BCC", new Bcc(), new Rel(), 2, 2), operation("STA", new Sta(), new Izy(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zpx(), 4, 2), operation("STA", new Sta(), new Zpx(), 4, 2), operation("STX", new Stx(), new Zpy(), 4, 2), unknown(), operation("TYA", new Tya(), new Imp(), 2), operation("STA", new Sta(), new Aby(), 5, 3), operation("TXS", new Txs(), new Imp(), 2), unknown(), unknown(), operation("STA", new Sta(), new Abx(), 5, 3), unknown(), unknown(),
             operation("LDY", new Ldy(), new Imm(), 2, 2), operation("LDA", new Lda(), new Izx(), 6, 2), operation("LDX", new Ldx(), new Imm(), 2, 2), unknown(), operation("LDY", new Ldy(), new Zp0(), 3, 2), operation("LDA", new Lda(), new Zp0(), 3, 2), operation("LDX", new Ldx(), new Zp0(), 3, 2), unknown(), operation("TAY", new Tay(), new Imp(), 2), operation("LDA", new Lda(), new Imm(), 2, 2), operation("TAX", new Tax(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abs(), 4, 3), operation("LDA", new Lda(), new Abs(), 4, 3), operation("LDX", new Ldx(), new Abs(), 4, 3), unknown(),
             operation("BCS", new Bcs(), new Rel(), 2, 2), operation("LDA", new Lda(), new Izy(), 5, 2), unknown(), unknown(), operation("LDY", new Ldy(), new Zpx(), 4, 2), operation("LDA", new Lda(), new Zpx(), 4, 2), operation("LDX", new Ldx(), new Zpy(), 4, 2), unknown(), operation("CLV", new Clv(), new Imp(), 2), operation("LDA", new Lda(), new Aby(), 4, 3), operation("TSX", new Tsx(), new Imp(), 2), unknown(), operation("LDY", new Ldy(), new Abx(), 4, 3), operation("LDA", new Lda(), new Abx(), 4, 3), operation("LDX", new Ldx(), new Aby(), 4, 3), unknown(),
             operation("CPY", new Cpy(), new Imm(), 2, 2), operation("CMP", new Cmp(), new Izx(), 6, 2), unknown(), unknown(), operation("CPY", new Cpy(), new Zp0(), 3, 2), operation("CMP", new Cmp(), new Zp0(), 3, 2), operation("DEC", new Dec(), new Zp0(), 5, 2), unknown(), operation("INY", new Iny(), new Imp(), 2), operation("CMP", new Cmp(), new Imm(), 2, 2), operation("DEX", new Dex(), new Imp(), 2), unknown(), operation("CPY", new Cpy(), new Abs(), 4, 3), operation("CMP", new Cmp(), new Abs(), 4, 3), operation("DEC", new Dec(), new Abs(), 6, 3), unknown(),
             operation("BNE", new Bne(), new Rel(), 2, 2), operation("CMP", new Cmp(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Zpx(), 4, 2), operation("DEC", new Dec(), new Zpx(), 6, 2), unknown(), operation("CLD", new Cld(), new Imp(), 2), operation("CMP", new Cmp(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("CMP", new Cmp(), new Abx(), 4, 3), operation("DEC", new Dec(), new Abx(), 7, 3), unknown(),
             operation("CPX", new Cpx(), new Imm(), 2, 2), operation("SBC", new Sbc(), new Izx(), 6, 2), unknown(), unknown(), operation("CPX", new Cpx(), new Zp0(), 3, 2), operation("SBC", new Sbc(), new Zp0(), 3, 2), operation("INC", new Inc(), new Zp0(), 5, 2), unknown(), operation("INX", new Inx(), new Imp(), 2), operation("SBC", new Sbc(), new Imm(), 2, 2), operation("NOP", new Nop(), new Imp(), 2), unknown(), operation("CPX", new Cpx(), new Abs(), 4, 3), operation("SBC", new Sbc(), new Abs(), 4, 3), operation("INC", new Inc(), new Abs(), 6, 3), unknown(),
-            operation("BEQ", new Beq(), new Rel(), 2, 2), operation("SBC", new Sbc(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4, 2), operation("INC", new Inc(), new Zpx(), 6, 2), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4, 3), operation("INC", new Inc(), new Abx(), 7), unknown()
+            operation("BEQ", new Beq(), new Rel(), 2, 2), operation("SBC", new Sbc(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Zpx(), 4, 2), operation("INC", new Inc(), new Zpx(), 6, 2), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("SBC", new Sbc(), new Abx(), 4, 3), operation("INC", new Inc(), new Abx(), 7, 3), unknown()
     };
     private EventPrinter eventPrinter;
 
@@ -996,6 +996,15 @@ public class Olc6502 {
     private class Nop extends Instruction {
         @Override
         public int execute() {
+            switch (opcode_8) {
+                case 0x1C:
+                case 0x3C:
+                case 0x5C:
+                case 0x7C:
+                case 0xDC:
+                case 0xFC:
+                    return 1;
+            }
             return 0;
         }
     }
@@ -1258,7 +1267,7 @@ public class Olc6502 {
     private class InvalidInstruction extends Instruction {
         @Override
         public int execute() {
-            return 0;
+            return -1;
         }
 
         @Override
@@ -1325,7 +1334,7 @@ public class Olc6502 {
     }
 
     private Operation unknown() {
-        return operation("???", new InvalidInstruction(), new Imp(), 8);
+        return operation("???", new InvalidInstruction(), new Imp(), 8, 1);
     }
 
     private Operation operation(String name, Instruction instruction, AddressingMode addressingMode, int cycles) {

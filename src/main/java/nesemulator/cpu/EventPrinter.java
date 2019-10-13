@@ -7,7 +7,7 @@ public abstract class EventPrinter {
                 "  " + printAsHex(opcode, 2) +
                 printInstructionOperandBytes(operands) +
 //                            " " + printAsHex(addrAbs_16) +
-                "  " + operation.name +
+                String.format("%1$5s", operation.name) +
                 " A:" + printAsHex(accumulatorRegister, 2) +
                 " X:" + printAsHex(xRegister, 2) +
                 " Y:" + printAsHex(yRegister, 2) +
