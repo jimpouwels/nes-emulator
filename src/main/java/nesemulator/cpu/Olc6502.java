@@ -28,7 +28,7 @@ public class Olc6502 {
             operation("JSR", new Jsr(), new Abs(), 6, 3), operation("AND", new And(), new Izx(), 6, 2), unknown(), unknown(), operation("BIT", new Bit(), new Zp0(), 3, 2), operation("AND", new And(), new Zp0(), 3, 2), operation("ROL", new Rol(), new Zp0(), 5, 2), unknown(), operation("PLP", new Plp(), new Imp(), 4), operation("AND", new And(), new Imm(), 2, 2), operation("ROL", new Rol(), new Imp(), 2, 1), unknown(), operation("BIT", new Bit(), new Abs(), 4, 3), operation("AND", new And(), new Abs(), 4, 3), operation("ROL", new Rol(), new Abs(), 6, 3), unknown(),
             operation("BMI", new Bmi(), new Rel(), 2, 2), operation("AND", new And(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("AND", new And(), new Zpx(), 4, 2), operation("ROL", new Rol(), new Zpx(), 6, 2), unknown(), operation("SEC", new Sec(), new Imp(), 2, 1), operation("AND", new And(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("AND", new And(), new Abx(), 4, 3), operation("ROL", new Rol(), new Abx(), 7, 3), unknown(),
             operation("RTI", new Rti(), new Imp(), 6), operation("EOR", new Eor(), new Izx(), 6, 2), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zp0(), 3, 2), operation("LSR", new Lsr(), new Zp0(), 5, 2), unknown(), operation("PHA", new Pha(), new Imp(), 3), operation("EOR", new Eor(), new Imm(), 2, 2), operation("LSR", new Lsr(), new Imp(), 2, 1), unknown(), operation("JMP", new Jmp(), new Abs(), 3, 3), operation("EOR", new Eor(), new Abs(), 4, 3), operation("LSR", new Lsr(), new Abs(), 6, 3), unknown(),
-            operation("BVC", new Bvc(), new Rel(), 2, 2), operation("EOR", new Eor(), new Izy(), 5), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4, 2), operation("LSR", new Lsr(), new Zpx(), 6, 2), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4, 3), operation("LSR", new Lsr(), new Abx(), 7, 3), unknown(),
+            operation("BVC", new Bvc(), new Rel(), 2, 2), operation("EOR", new Eor(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Zpx(), 4, 2), operation("LSR", new Lsr(), new Zpx(), 6, 2), unknown(), operation("CLI", new Cli(), new Imp(), 2), operation("EOR", new Eor(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("EOR", new Eor(), new Abx(), 4, 3), operation("LSR", new Lsr(), new Abx(), 7, 3), unknown(),
             operation("RTS", new Rts(), new Imp(), 6, 1), operation("ADC", new Adc(), new Izx(), 6, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zp0(), 3, 2), operation("ROR", new Ror(), new Zp0(), 5, 2), unknown(), operation("PLA", new Pla(), new Imp(), 4), operation("ADC", new Adc(), new Imm(), 2, 2), operation("ROR", new Ror(), new Imp(), 2), unknown(), operation("JMP", new Jmp(), new Ind(), 5), operation("ADC", new Adc(), new Abs(), 4, 3), operation("ROR", new Ror(), new Abs(), 6, 3), unknown(),
             operation("BVS", new Bvs(), new Rel(), 2, 2), operation("ADC", new Adc(), new Izy(), 5, 2), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Zpx(), 4, 2), operation("ROR", new Ror(), new Zpx(), 6, 2), unknown(), operation("SEI", new Sei(), new Imp(), 2), operation("ADC", new Adc(), new Aby(), 4, 3), unknown(), unknown(), unknown(), operation("ADC", new Adc(), new Abx(), 4, 3), operation("ROR", new Ror(), new Abx(), 7), unknown(),
             unknown(), operation("STA", new Sta(), new Izx(), 6, 2), unknown(), unknown(), operation("STY", new Sty(), new Zp0(), 3, 2), operation("STA", new Sta(), new Zp0(), 3, 2), operation("STX", new Stx(), new Zp0(), 3, 2), unknown(), operation("DEY", new Dey(), new Imp(), 2), unknown(), operation("TXA", new Txa(), new Imp(), 2), unknown(), operation("STY", new Sty(), new Abs(), 4, 3), operation("STA", new Sta(), new Abs(), 4, 3), operation("STX", new Stx(), new Abs(), 4, 3), unknown(),
@@ -68,8 +68,10 @@ public class Olc6502 {
             // if both require an additional cycle, add it to the remaining cycles.
             remainingCycles += additionalCycle1 & additionalCycle2;
         }
-        clockCount++;
-        remainingCycles--;
+        while (remainingCycles != 0) {
+            clockCount++;
+            remainingCycles--;
+        }
     }
 
     private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
@@ -332,8 +334,8 @@ public class Olc6502 {
     private class Ind extends AddressingMode {
         @Override
         public int set() {
-            int pointerHigh_8 = readByte(programCounter_16++);
             int pointerLow_8 = readByte(programCounter_16++);
+            int pointerHigh_8 = readByte(programCounter_16++);
 
             int pointer_16 = pointerHigh_8 << 8 | pointerLow_8;
             if (isHardwareBug(pointerLow_8)) {
@@ -373,11 +375,11 @@ public class Olc6502 {
         public int set() {
             int pointer_8 = readByte(programCounter_16++);
 
-            int low_8 = readByte(pointer_8 & 0x00FF);
-            int high_8 = readByte((pointer_8 + 1) & 0x00FF);
+            int low_8 = readByte(pointer_8);
+            int high_8 = readByte((pointer_8 + 1) & 0xFF);
 
             addrAbs_16 = (high_8 << 8) | low_8;
-            addrAbs_16 += yRegister_8;
+            addrAbs_16 = (addrAbs_16 + yRegister_8) & 0xFFFF;
 
             if ((addrAbs_16 & 0xFF00) != (high_8 << 8)) {
                 return 1;
