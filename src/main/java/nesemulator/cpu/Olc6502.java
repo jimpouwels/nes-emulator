@@ -656,6 +656,7 @@ public class Olc6502 {
             fetch();
             int value = fetched_8 << 1;
             updateCarryBitToValueOfBit7(value);
+            value &= 0xFF; // remove carry flag FIXME: improve code?
             updateZeroFlag(value);
             updateNegativeFlag(value);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) { // FIXME: Can't we just pass the addressingMode on this method as a param? Try out later.
@@ -1028,7 +1029,7 @@ public class Olc6502 {
     private class Plp extends Instruction {
         @Override
         public int execute() {
-            status_8 = pullByteFromStack() & 0xEF; // keep BREAK flag untouched
+            status_8 = pullByteFromStack() & 0xEF; // FIXME!! THIS IS A HACK THAT NEEDS TO BE FIXED!
             setFlag(Flag.UNUSED);
             return 0;
         }
@@ -1066,7 +1067,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int temp = (getFlag(Flag.CARRY) << 7) | (fetched_8 >> 1);
-            updateCarryBitToValueOfBit1(temp);
+            updateCarryBitToValueOfBit0(fetched_8);
             updateZeroFlag(temp);
             updateNegativeFlag(temp);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) {
@@ -1310,7 +1311,7 @@ public class Olc6502 {
         }
     }
 
-    private void updateCarryBitToValueOfBit1(int value) {
+    private void updateCarryBitToValueOfBit0(int value) {
         if ((value & 0x01) > 0) {
             setFlag(Flag.CARRY);
         } else {
