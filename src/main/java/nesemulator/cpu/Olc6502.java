@@ -597,7 +597,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int additionResult = addAndUpdateOverflowFlag(accumulatorRegister_8, fetched_8);
-            updateCarryBitToValueOfBit7(additionResult);
+            updateCarryBitToValueOfBit8(additionResult);
             additionResult &= 0xFF; // remove overflown bit
             updateZeroFlag(additionResult);
             updateNegativeFlag(additionResult);
@@ -614,7 +614,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int subtractionResult = subtractAndUpdateOverflowFlag(fetched_8);
-            updateCarryBitToValueOfBit7(subtractionResult);
+            updateCarryBitToValueOfBit8(subtractionResult);
             subtractionResult &= 0x00FF; // remove overflow bit
             updateZeroFlag(subtractionResult);
             updateNegativeFlag(subtractionResult);
@@ -655,7 +655,7 @@ public class Olc6502 {
         public int execute() {
             fetch();
             int value = fetched_8 << 1;
-            updateCarryBitToValueOfBit7(value);
+            updateCarryBitToValueOfBit8(value);
             value &= 0xFF; // remove carry flag FIXME: improve code?
             updateZeroFlag(value);
             updateNegativeFlag(value);
@@ -1042,12 +1042,9 @@ public class Olc6502 {
         @Override
         public int execute() {
             fetch();
-            if ((fetched_8 & 0xFF) > 0) {
-                setFlag(Flag.CARRY);
-            } else {
-                clearFlag(Flag.CARRY); // FIXME: Javidx9 is doing "SetFlag(C, temp & 0xFF00);" here... after the temp assignment, is that correct/better?
-            }
-            int temp = (fetched_8 << 1 | getFlag(Flag.CARRY)) & 0xFF;
+            int temp = (fetched_8 << 1) | getFlag(Flag.CARRY);
+            updateCarryBitToValueOfBit8(temp);
+            temp &= 0xFF; // remove carry bit
             updateNegativeFlag(temp);
             updateZeroFlag(temp);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) {
@@ -1303,7 +1300,7 @@ public class Olc6502 {
         }
     }
 
-    private void updateCarryBitToValueOfBit7(int value) {
+    private void updateCarryBitToValueOfBit8(int value) {
         if (value > 0xFF) {
             setFlag(Flag.CARRY);
         } else {
