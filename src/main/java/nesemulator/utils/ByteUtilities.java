@@ -9,4 +9,8 @@ public class ByteUtilities {
     public static int widenIgnoreSigning(short shortToWiden) {
         return (int) shortToWiden & 0xFFFF;
     }
+
+    public static int unsetBit(int value, int bitNumber) {
+        return value & ~(1 << bitNumber);
+    }
 }

@@ -3,6 +3,8 @@ package nesemulator.cpu;
 import nesemulator.Bus;
 import nesemulator.cpu.instruction.Instruction;
 
+import static nesemulator.utils.ByteUtilities.unsetBit;
+
 public class Olc6502 {
 
     private static final int STACK_ADDRESS = 0x0100;
@@ -600,7 +602,7 @@ public class Olc6502 {
             fetch();
             int additionResult = addAndUpdateOverflowFlag(accumulatorRegister_8, fetched_8);
             updateCarryBitToValueOfBit8(additionResult);
-            additionResult &= 0xFF; // remove overflown bit
+            additionResult = unsetBit(additionResult, 8);
             updateZeroFlag(additionResult);
             updateNegativeFlag(additionResult);
             accumulatorRegister_8 = additionResult;
@@ -617,7 +619,7 @@ public class Olc6502 {
             fetch();
             int subtractionResult = subtractAndUpdateOverflowFlag(fetched_8);
             updateCarryBitToValueOfBit8(subtractionResult);
-            subtractionResult &= 0x00FF; // remove overflow bit
+            subtractionResult = unsetBit(subtractionResult, 8);
             updateZeroFlag(subtractionResult);
             updateNegativeFlag(subtractionResult);
             accumulatorRegister_8 = subtractionResult;
@@ -658,7 +660,7 @@ public class Olc6502 {
             fetch();
             int value = fetched_8 << 1;
             updateCarryBitToValueOfBit8(value);
-            value &= 0xFF; // remove carry flag FIXME: improve code?
+            value = unsetBit(value, 8);
             updateZeroFlag(value);
             updateNegativeFlag(value);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) { // FIXME: Can't we just pass the addressingMode on this method as a param? Try out later.
@@ -1057,7 +1059,7 @@ public class Olc6502 {
             fetch();
             int temp = (fetched_8 << 1) | getFlag(Flag.CARRY);
             updateCarryBitToValueOfBit8(temp);
-            temp &= 0xFF; // remove carry bit
+            temp = unsetBit(temp, 8);
             updateNegativeFlag(temp);
             updateZeroFlag(temp);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) {
