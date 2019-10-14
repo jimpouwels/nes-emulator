@@ -34,7 +34,7 @@ public class NesTest {
 
     @After
     public void tearDown() throws Exception {
-//        Files.delete(Paths.get(ACTUAL_LOGS_TXT));
+        Files.delete(Paths.get(ACTUAL_LOGS_TXT));
     }
 
     @Test
@@ -47,8 +47,9 @@ public class NesTest {
         bus.insertCartridge(cartridge);
         bus.reset();
         int i = 0;
-        while (i++ < expectedLines.size()) {
+        while (i <= expectedLines.size()) {
             bus.clock();
+            i++;
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(ACTUAL_LOGS_TXT))) {
             for (int j = 0; j < expectedLines.size(); j++) {
