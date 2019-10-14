@@ -25,15 +25,17 @@ public class Olc2c02 {
     }
 
     public int ppuRead(int address_16) {
-        int data = cartridge.ppuReadByte(address_16);
-        if (data != -1) {
+        if (cartridge.isInCharacterRomRange(address_16)) {
+            return cartridge.ppuReadByte(address_16);
         }
-        return 0x00;
+        throw new RuntimeException("cannot read");
     }
 
     public void ppuWrite(int address_16, int data_8) {
-        if (cartridge.ppuWriteByte(address_16, data_8)) {
+        if (cartridge.isInCharacterRomRange(address_16)) {
+            cartridge.ppuWriteByte(address_16, data_8);
         }
+        throw new RuntimeException("cannot read");
     }
 
     private int mapToInternalRange(int address_16) {

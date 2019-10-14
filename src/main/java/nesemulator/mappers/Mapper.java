@@ -10,11 +10,16 @@ public abstract class Mapper {
         this.nrOfCharacterBanks = nrOfCharacterBanks;
     }
 
-    public abstract int cpuMapRead(int address_16);
+    public abstract int getProgramROMRangeStart();
 
-    public abstract int cpuMapWrite(int address_16);
+    public abstract int getProgramROMRangeEnd();
 
-    public abstract int ppuMapRead(int address_16);
+    public abstract int getCharacterROMRangeStart();
 
-    public abstract int ppuMapWrite(int address_16);
+    public abstract int getCharacterROMRangeEnd();
+
+    public abstract int mapToProgramROMAddress(int address_16);
+
+    public abstract int mapToCharacterROMAddress(int address_16);
+
 }

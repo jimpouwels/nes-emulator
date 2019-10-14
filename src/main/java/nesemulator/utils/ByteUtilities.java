@@ -13,4 +13,8 @@ public class ByteUtilities {
     public static int unsetBit(int value, int bitNumber) {
         return value & ~(1 << bitNumber);
     }
+
+    public static boolean isBitSet(int value, int bitNumber) {
+        return (value & (1 << bitNumber)) > 0;
+    }
 }
