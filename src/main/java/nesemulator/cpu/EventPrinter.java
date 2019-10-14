@@ -6,7 +6,6 @@ public abstract class EventPrinter {
         String instructionLine = printAsHex(programCounter, 4) +
                 "  " + printAsHex(opcode, 2) +
                 printInstructionOperandBytes(operands) +
-//                            " " + printAsHex(addrAbs_16) +
                 String.format("%1$5s", operation.name) +
                 " A:" + printAsHex(accumulatorRegister, 2) +
                 " X:" + printAsHex(xRegister, 2) +
@@ -21,11 +20,11 @@ public abstract class EventPrinter {
     protected abstract void printInstructionLine(String line);
 
     private String printInstructionOperandBytes(int[] bytes) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < 2; i++) {
-            result += i <= bytes.length - 1 ? " " + printAsHex(bytes[i], 2) : "   ";
+            result.append(i <= bytes.length - 1 ? " " + printAsHex(bytes[i], 2) : "   ");
         }
-        return result;
+        return result.toString();
     }
 
     private String printAsHex(int value, int charCount) {
