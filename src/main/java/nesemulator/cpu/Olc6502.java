@@ -89,7 +89,7 @@ public class Olc6502 {
         accumulatorRegister_8 = 0x00;
         xRegister_8 = 0x00;
         yRegister_8 = 0x00;
-        stackPointer_8 = 0xFD; // FIXME: NesDev says common practice to start at 0xFF --> try out later
+        stackPointer_8 = 0xFD;
         status_8 = 0x00;
         setFlag(Flag.UNUSED);
         setFlag(Flag.DISABLE_INTERRUPTS);
@@ -162,9 +162,8 @@ public class Olc6502 {
     }
 
     private int read2Bytes(int address_16) {
-        addrAbs_16 = address_16; // FIXME: Do we really need to assign it to addrAbs here? Or is a local var sufficient? Try out later
-        int lowByte = readByte(addrAbs_16);
-        int highByte = readByte(addrAbs_16 + 1);
+        int lowByte = readByte(address_16);
+        int highByte = readByte(address_16 + 1);
         return (highByte << 8) | lowByte;
     }
 
@@ -186,7 +185,7 @@ public class Olc6502 {
     }
 
     private void writeByteToStack(int data_8) {
-        write(STACK_ADDRESS + stackPointer_8--, data_8); // FIXME: is the mask on 0x00FF needed? Probably not, try out later.
+        write(STACK_ADDRESS + stackPointer_8--, data_8);
     }
 
     private int pullByteFromStack() {
@@ -272,7 +271,6 @@ public class Olc6502 {
         @Override
         public int set() {
             addrAbs_16 = readByte(programCounter_16++);
-            addrAbs_16 &= 0x00FF; // FIXME: Is this mask really needed? It seems like the left-byte of the address is already 0x00, since the read() returns an 8-bit byte.
             return 0;
         }
 
@@ -408,7 +406,7 @@ public class Olc6502 {
     }
 
     private boolean isHardwareBug(int pointerLow_8) {
-        return pointerLow_8 == 0x00FF; // FIXME: Can the mask be 0xFF? Try out later.
+        return pointerLow_8 == 0xFF;
     }
 
 //================================  INSTRUCTIONS  =======================================
@@ -453,11 +451,11 @@ public class Olc6502 {
         public int execute() {
             if (getFlag(Flag.CARRY) == 0) {
                 remainingCycles++;
-                addrAbs_16 = programCounter_16 + addrRel_16; // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
-                if ((addrAbs_16 & 0xFF00) != (programCounter_16 & 0xFF00)) {
+                int address_16 = programCounter_16 + addrRel_16;
+                if ((address_16 & 0xFF00) != (programCounter_16 & 0xFF00)) {
                     remainingCycles++;
                 }
-                programCounter_16 = addrAbs_16;
+                programCounter_16 = address_16;
             }
             return 0;
         }
@@ -471,11 +469,11 @@ public class Olc6502 {
         public int execute() {
             if (getFlag(Flag.ZERO) == 1) {
                 remainingCycles++;
-                addrAbs_16 = programCounter_16 + addrRel_16; // FIXME: Do we need the assignment to addrAbs here, couldn't it just be a local var? Try out later.
-                if ((addrAbs_16 & 0xFF00) != (programCounter_16 & 0xFF00)) {
+                int address_16 = programCounter_16 + addrRel_16;
+                if ((address_16 & 0xFF00) != (programCounter_16 & 0xFF00)) {
                     remainingCycles++;
                 }
-                programCounter_16 = addrAbs_16;
+                programCounter_16 = address_16;
             }
             return 0;
         }
@@ -772,7 +770,7 @@ public class Olc6502 {
             } else {
                 clearFlag(Flag.CARRY);
             }
-            updateZeroFlag(value_8); // FIXME: http://obelisk.me.uk/6502/reference.html#CPX --> Says zero flag is set if X = M?
+            updateZeroFlag(value_8);
             updateNegativeFlag(value_8);
             return 0;
         }
@@ -791,7 +789,7 @@ public class Olc6502 {
             } else {
                 clearFlag(Flag.CARRY);
             }
-            updateZeroFlag(value_8); // FIXME: http://obelisk.me.uk/6502/reference.html#CPY --> Says zero flag is set if X = M?
+            updateZeroFlag(value_8);
             updateNegativeFlag(value_8);
             return 0;
         }
@@ -1033,11 +1031,7 @@ public class Olc6502 {
     private class Php extends Instruction {
         @Override
         public int execute() {
-            setFlag(Flag.BREAK);
-            setFlag(Flag.UNUSED);
-            writeByteToStack(status_8);
-            clearFlag(Flag.BREAK); // FIXME: NEEDED?
-            clearFlag(Flag.UNUSED); // FIXME: NEEDED?
+            writeByteToStack(status_8 | Flag.UNUSED.value_8 | Flag.BREAK.value_8);
             return 0;
         }
     }
@@ -1048,9 +1042,7 @@ public class Olc6502 {
     private class Plp extends Instruction {
         @Override
         public int execute() {
-            int oldBreakFlag = getFlag(Flag.BREAK); // FIXME: FIX THIS
             status_8 = pullByteFromStack() & 0xEF;
-//            status_8 |= oldBreakFlag;
             setFlag(Flag.UNUSED);
             return 0;
         }
