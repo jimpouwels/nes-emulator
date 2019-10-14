@@ -21,6 +21,11 @@ public class Bus {
         this.ram = new Ram();
     }
 
+    public void reset(int reset) {
+        cpu.reset(reset);
+        systemClockCounter = 0;
+    }
+
     public void reset() {
         cpu.reset();
         systemClockCounter = 0;

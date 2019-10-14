@@ -45,7 +45,7 @@ public class NesTest {
         Bus bus = new Bus(cpu, new Olc2c02());
         cpu.connectToBus(bus);
         bus.insertCartridge(cartridge);
-        bus.reset();
+        bus.reset(0xC000);
         int i = 0;
         while (i <= expectedLines.size()) {
             bus.clock();

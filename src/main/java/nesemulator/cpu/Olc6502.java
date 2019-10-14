@@ -55,7 +55,7 @@ public class Olc6502 {
             opcode_8 = readByte(programCounter_16);
             Operation operation = operationLookup[opcode_8];
             if (operation.instruction instanceof InvalidInstruction) {
-//                throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
+                throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
             }
             setFlag(Flag.UNUSED);
             eventPrinter.onNewInstruction(operation, opcode_8, programCounter_16, readInstructionOperands(programCounter_16, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
@@ -85,7 +85,7 @@ public class Olc6502 {
         return bytes;
     }
 
-    public void reset() {
+    public void reset(int programCounterStart_16) {
         accumulatorRegister_8 = 0x00;
         xRegister_8 = 0x00;
         yRegister_8 = 0x00;
@@ -94,13 +94,17 @@ public class Olc6502 {
         setFlag(Flag.UNUSED);
         setFlag(Flag.DISABLE_INTERRUPTS);
 
-        programCounter_16 = 0xC000;//read2Bytes(PROGRAM_COUNTER_ADDRESS);
+        programCounter_16 = programCounterStart_16;
 
         addrRel_16 = 0x0000;
         addrAbs_16 = 0x0000;
         fetched_8 = 0x00;
 
         remainingCycles = 8;
+    }
+
+    public void reset() {
+        reset(read2Bytes(PROGRAM_COUNTER_ADDRESS));
     }
 
     /**
