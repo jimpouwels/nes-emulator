@@ -13,7 +13,6 @@ public class Main {
         MainScreen screen = new MainScreen();
         screen.setVisible(true);
 
-
         Runnable r = () -> {
             Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("nestest.nes").getPath());
             Olc6502 cpu = new Olc6502(new InstructionPrinter(false));

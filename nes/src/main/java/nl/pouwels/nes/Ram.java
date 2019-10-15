@@ -1,5 +1,11 @@
 package nl.pouwels.nes;
 
+/**
+ * The RAM has an addressable range of 8KB, but the hardware is really only 2KB.
+ * The left 2KB of addressable range is the actual memory, the other 3 bytes are mirrors of that 2KB.
+ * Because we don't want to implement the actual mirroring, we just take the address, and % (mod) it, so that we bring
+ * it down to 0 with offset.
+ */
 public class Ram {
 
     private static final int SIZE_IN_BYTES = 2048;
