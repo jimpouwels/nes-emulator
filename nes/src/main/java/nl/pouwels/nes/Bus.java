@@ -1,5 +1,6 @@
 package nl.pouwels.nes;
 
+import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
 
@@ -25,13 +26,11 @@ public class Bus {
         systemClockCounter = 0;
     }
 
-    public void reset() {
-        cpu.reset();
-        systemClockCounter = 0;
-    }
-
     public void clock() {
-        cpu.clock();
+        ppu.clock();
+        if (systemClockCounter % 3 == 0) {
+//            cpu.clock();
+        }
     }
 
     public void insertCartridge(Cartridge cartridge) {
@@ -60,4 +59,9 @@ public class Bus {
         return 0x00;
     }
 
+    public void start() {
+        do {
+            clock();
+        } while (true);
+    }
 }

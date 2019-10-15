@@ -1,4 +1,4 @@
-package nl.pouwels.nes;
+package nl.pouwels.nes.cartridge;
 
 import nl.pouwels.nes.mappers.Mapper;
 import nl.pouwels.nes.mappers.Mapper0;

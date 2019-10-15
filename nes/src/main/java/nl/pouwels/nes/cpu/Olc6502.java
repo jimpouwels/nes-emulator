@@ -1,8 +1,8 @@
 package nl.pouwels.nes.cpu;
 
+import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.cpu.instruction.Instruction;
 import nl.pouwels.nes.utils.ByteUtilities;
-import nl.pouwels.nes.Bus;
 
 public class Olc6502 {
 
@@ -69,10 +69,8 @@ public class Olc6502 {
             // if both require an additional cycle, add it to the remaining cycles.
             remainingCycles += additionalCycle1 & additionalCycle2;
         }
-        while (remainingCycles != 0) {
-            clockCount++;
-            remainingCycles--;
-        }
+        clockCount++;
+        remainingCycles--;
     }
 
     private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
