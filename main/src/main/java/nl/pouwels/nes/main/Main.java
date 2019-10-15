@@ -16,7 +16,7 @@ public class Main {
 
         Runnable r = () -> {
             Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("nestest.nes").getPath());
-            Olc6502 cpu = new Olc6502(new InstructionPrinter());
+            Olc6502 cpu = new Olc6502(new InstructionPrinter(false));
             Bus nes = new Bus(cpu, new Olc2c02(screen));
             cpu.connectToBus(nes);
             nes.insertCartridge(cartridge);

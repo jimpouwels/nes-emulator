@@ -29,7 +29,7 @@ public class Bus {
     public void clock() {
         ppu.clock();
         if (systemClockCounter % 3 == 0) {
-//            cpu.clock();
+            cpu.clock();
         }
     }
 

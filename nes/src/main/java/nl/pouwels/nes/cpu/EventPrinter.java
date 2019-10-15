@@ -2,7 +2,16 @@ package nl.pouwels.nes.cpu;
 
 public abstract class EventPrinter {
 
+    private boolean isEnabled;
+
+    public EventPrinter(boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
+
     public void onNewInstruction(Operation operation, int opcode, int programCounter, int[] operands, int accumulatorRegister, int xRegister, int yRegister, int status, int stackPointer, int clockCount) {
+        if (!isEnabled) {
+            return;
+        }
         String instructionLine = printAsHex(programCounter, 4) +
                 "  " + printAsHex(opcode, 2) +
                 printInstructionOperandBytes(operands) +
