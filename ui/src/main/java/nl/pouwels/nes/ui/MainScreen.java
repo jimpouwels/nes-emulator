@@ -30,9 +30,11 @@ public class MainScreen extends JPanel implements Screen {
     }
 
     @Override
-    public void drawPixel(int cycle, int scanline, Pixel pixel) {
+    public void drawPixel(int x, int y, Pixel pixel) {
         int rgb = ((pixel.r & 0x0ff) << 16) | ((pixel.g & 0x0ff) << 8) | (pixel.b & 0x0ff);
-        canvas.setRGB(cycle, scanline, rgb);
-        repaint();
+        canvas.setRGB(x, y, rgb);
+        if (x == 0 && y == 0) {
+            repaint();
+        }
     }
 }

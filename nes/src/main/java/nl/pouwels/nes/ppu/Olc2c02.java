@@ -89,9 +89,9 @@ public class Olc2c02 {
         screen.drawPixel(cycles, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
 
         if (cycles >= 340) {
-            cycles = 0;
+            cycles = -1;
             if (scanline >= 260) {
-                scanline = 0;
+                scanline = -1;
                 frameComplete = true;
             }
             scanline++;
