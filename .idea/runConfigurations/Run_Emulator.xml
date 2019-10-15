@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Emulator" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="nl.pouwels.nes.main.Main" />
+    <module name="nes-emulator.main.main" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

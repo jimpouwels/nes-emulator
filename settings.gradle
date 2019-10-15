@@ -1,1 +1,6 @@
 rootProject.name = "nes-emulator"
+include ":main"
+include ":nes"
+include ":ui"
+
+
