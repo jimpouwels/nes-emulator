@@ -86,17 +86,17 @@ public class Olc2c02 {
     }
 
     public void clock() {
-        screen.drawPixel(cycles - 1, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
+        screen.drawPixel(cycles, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
 
-        cycles++;
-        if (cycles >= 341) {
+        if (cycles >= 340) {
             cycles = 0;
-            scanline++;
-            if (scanline >= 261) {
-                scanline = -1;
+            if (scanline >= 260) {
+                scanline = 0;
                 frameComplete = true;
             }
+            scanline++;
         }
+        cycles++;
     }
 
     public void connectCartridge(Cartridge cartridge) {

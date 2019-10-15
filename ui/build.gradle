@@ -12,6 +12,6 @@ repositories {
 }
 
 dependencies {
-    implementation project("nes")
+    implementation project(":nes")
     testImplementation "junit:junit:4.12"
 }

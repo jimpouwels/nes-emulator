@@ -1,6 +1,5 @@
 package nl.pouwels.nes.main;
 
-import javafx.stage.Stage;
 import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.InstructionPrinter;
 import nl.pouwels.nes.cartridge.Cartridge;
@@ -8,21 +7,12 @@ import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
 import nl.pouwels.nes.ui.MainScreen;
 
-public class Main extends javafx.application.Application {
-
-    private static MainScreen screen;
+public class Main {
 
     public static void main(String... args) {
-        System.out.println("Starting Jim's NES Emulator!");
-        System.out.println("-----------------------------");
-        screen = new MainScreen();
-        launch();
+        MainScreen screen = new MainScreen();
+        screen.setVisible(true);
 
-    }
-
-    @Override
-    public void start(Stage primaryStage) {
-        screen.show(primaryStage);
 
         Runnable r = () -> {
             Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("nestest.nes").getPath());
@@ -35,5 +25,7 @@ public class Main extends javafx.application.Application {
             nes.start();
         };
         new Thread(r).start();
+
     }
+
 }
