@@ -4,7 +4,7 @@ import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cpu.EventPrinter;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
-import nl.pouwels.nes.ppu.Pixel;
+import nl.pouwels.nes.ppu.Color;
 import nl.pouwels.nes.ppu.Screen;
 import org.junit.After;
 import org.junit.Before;
@@ -83,7 +83,7 @@ public class NesTest {
 
     class DummyScreen implements Screen {
         @Override
-        public void drawPixel(int cycle, int scanline, Pixel pixel) {
+        public void drawPixel(int cycle, int scanline, Color color) {
         }
     }
 

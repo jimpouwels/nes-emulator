@@ -1,6 +1,6 @@
 package nl.pouwels.nes.ui;
 
-import nl.pouwels.nes.ppu.Pixel;
+import nl.pouwels.nes.ppu.Color;
 import nl.pouwels.nes.ppu.Screen;
 
 import javax.swing.*;
@@ -19,8 +19,8 @@ public class MainScreen extends JPanel implements Screen {
     }
 
     @Override
-    public void drawPixel(int x, int y, Pixel pixel) {
-        int rgb = ((pixel.r & 0x0ff) << 16) | ((pixel.g & 0x0ff) << 8) | (pixel.b & 0x0ff);
+    public void drawPixel(int x, int y, Color color) {
+        int rgb = ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
         canvas.setRGB(x, y, rgb);
 
         if (x == 0 && y == 0) {
@@ -31,7 +31,7 @@ public class MainScreen extends JPanel implements Screen {
     private void renderStatus() {
         Label statusTitle = new Label();
         statusTitle.setText("STATUS");
-        statusTitle.setForeground(Color.WHITE);
+        statusTitle.setForeground(java.awt.Color.WHITE);
         statusTitle.setBounds(875, 0, 100, 40);
         add(statusTitle);
     }
@@ -44,7 +44,7 @@ public class MainScreen extends JPanel implements Screen {
         frame.setVisible(true);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBackground(Color.decode("0x022f8e"));
+        setBackground(java.awt.Color.decode("0x022f8e"));
         setLayout(null);
     }
 

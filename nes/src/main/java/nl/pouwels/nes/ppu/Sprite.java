@@ -2,17 +2,17 @@ package nl.pouwels.nes.ppu;
 
 public class Sprite {
 
-    private Pixel[][] pixels;
+    private Color[][] colors;
 
     public Sprite(int width, int height) {
-        pixels = new Pixel[width][height];
+        colors = new Color[width][height];
     }
 
-    public void setPixel(int x, int y, Pixel pixel) {
-        pixels[x][y] = pixel;
+    public void setPixel(int x, int y, Color color) {
+        colors[x][y] = color;
     }
 
-    public Pixel getPixel(int x, int y) {
-        return pixels[x][y];
+    public Color getPixel(int x, int y) {
+        return colors[x][y];
     }
 }
