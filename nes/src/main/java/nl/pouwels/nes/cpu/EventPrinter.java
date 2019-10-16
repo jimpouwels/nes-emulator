@@ -1,6 +1,6 @@
 package nl.pouwels.nes.cpu;
 
-public abstract class EventPrinter {
+public abstract class EventPrinter implements EventHandler {
 
     private boolean isEnabled;
 

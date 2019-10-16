@@ -41,10 +41,10 @@ public class Olc6502 {
             operation("CPX", new Cpx(), new Imm(), 2, 2), operation("SBC", new Sbc(), new Izx(), 6, 2), operation("*NOP", new Nop(), new Imp(), 2, 1), unknown(), operation("CPX", new Cpx(), new Zp0(), 3, 2), operation("SBC", new Sbc(), new Zp0(), 3, 2), operation("INC", new Inc(), new Zp0(), 5, 2), unknown(), operation("INX", new Inx(), new Imp(), 2), operation("SBC", new Sbc(), new Imm(), 2, 2), operation("NOP", new Nop(), new Imp(), 2), unknown(), operation("CPX", new Cpx(), new Abs(), 4, 3), operation("SBC", new Sbc(), new Abs(), 4, 3), operation("INC", new Inc(), new Abs(), 6, 3), unknown(),
             operation("BEQ", new Beq(), new Rel(), 2, 2), operation("SBC", new Sbc(), new Izy(), 5, 2), unknown(), unknown(), operation("*NOP", new Nop(), new Imp(), 4, 1), operation("SBC", new Sbc(), new Zpx(), 4, 2), operation("INC", new Inc(), new Zpx(), 6, 2), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4, 3), operation("*NOP", new Nop(), new Imp(), 2, 1), unknown(), operation("*NOP", new Nop(), new Imp(), 4, 1), operation("SBC", new Sbc(), new Abx(), 4, 3), operation("INC", new Inc(), new Abx(), 7, 3), unknown()
     };
-    private EventPrinter eventPrinter;
+    private EventHandler eventHandler;
 
-    public Olc6502(EventPrinter eventPrinter) {
-        this.eventPrinter = eventPrinter;
+    public Olc6502(EventPrinter eventHandler) {
+        this.eventHandler = eventHandler;
     }
 
     public void connectToBus(Bus bus) {
@@ -59,7 +59,7 @@ public class Olc6502 {
 //                throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
 //            }
             setFlag(Flag.UNUSED);
-            eventPrinter.onNewInstruction(operation, opcode_8, programCounter_16, readInstructionOperands(programCounter_16, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
+            eventHandler.onNewInstruction(operation, opcode_8, programCounter_16, readInstructionOperands(programCounter_16, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
             programCounter_16++;
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.

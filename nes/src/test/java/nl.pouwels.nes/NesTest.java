@@ -4,6 +4,8 @@ import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cpu.EventPrinter;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
+import nl.pouwels.nes.ppu.Pixel;
+import nl.pouwels.nes.ppu.Screen;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +25,7 @@ import static org.junit.Assert.fail;
 public class NesTest {
 
     private static final String ACTUAL_LOGS_TXT = "./actual_logs.txt";
+    private int instructionCount;
 
     @Before
     public void setUp() throws Exception {
@@ -41,15 +44,14 @@ public class NesTest {
     public void runNesTest() throws IOException {
         List<String> expectedLines = Files.readAllLines(Paths.get(getClass().getClassLoader().getResource("golden_log.txt").getPath()));
         Cartridge cartridge = new Cartridge(getClass().getClassLoader().getResource("nestest.nes").getPath());
-        Olc6502 cpu = new Olc6502(new FileEventPrinter());
-        Bus bus = new Bus(cpu, new Olc2c02());
+        Olc6502 cpu = new Olc6502(new LogFileEventPrinter(true));
+        Bus bus = new Bus(cpu, new Olc2c02(new DummyScreen()));
         cpu.connectToBus(bus);
         bus.insertCartridge(cartridge);
         bus.reset(0xC000);
-        int i = 0;
-        while (i <= expectedLines.size()) {
+
+        while (instructionCount != expectedLines.size()) {
             bus.clock();
-            i++;
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(ACTUAL_LOGS_TXT))) {
             for (int j = 0; j < expectedLines.size(); j++) {
@@ -63,14 +65,26 @@ public class NesTest {
         }
     }
 
-    class FileEventPrinter extends EventPrinter {
+    class LogFileEventPrinter extends EventPrinter {
+
+        public LogFileEventPrinter(boolean isEnabled) {
+            super(isEnabled);
+        }
 
         @Override
         protected void printInstructionLine(String line) {
+            instructionCount++;
             try (PrintWriter output = new PrintWriter(new FileWriter(ACTUAL_LOGS_TXT, true))) {
                 output.printf("%s\r\n", line);
             } catch (Exception e) {
             }
         }
     }
+
+    class DummyScreen implements Screen {
+        @Override
+        public void drawPixel(int cycle, int scanline, Pixel pixel) {
+        }
+    }
+
 }

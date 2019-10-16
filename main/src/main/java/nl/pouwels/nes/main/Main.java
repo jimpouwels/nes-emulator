@@ -1,7 +1,7 @@
 package nl.pouwels.nes.main;
 
 import nl.pouwels.nes.Bus;
-import nl.pouwels.nes.InstructionPrinter;
+import nl.pouwels.nes.ConsoleEventPrinter;
 import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
@@ -15,7 +15,7 @@ public class Main {
 
         Runnable r = () -> {
             Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("nestest.nes").getPath());
-            Olc6502 cpu = new Olc6502(new InstructionPrinter(false));
+            Olc6502 cpu = new Olc6502(new ConsoleEventPrinter(false));
             Bus nes = new Bus(cpu, new Olc2c02(screen));
             cpu.connectToBus(nes);
             nes.insertCartridge(cartridge);

@@ -2,9 +2,9 @@ package nl.pouwels.nes;
 
 import nl.pouwels.nes.cpu.EventPrinter;
 
-public class InstructionPrinter extends EventPrinter {
+public class ConsoleEventPrinter extends EventPrinter {
 
-    public InstructionPrinter(boolean isEnabled) {
+    public ConsoleEventPrinter(boolean isEnabled) {
         super(isEnabled);
     }
 

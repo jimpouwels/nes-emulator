@@ -4,12 +4,16 @@ import nl.pouwels.nes.cartridge.Cartridge;
 
 public class Olc2c02 {
 
-    public boolean frameComplete;
+    private static final int FOUR_KB = 0x1000;
+    private static final int PATTERN_TABLE_SIZE_IN_KB = FOUR_KB;
+    private static final int PALLETTE_MEMORY_ADDRESS_START = 0x3F00;
+    private boolean frameComplete;
     private static final int SIZE_IN_BYTES = 0x0008;
     private Cartridge cartridge;
     private int cycles;
     private int scanline;
     private Pixel[] colorPallette = new Pixel[0x40];
+    private Sprite[] patternTables = {new Sprite(128, 128), new Sprite(128, 128)};
     private int[][] nameTables = new int[2][1024];
     private int[] paletteTable = new int[32];
     private Screen screen;
@@ -103,6 +107,50 @@ public class Olc2c02 {
         this.cartridge = cartridge;
     }
 
+    /**
+     * The pattern memory consists of two pattern tables, 4kb each.
+     * The pattern memory is a 1d representation of a 2d table. There's 16x16 tiles.
+     * Each tile is 8x8 bytes.
+     * <p>
+     * 2-Bit Pixels              LSB Bit Plane 8x8 bytes      MSB Bit Plane 8x8 bytes
+     * 0 0 0 0 0 0 0 0	         0 0 0 0 0 0 0 0              0 0 0 0 0 0 0 0
+     * 0 1 1 0 0 1 1 0	         0 1 1 0 0 1 1 0              0 0 0 0 0 0 0 0
+     * 0 1 2 0 0 2 1 0	         0 1 1 0 0 1 1 0              0 0 1 0 0 1 0 0
+     * 0 0 0 0 0 0 0 0     =     0 0 0 0 0 0 0 0      +       0 0 0 0 0 0 0 0
+     * 0 1 1 0 0 1 1 0	         0 1 1 0 0 1 1 0              0 0 0 0 0 0 0 0
+     * 0 0 1 1 1 1 0 0	         0 0 1 1 1 1 0 0              0 0 0 0 0 0 0 0
+     * 0 0 0 2 2 0 0 0	         0 0 0 1 1 0 0 0              0 0 0 1 1 0 0 0
+     * 0 0 0 0 0 0 0 0	         0 0 0 0 0 0 0 0              0 0 0 0 0 0 0 0
+     * <p>
+     * the order in memory is:
+     * row1Table1 - row1Table2 - row2Table1 - row2Table2 - etc.
+     * This means each byte in the MSB bit plane, is 8 bytes ahead of the corresponding byte in LSB bit plane.
+     */
+    public Sprite getPatternTable(int tableIndex, int pallette_8) {
+        for (int tileY = 0; tileY < 16; tileY++) {
+            for (int tileX = 0; tileX < 16; tileX++) {
+                int tileOffset = tileY * 256 + tileX * 16;
+                for (int tileRow = 0; tileRow < 8; tileRow++) {
+                    int tableOffset = tableIndex * PATTERN_TABLE_SIZE_IN_KB;
+                    int tileRowLsb_8 = ppuRead(tableOffset + tileOffset + tileRow);
+                    int tileRowMsb_8 = ppuRead(tableOffset + tileOffset + tileRow + 8);
+                    for (int tileColumn = 0; tileColumn < 8; tileColumn++) {
+                        // combine each bit of the lsb with the msb, this way you get the pixelvalue for each column
+                        int pixelValue_8 = (tileRowLsb_8 & 0x01) + ((tileRowMsb_8 & 0x01) * 2); // msb bit 1 represents a 2
+                        tileRowLsb_8 >>= 1;
+                        tileRowMsb_8 >>= 1;
+
+                        patternTables[tableIndex].setPixel(
+                                tileX * 8 + (7 - tileColumn),
+                                tileY * 8 + tileRow,
+                                loadColorFromPallette(pallette_8, pixelValue_8));
+                    }
+                }
+            }
+        }
+        return patternTables[tableIndex]; // FIXME: Can't we just load it once at startup?
+    }
+
     public int cpuRead(int address_16) {
         int internalAddress_16 = mapToInternalRange(address_16);
         return 0x00;
@@ -124,6 +172,14 @@ public class Olc2c02 {
             cartridge.ppuWriteByte(address_16, data_8);
         }
         throw new RuntimeException("cannot read");
+    }
+
+    /**
+     * pallette_8 * 4 happens because each pallette has 4 bytes, so when we choose pallette 2,
+     * you want to skip 8 bytes ahead.
+     */
+    private Pixel loadColorFromPallette(int pallette_8, int pixelValue_8) {
+        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 * 4) + pixelValue_8) & 0x3F];
     }
 
     private int mapToInternalRange(int address_16) {
