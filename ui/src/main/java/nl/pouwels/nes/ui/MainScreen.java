@@ -33,15 +33,6 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         patternTable1Canvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
         drawInfoContainer();
         repaint();
-        Runnable r = () -> {
-            try {
-                Thread.sleep(15000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            nes.getPpu().getPatternTable(0, 3);
-        };
-        new Thread(r).start();
     }
 
     public void paintComponent(Graphics g) {
@@ -128,19 +119,19 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             } while (runningFullSpeed);
         };
         new Thread(runnable).start();
-    }
-
-    private void drawSprite(BufferedImage canvas, Sprite sprite) {
-        for (int y = 0; y < sprite.numRows(); y++) {
-            for (int x = 0; x < sprite.numCols(); x++) {
-                drawPixel(canvas, x, y, sprite.getPixel(x, y));
+        Runnable patternTableLoader = () -> {
+            try {
+                Thread.sleep(1000);
+                nes.getPpu().getPatternTable(0, 4);
+            } catch (InterruptedException e) {
             }
-        }
+        };
+        new Thread(patternTableLoader).start();
     }
 
     private void renderWindow() {
         JFrame frame = new JFrame("NES Emulator");
-        frame.setPreferredSize(new Dimension(1250, 675));
+        frame.setPreferredSize(new Dimension(1600, 675));
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
@@ -159,10 +150,6 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         textPane.setVisible(true);
         textPane.setBackground(Color.decode(BACKGROUND_COLOR));
         add(textPane);
-    }
-
-    private boolean isKeyPressed(int keyChar, int i2) {
-        return keyChar == i2;
     }
 
     private void drawData() {
