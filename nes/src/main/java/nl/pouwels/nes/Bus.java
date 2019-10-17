@@ -59,7 +59,7 @@ public class Bus {
         } else if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
             return ram.cpuReadByte(address_16);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
-            ppu.cpuRead(address_16);
+            return ppu.cpuRead(address_16);
         }
         return 0x00;
     }
