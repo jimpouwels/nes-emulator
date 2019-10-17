@@ -13,6 +13,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static nl.pouwels.nes.utils.PrintUtilities.printAsHex;
+
 public class DataRenderer {
     public static void drawData(List<Olc6502.InstructionAtAddress> instructionAtAddressList, JTextPane textPane, Bus nes) {
         try {
@@ -54,19 +56,19 @@ public class DataRenderer {
             Style registerStyle = textPane.addStyle(null, null);
             StyleConstants.setBold(registerStyle, true);
             doc.insertString(doc.getLength(), "PC: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getProgramCounter_16()), null);
+            doc.insertString(doc.getLength(), printAsHex(nes.getCpu().getProgramCounter_16(), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
             doc.insertString(doc.getLength(), "A: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getAccumolatorRegister()), null);
+            doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getAccumolatorRegister()), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
             doc.insertString(doc.getLength(), "X: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getXRegister()), null);
+            doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getXRegister()), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
             doc.insertString(doc.getLength(), "Y: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getYRegister()), null);
+            doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getYRegister()), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
             doc.insertString(doc.getLength(), "SP: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getStackPointer()), null);
+            doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getStackPointer()), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
 
             doc.insertString(doc.getLength(), "\n\n", null);
