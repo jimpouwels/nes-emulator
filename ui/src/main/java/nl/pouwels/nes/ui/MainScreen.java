@@ -1,23 +1,17 @@
 package nl.pouwels.nes.ui;
 
 import nl.pouwels.nes.Bus;
-import nl.pouwels.nes.cpu.Flag;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Screen;
 import nl.pouwels.nes.ppu.Sprite;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MainScreen extends JPanel implements Screen, KeyListener {
 
@@ -73,6 +67,48 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         }
     }
 
+    @Override
+    public void keyTyped(KeyEvent e) {
+        switch (e.getKeyChar()) {
+            case 'i':
+                runInstruction();
+                drawData();
+                break;
+            case 'f':
+                runFrame();
+                break;
+            case ' ':
+                runProgram();
+        }
+    }
+
+    private void runInstruction() {
+        runningFullSpeed = false;
+        do {
+            nes.clock();
+        } while (!nes.getCpu().isInstructionCompleted());
+    }
+
+    private void runFrame() {
+        runningFullSpeed = false;
+        do {
+            nes.clock();
+        } while (!nes.getPpu().isFrameCompleted());
+        do {
+            nes.clock();
+        } while (!nes.getCpu().isInstructionCompleted());
+    }
+
+    private void runProgram() {
+        runningFullSpeed = !runningFullSpeed;
+        Runnable runnable = () -> {
+            do {
+                nes.clock();
+            } while (runningFullSpeed);
+        };
+        new Thread(runnable).start();
+    }
+
     private void drawSprite(BufferedImage canvas, Sprite sprite) {
         for (int y = 0; y < sprite.numRows(); y++) {
             for (int x = 0; x < sprite.numCols(); x++) {
@@ -93,28 +129,6 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setLayout(null);
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-        if (e.getKeyChar() == 'i') {
-            do {
-                nes.clock();
-            } while (!nes.getCpu().isInstructionCompleted());
-            drawData();
-        } else if (e.getKeyChar() == 'f') {
-            do {
-                nes.clock();
-            } while (!nes.getPpu().isFrameCompleted());
-        } else if (e.getKeyChar() == ' ') {
-            runningFullSpeed = !runningFullSpeed;
-            Runnable runnable = () -> {
-                do {
-                    nes.clock();
-                } while (runningFullSpeed);
-            };
-            new Thread(runnable).start();
-        }
-    }
-
     private void drawInfoContainer() {
         textPane.setBounds(780, 10, 370, 630);
         Font f = new Font(Font.MONOSPACED, 0, 15);
@@ -126,81 +140,13 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         add(textPane);
     }
 
+    private boolean isKeyPressed(int keyChar, int i2) {
+        return keyChar == i2;
+    }
+
     private void drawData() {
-        try {
-            if (mapAsm == null) {
-                return;
-            }
-            int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
-            StyledDocument doc = textPane.getStyledDocument();
-            textPane.setText("");
-
-            Style statusStyle = textPane.addStyle(null, null);
-            StyleConstants.setBold(statusStyle, true);
-            doc.insertString(doc.getLength(), "STATUS:  ", statusStyle);
-
-            Style flagStyle = textPane.addStyle(null, null);
-            StyleConstants.setBold(flagStyle, true);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.CARRY) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "C", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.ZERO) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "Z", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.DISABLE_INTERRUPTS) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "I", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.DECIMAL_MODE) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "D", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.BREAK) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "B", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.UNUSED) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "U", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.OVERFLOW) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "O", flagStyle);
-            doc.insertString(doc.getLength(), "  ", statusStyle);
-            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.NEGATIVE) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
-            doc.insertString(doc.getLength(), "N", flagStyle);
-
-            doc.insertString(doc.getLength(), "\n", null);
-            Style registerStyle = textPane.addStyle(null, null);
-            StyleConstants.setBold(registerStyle, true);
-            doc.insertString(doc.getLength(), "PC: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getProgramCounter_16()), null);
-            doc.insertString(doc.getLength(), "\n", null);
-            doc.insertString(doc.getLength(), "A: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getAccumolatorRegister()), null);
-            doc.insertString(doc.getLength(), "\n", null);
-            doc.insertString(doc.getLength(), "X: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getXRegister()), null);
-            doc.insertString(doc.getLength(), "\n", null);
-            doc.insertString(doc.getLength(), "Y: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getYRegister()), null);
-            doc.insertString(doc.getLength(), "\n", null);
-            doc.insertString(doc.getLength(), "SP: ", registerStyle);
-            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getStackPointer()), null);
-            doc.insertString(doc.getLength(), "\n", null);
-
-            doc.insertString(doc.getLength(), "\n\n", null);
-            for (int i = -13; i < 13; i++) {
-                if ((index + i) >= 0) {
-                    String line = mapAsm.get(index + i).line;
-                    Style style = null;
-                    if (i == 0) {
-                        style = textPane.addStyle(null, null);
-                        StyleConstants.setForeground(style, Color.cyan);
-                    }
-                    doc.insertString(doc.getLength(), line + "\n", style);
-
-                }
-            }
-            repaint();
-        } catch (BadLocationException | IndexOutOfBoundsException ex) {
-            ex.printStackTrace();
-        }
+        DataRenderer.drawData(mapAsm, textPane, nes);
+        repaint();
     }
 
     @Override
