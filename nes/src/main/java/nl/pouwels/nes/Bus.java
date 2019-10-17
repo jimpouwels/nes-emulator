@@ -67,4 +67,8 @@ public class Bus {
     public Olc2c02 getPpu() {
         return ppu;
     }
+
+    public Olc6502 getCpu() {
+        return cpu;
+    }
 }

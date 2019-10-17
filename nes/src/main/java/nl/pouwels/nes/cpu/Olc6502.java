@@ -73,6 +73,10 @@ public class Olc6502 {
         remainingCycles--;
     }
 
+    public boolean isInstructionCompleted() {
+        return remainingCycles == 0;
+    }
+
     private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
         if (nrOfBytes == -1) {
             return new int[0];

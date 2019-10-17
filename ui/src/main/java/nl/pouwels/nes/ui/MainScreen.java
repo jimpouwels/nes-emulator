@@ -7,25 +7,30 @@ import nl.pouwels.nes.ppu.Sprite;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-public class MainScreen extends JPanel implements Screen {
+public class MainScreen extends JPanel implements Screen, KeyListener {
 
+    private static final int SPACEBAR = 32;
     private final BufferedImage gameCanvas;
     private BufferedImage patternTable1;
     private BufferedImage patternTable2;
+    private Bus nes;
 
     public MainScreen() {
         renderWindow();
         renderStatus();
+        addKeyListener(this);
+        setFocusable(true);
+        requestFocusInWindow();
         gameCanvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
     }
 
     public void setBus(Bus nes) {
-        do {
-            nes.clock();
-        } while (true);
+        this.nes = nes;
     }
 
     @Override
@@ -102,5 +107,22 @@ public class MainScreen extends JPanel implements Screen {
         g2.drawImage(gameCanvas, imageSpaceTran, null);
         g2.drawImage(patternTable1, 500, 500, null);
         g2.drawImage(patternTable2, 500, 500, null);
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        if (e.getExtendedKeyCode() == SPACEBAR) {
+            while (!nes.getCpu().isInstructionCompleted()) {
+                nes.clock();
+            }
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
     }
 }
