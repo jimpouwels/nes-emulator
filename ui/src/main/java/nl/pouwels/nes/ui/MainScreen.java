@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class MainScreen extends JPanel implements Screen, KeyListener {
 
     private static final int SPACEBAR = 32;
+    private static final String BACKGROUND_COLOR = "0x022f8e";
     private final BufferedImage gameCanvas;
     private BufferedImage patternTable1;
     private BufferedImage patternTable2;
@@ -32,10 +33,15 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
-        textPane.setBounds(500, 20, 400, 500);
+        textPane.setBounds(870, 250, 370, 390);
+        Font f = new Font(Font.MONOSPACED, 0, 15);
+        textPane.setFont(f);
+        textPane.setForeground(java.awt.Color.WHITE);
         textPane.setFocusable(false);
         textPane.setVisible(true);
+        textPane.setBackground(java.awt.Color.decode(BACKGROUND_COLOR));
         add(textPane);
+        repaint();
     }
 
     public void setBus(Bus nes) {
@@ -116,7 +122,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         frame.setVisible(true);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBackground(java.awt.Color.decode("0x022f8e"));
+        setBackground(java.awt.Color.decode(BACKGROUND_COLOR));
         setLayout(null);
     }
 
