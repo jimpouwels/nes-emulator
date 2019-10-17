@@ -426,8 +426,8 @@ public class Olc6502 {
         @Override
         public int set() {
             addrRel_16 = readByte(programCounter_16++);
-            if ((addrRel_16 & 0x80) > 0) {
-                addrRel_16 |= 0xFF00;
+            if ((addrRel_16 & 0x80) != 0) {
+                addrRel_16 |= 0xFFFFFF00;
             }
             return 0;
         }

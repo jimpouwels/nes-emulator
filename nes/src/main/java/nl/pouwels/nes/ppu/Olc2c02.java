@@ -169,8 +169,9 @@ public class Olc2c02 {
     }
 
     public int cpuReadByte(int address_16) {
+        int registerAddress = address_16 & 0x0007;
         int data_8 = 0x00;
-        switch (address_16) {
+        switch (registerAddress) {
             case 0x0000: // read control register
                 break;
             case 0x0001: // read mask register
@@ -198,7 +199,8 @@ public class Olc2c02 {
     }
 
     public void cpuWrite(int address_16, int data_8) {
-        switch (address_16) {
+        int registerAddress = address_16 & 0x0007;
+        switch (registerAddress) {
             case 0x0000: // write control register
                 controlRegister.write(data_8);
                 break;
@@ -241,8 +243,9 @@ public class Olc2c02 {
 
         } else if (isPalletteMemoryAddress(address_16)) {
             writePallette(address_16, data_8);
+        } else {
+            throw new RuntimeException("cannot write");
         }
-        throw new RuntimeException("cannot read");
     }
 
     public boolean isFrameCompleted() {

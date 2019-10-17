@@ -88,8 +88,9 @@ public class Cartridge {
     public void ppuWriteByte(int address_16, int data_8) {
         if (isInCharacterRomRange(address_16)) {
             characterMemory[mapper.mapToCharacterROMAddress(address_16)] = data_8;
+        } else {
+            throw new RuntimeException("Address " + "%x" + address_16 + " is outside Character ROM range");
         }
-        throw new RuntimeException("Address " + "%x" + address_16 + " is outside Character ROM range");
     }
 
     private static class INesFormatHeader {
