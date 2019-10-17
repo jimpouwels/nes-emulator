@@ -106,8 +106,8 @@ public class Olc2c02 {
     }
 
     public void clock() {
+        frameComplete = false;
         screen.drawPixel(cycles, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
-
         cycles++;
         if (cycles >= 341) {
             cycles = 0;
@@ -243,6 +243,10 @@ public class Olc2c02 {
             writePallette(address_16, data_8);
         }
         throw new RuntimeException("cannot read");
+    }
+
+    public boolean isFrameCompleted() {
+        return frameComplete;
     }
 
     /**

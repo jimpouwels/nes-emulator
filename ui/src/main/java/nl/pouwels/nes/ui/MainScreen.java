@@ -26,6 +26,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private Bus nes;
     private List<Olc6502.InstructionAtAddress> mapAsm;
     private JTextPane textPane = new JTextPane();
+    private boolean runningFullSpeed;
 
     public MainScreen() {
         renderWindow();
@@ -33,7 +34,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
-        drawInfo();
+        drawInfoContainer();
         repaint();
     }
 
@@ -55,6 +56,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     public void drawPixel(int x, int y, nl.pouwels.nes.ppu.Color color) {
         drawPixel(gameCanvas, x, y, color);
         if (x == 340 && y == 240) {
+            drawData();
             repaint();
         }
     }
@@ -93,12 +95,42 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (e.getKeyChar() == ' ') {
+        if (e.getKeyChar() == 'i') {
             do {
                 nes.clock();
             } while (!nes.getCpu().isInstructionCompleted());
+            drawData();
+        } else if (e.getKeyChar() == 'f') {
+            do {
+                nes.clock();
+            } while (!nes.getPpu().isFrameCompleted());
+        } else if (e.getKeyChar() == ' ') {
+            runningFullSpeed = !runningFullSpeed;
+            Runnable runnable = () -> {
+                do {
+                    nes.clock();
+                } while (runningFullSpeed);
+            };
+            new Thread(runnable).start();
         }
+    }
+
+    private void drawInfoContainer() {
+        textPane.setBounds(780, 10, 370, 630);
+        Font f = new Font(Font.MONOSPACED, 0, 15);
+        textPane.setFont(f);
+        textPane.setForeground(Color.WHITE);
+        textPane.setFocusable(false);
+        textPane.setVisible(true);
+        textPane.setBackground(Color.decode(BACKGROUND_COLOR));
+        add(textPane);
+    }
+
+    private void drawData() {
         try {
+            if (mapAsm == null) {
+                return;
+            }
             int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
             StyledDocument doc = textPane.getStyledDocument();
             textPane.setText("");
@@ -166,20 +198,9 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 }
             }
             repaint();
-        } catch (BadLocationException ex) {
+        } catch (BadLocationException | IndexOutOfBoundsException ex) {
             ex.printStackTrace();
         }
-    }
-
-    private void drawInfo() {
-        textPane.setBounds(780, 10, 370, 630);
-        Font f = new Font(Font.MONOSPACED, 0, 15);
-        textPane.setFont(f);
-        textPane.setForeground(Color.WHITE);
-        textPane.setFocusable(false);
-        textPane.setVisible(true);
-        textPane.setBackground(Color.decode(BACKGROUND_COLOR));
-        add(textPane);
     }
 
     @Override
