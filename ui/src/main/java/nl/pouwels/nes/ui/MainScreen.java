@@ -21,23 +21,19 @@ import java.util.stream.Collectors;
 
 public class MainScreen extends JPanel implements Screen, KeyListener {
 
-    private static final int SPACEBAR = 32;
     private static final String BACKGROUND_COLOR = "0x022f8e";
     private final BufferedImage gameCanvas;
-    private BufferedImage patternTable1;
-    private BufferedImage patternTable2;
     private Bus nes;
     private List<Olc6502.InstructionAtAddress> mapAsm;
     private JTextPane textPane = new JTextPane();
 
     public MainScreen() {
         renderWindow();
-        renderStatus();
         addKeyListener(this);
         setFocusable(true);
         requestFocusInWindow();
-        gameCanvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
-        textPane.setBounds(870, 250, 370, 390);
+        gameCanvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
+        textPane.setBounds(800, 250, 370, 390);
         Font f = new Font(Font.MONOSPACED, 0, 15);
         textPane.setFont(f);
         textPane.setForeground(java.awt.Color.WHITE);
@@ -47,6 +43,16 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         add(textPane);
         grabFocus();
         repaint();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        AffineTransform imageSpaceTran = new AffineTransform();
+        imageSpaceTran.scale(3f, 3f);
+        g2.drawImage(gameCanvas, imageSpaceTran, null);
+//        g2.drawImage(patternTable1, 500, 500, null);
+//        g2.drawImage(patternTable2, 500, 500, null);
     }
 
     public void setBus(Bus nes) {
@@ -65,25 +71,14 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     @Override
     public void drawPatternTable(int tableIndex, Sprite sprite) {
-        if (tableIndex == 0) {
-            drawPatternTable1(sprite);
-        } else if (tableIndex == 1) {
-            drawPatternTable2(sprite);
-        } else {
-            throw new RuntimeException("Unknown table index");
-        }
+//        if (tableIndex == 0) {
+//            drawPatternTable1(sprite);
+//        } else if (tableIndex == 1) {
+//            drawPatternTable2(sprite);
+//        } else {
+//            throw new RuntimeException("Unknown table index");
+//        }
         repaint();
-    }
-
-
-    private void drawPatternTable1(Sprite patternTable) {
-        patternTable1 = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
-        drawSprite(patternTable1, patternTable);
-    }
-
-    private void drawPatternTable2(Sprite patternTable) {
-        patternTable2 = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
-        drawSprite(patternTable2, patternTable);
     }
 
     public void drawPixel(BufferedImage canvas, int x, int y, Color color) {
@@ -93,30 +88,12 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         }
     }
 
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-        AffineTransform imageSpaceTran = new AffineTransform();
-        imageSpaceTran.scale(2.5f, 2.5f);
-        g2.drawImage(gameCanvas, imageSpaceTran, null);
-//        g2.drawImage(patternTable1, 500, 500, null);
-//        g2.drawImage(patternTable2, 500, 500, null);
-    }
-
     private void drawSprite(BufferedImage canvas, Sprite sprite) {
         for (int y = 0; y < sprite.numRows(); y++) {
             for (int x = 0; x < sprite.numCols(); x++) {
                 drawPixel(canvas, x, y, sprite.getPixel(x, y));
             }
         }
-    }
-
-    private void renderStatus() {
-        Label statusTitle = new Label();
-        statusTitle.setText("STATUS");
-        statusTitle.setForeground(java.awt.Color.WHITE);
-        statusTitle.setBounds(875, 0, 100, 40);
-        add(statusTitle);
     }
 
     private void renderWindow() {
@@ -133,7 +110,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (e.getExtendedKeyCode() == SPACEBAR) {
+        if (e.getKeyChar() == ' ') {
             do {
                 nes.clock();
             } while (!nes.getCpu().isInstructionCompleted());
@@ -141,6 +118,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
         StyledDocument doc = textPane.getStyledDocument();
         textPane.setText("");
+
         for (int i = -10; i < 10; i++) {
             if ((index + i) >= 0) {
                 try {

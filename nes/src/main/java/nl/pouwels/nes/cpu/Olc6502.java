@@ -1420,25 +1420,25 @@ public class Olc6502 {
                 addr++;
                 hi = readByte(addr);
                 addr++;
-                sInst += "$" + printAsHex((int) (hi << 8) | lo, 4) + " {ABS}";
+                sInst += "$" + printAsHex((hi << 8) | lo, 4) + " {ABS}";
             } else if (operationLookup[opcode].addressingMode instanceof Abx) {
                 lo = readByte(addr);
                 addr++;
                 hi = readByte(addr);
                 addr++;
-                sInst += "$" + printAsHex((int) (hi << 8) | lo, 4) + ", X {ABX}";
+                sInst += "$" + printAsHex((hi << 8) | lo, 4) + ", X {ABX}";
             } else if (operationLookup[opcode].addressingMode instanceof Aby) {
                 lo = readByte(addr);
                 addr++;
                 hi = readByte(addr);
                 addr++;
-                sInst += "$" + printAsHex((int) (hi << 8) | lo, 4) + ", Y {ABY}";
+                sInst += "$" + printAsHex((hi << 8) | lo, 4) + ", Y {ABY}";
             } else if (operationLookup[opcode].addressingMode instanceof Ind) {
                 lo = readByte(addr);
                 addr++;
                 hi = readByte(addr);
                 addr++;
-                sInst += "($" + printAsHex((int) (hi << 8) | lo, 4) + ") {IND}";
+                sInst += "($" + printAsHex((hi << 8) | lo, 4) + ") {IND}";
             } else if (operationLookup[opcode].addressingMode instanceof Rel) {
                 value = readByte(addr);
                 addr++;
