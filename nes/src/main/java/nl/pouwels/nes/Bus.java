@@ -26,6 +26,11 @@ public class Bus {
         systemClockCounter = 0;
     }
 
+    public void reset() {
+        cpu.reset();
+        systemClockCounter = 0;
+    }
+
     public void clock() {
         ppu.clock();
         if (systemClockCounter % 3 == 0) {
@@ -63,5 +68,9 @@ public class Bus {
         do {
             clock();
         } while (true);
+    }
+
+    public Olc2c02 getPpu() {
+        return ppu;
     }
 }

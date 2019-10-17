@@ -1,21 +1,37 @@
 package nl.pouwels.nes.ppu;
 
 import nl.pouwels.nes.cartridge.Cartridge;
+import nl.pouwels.nes.ppu.register.ControlRegister;
+import nl.pouwels.nes.ppu.register.MaskRegister;
+import nl.pouwels.nes.ppu.register.StatusRegister;
 
 public class Olc2c02 {
 
     private static final int FOUR_KB = 0x1000;
     private static final int PATTERN_TABLE_SIZE_IN_KB = FOUR_KB;
     private static final int PALLETTE_MEMORY_ADDRESS_START = 0x3F00;
-    private boolean frameComplete;
     private static final int SIZE_IN_BYTES = 0x0008;
+    private boolean frameComplete;
+    private AddressWriteMode addressWriteMode = AddressWriteMode.HIGH_BYTE;
+    private int cpuWrittenAddress_16;
     private Cartridge cartridge;
     private int cycles;
     private int scanline;
+    // reading the data from the ppu is delayed by 1 cycle, buffer it
+    private int dataBuffer_8;
+    private int address_16;
+
+    private ControlRegister controlRegister = new ControlRegister();
+    private MaskRegister maskRegister = new MaskRegister();
+    private StatusRegister statusRegister = new StatusRegister();
+
+    // memories
+    private int[][] nameTablesMemory = new int[2][1024];
+    private int[] paletteTableMemory = new int[32];
+    private int[][] patternMemory = new int[2][4096];
+
     private Color[] colorPallette = new Color[0x40];
-    private Sprite[] patternTables = {new Sprite(128, 128), new Sprite(128, 128)};
-    private int[][] nameTables = new int[2][1024];
-    private int[] paletteTable = new int[32];
+    private Sprite[] loadedPatternTables = {new Sprite(128, 128), new Sprite(128, 128)};
     private Screen screen;
 
     public Olc2c02(Screen screen) {
@@ -92,15 +108,15 @@ public class Olc2c02 {
     public void clock() {
         screen.drawPixel(cycles, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
 
-        if (cycles >= 340) {
-            cycles = -1;
-            if (scanline >= 260) {
+        cycles++;
+        if (cycles >= 341) {
+            cycles = 0;
+            scanline++;
+            if (scanline >= 261) {
                 scanline = -1;
                 frameComplete = true;
             }
-            scanline++;
         }
-        cycles++;
     }
 
     public void connectCartridge(Cartridge cartridge) {
@@ -140,7 +156,7 @@ public class Olc2c02 {
                         tileRowLsb_8 >>= 1;
                         tileRowMsb_8 >>= 1;
 
-                        patternTables[tableIndex].setPixel(
+                        loadedPatternTables[tableIndex].setPixel(
                                 tileX * 8 + (7 - tileColumn),
                                 tileY * 8 + tileRow,
                                 loadColorFromPallette(pallette_8, pixelValue_8));
@@ -148,21 +164,67 @@ public class Olc2c02 {
                 }
             }
         }
-        return patternTables[tableIndex]; // FIXME: Can't we just load it once at startup?
+        screen.drawPatternTable(tableIndex, loadedPatternTables[tableIndex]);
+        return loadedPatternTables[tableIndex]; // FIXME: Can't we just load it once at startup?
     }
 
     public int cpuRead(int address_16) {
-        int internalAddress_16 = mapToInternalRange(address_16);
-        return 0x00;
+        int data_8 = 0x00;
+        switch (address_16) {
+            case 0x0000: // read control register
+                break;
+            case 0x0001: // read mask register
+                break;
+            case 0x0003: // status register
+                // the first 5 bits of the status register are unused, but it's 'likely' that in the hardware it's filled with the last databuffer value.
+                data_8 = statusRegister.getAsByte() | (dataBuffer_8 & 0x1F);
+                statusRegister.verticalBlank_1 = 0;
+                addressWriteMode = AddressWriteMode.HIGH_BYTE;
+                break;
+            case 0x0007: // ppu read data
+                // delayed data retrieval
+                data_8 = dataBuffer_8;
+                dataBuffer_8 = ppuRead(cpuWrittenAddress_16);
+
+                // the pallette memory can return the data within the same clockcycle, no delay
+                if (isPalletteMemoryAddress(cpuWrittenAddress_16)) {
+                    data_8 = dataBuffer_8;
+                }
+                cpuWrittenAddress_16++;
+                break;
+        }
+        return data_8;
     }
 
     public void cpuWrite(int address_16, int data_8) {
-        int internalAddress_16 = mapToInternalRange(address_16);
+        switch (address_16) {
+            case 0x0000: // write control register
+                controlRegister.write(data_8);
+                break;
+            case 0x0001: // write mask register
+                maskRegister.write(data_8);
+                break;
+            case 0x0006: // write address
+                writeAddress(address_16, data_8);
+                break;
+            case 0x0007: // ppu write data
+                ppuWrite(cpuWrittenAddress_16, data_8);
+                cpuWrittenAddress_16++;
+                break;
+        }
     }
 
     public int ppuRead(int address_16) {
         if (cartridge.isInCharacterRomRange(address_16)) {
             return cartridge.ppuReadByte(address_16);
+        } else if (isPatternMemoryAddress(address_16)) {
+            // the 12th bit == 4096. So if that bit is 1, we want the second table (starting at 4096, if it's 0, we want the first table.
+            // the second index is the remaining bits
+            return patternMemory[(address_16 & 0x1000) >> 12][address_16 & 0x0FFF];
+        } else if (isNameTableAddress(address_16)) {
+
+        } else if (isPalletteMemoryAddress(address_16)) {
+            return loadPallette(address_16);
         }
         throw new RuntimeException("cannot read");
     }
@@ -170,6 +232,14 @@ public class Olc2c02 {
     public void ppuWrite(int address_16, int data_8) {
         if (cartridge.isInCharacterRomRange(address_16)) {
             cartridge.ppuWriteByte(address_16, data_8);
+        } else if (isPatternMemoryAddress(address_16)) {
+            // the 12th bit == 4096. So if that bit is 1, we want the second table (starting at 4096, if it's 0, we want the first table.
+            // the second index is the remaining bits
+            patternMemory[(address_16 & 0x1000) >> 12][address_16 & 0x0FFF] = data_8;
+        } else if (isNameTableAddress(address_16)) {
+
+        } else if (isPalletteMemoryAddress(address_16)) {
+            writePallette(address_16, data_8);
         }
         throw new RuntimeException("cannot read");
     }
@@ -179,7 +249,53 @@ public class Olc2c02 {
      * you want to skip 8 bytes ahead.
      */
     private Color loadColorFromPallette(int pallette_8, int pixelValue_8) {
-        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 * 4) + pixelValue_8) & 0x3F];
+        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 << 2) + pixelValue_8) & 0x3F];
+    }
+
+    private void writeAddress(int address_16, int data_8) {
+        if (addressWriteMode == AddressWriteMode.LOW_BYTE) {
+            cpuWrittenAddress_16 = (address_16 & 0x00FF) | data_8;
+            addressWriteMode = AddressWriteMode.HIGH_BYTE;
+        } else {
+            cpuWrittenAddress_16 = (address_16 & 0xFF00) | data_8 << 8;
+            addressWriteMode = AddressWriteMode.LOW_BYTE;
+        }
+    }
+
+    private int loadPallette(int address_16) {
+        int palletteIndex = toPalletteIndex(address_16);
+        return paletteTableMemory[palletteIndex];
+    }
+
+    private void writePallette(int address_16, int data_8) {
+        int palletteIndex = toPalletteIndex(address_16);
+        paletteTableMemory[palletteIndex] = data_8;
+    }
+
+    private int toPalletteIndex(int address_16) {
+        address_16 &= 0x001F;
+        if (address_16 == 0x0010) {
+            address_16 = 0x0000;
+        } else if (address_16 == 0x0014) {
+            address_16 = 0x0004;
+        } else if (address_16 == 0x0018) {
+            address_16 = 0x0008;
+        } else if (address_16 == 0x001C) {
+            address_16 = 0x000C;
+        }
+        return address_16;
+    }
+
+    private boolean isPatternMemoryAddress(int address_16) {
+        return address_16 >= 0x0000 && address_16 <= 0x1FFF;
+    }
+
+    private boolean isNameTableAddress(int address_16) {
+        return address_16 >= 0x2000 && address_16 <= 0x3EFF;
+    }
+
+    private boolean isPalletteMemoryAddress(int address_16) {
+        return address_16 >= 0x3F00 && address_16 <= 0x3FFF;
     }
 
     private int mapToInternalRange(int address_16) {

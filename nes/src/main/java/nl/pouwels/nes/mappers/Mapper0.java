@@ -26,7 +26,7 @@ public class Mapper0 extends Mapper {
 
     @Override
     public int getCharacterROMRangeEnd() {
-        return 0x1FFFF;
+        return 0x1FFF;
     }
 
     @Override

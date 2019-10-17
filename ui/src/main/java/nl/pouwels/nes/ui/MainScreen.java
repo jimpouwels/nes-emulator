@@ -2,6 +2,7 @@ package nl.pouwels.nes.ui;
 
 import nl.pouwels.nes.ppu.Color;
 import nl.pouwels.nes.ppu.Screen;
+import nl.pouwels.nes.ppu.Sprite;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,21 +11,60 @@ import java.awt.image.BufferedImage;
 
 public class MainScreen extends JPanel implements Screen {
 
-    private final BufferedImage canvas;
+    private final BufferedImage gameCanvas;
+    private BufferedImage patternTable1;
+    private BufferedImage patternTable2;
 
     public MainScreen() {
         renderWindow();
         renderStatus();
-        canvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
+        gameCanvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
     }
+
 
     @Override
     public void drawPixel(int x, int y, Color color) {
-        int rgb = ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
-        canvas.setRGB(x, y, rgb);
-
-        if (x == 0 && y == 0) {
+        drawPixel(gameCanvas, x, y, color);
+        if (x == 340 && y == 240) {
             repaint();
+        }
+    }
+
+    @Override
+    public void drawPatternTable(int tableIndex, Sprite sprite) {
+        if (tableIndex == 0) {
+            drawPatternTable1(sprite);
+        } else if (tableIndex == 1) {
+            drawPatternTable2(sprite);
+        } else {
+            throw new RuntimeException("Unknown table index");
+        }
+        repaint();
+    }
+
+
+    private void drawPatternTable1(Sprite patternTable) {
+        patternTable1 = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+        drawSprite(patternTable1, patternTable);
+    }
+
+    private void drawPatternTable2(Sprite patternTable) {
+        patternTable2 = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+        drawSprite(patternTable2, patternTable);
+    }
+
+    public void drawPixel(BufferedImage canvas, int x, int y, Color color) {
+        int rgb = ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
+        if (x < 256 && y < 240 && y > -1) {
+            canvas.setRGB(x, y, rgb);
+        }
+    }
+
+    private void drawSprite(BufferedImage canvas, Sprite sprite) {
+        for (int y = 0; y < sprite.numRows(); y++) {
+            for (int x = 0; x < sprite.numCols(); x++) {
+                drawPixel(canvas, x, y, sprite.getPixel(x, y));
+            }
         }
     }
 
@@ -53,6 +93,8 @@ public class MainScreen extends JPanel implements Screen {
         Graphics2D g2 = (Graphics2D) g;
         AffineTransform imageSpaceTran = new AffineTransform();
         imageSpaceTran.scale(2.5f, 2.5f);
-        g2.drawImage(canvas, imageSpaceTran, null);
+        g2.drawImage(gameCanvas, imageSpaceTran, null);
+        g2.drawImage(patternTable1, 500, 500, null);
+        g2.drawImage(patternTable2, 500, 500, null);
     }
 }

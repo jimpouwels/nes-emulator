@@ -3,9 +3,10 @@ package nl.pouwels.nes;
 import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cpu.EventPrinter;
 import nl.pouwels.nes.cpu.Olc6502;
-import nl.pouwels.nes.ppu.Olc2c02;
 import nl.pouwels.nes.ppu.Color;
+import nl.pouwels.nes.ppu.Olc2c02;
 import nl.pouwels.nes.ppu.Screen;
+import nl.pouwels.nes.ppu.Sprite;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,6 +85,11 @@ public class NesTest {
     class DummyScreen implements Screen {
         @Override
         public void drawPixel(int cycle, int scanline, Color color) {
+        }
+
+        @Override
+        public void drawPatternTable(int tableIndex, Sprite sprite) {
+
         }
     }
 

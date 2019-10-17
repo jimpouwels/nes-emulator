@@ -62,7 +62,6 @@ public class Cartridge {
 
     public boolean isInCharacterRomRange(int address_16) {
         return address_16 >= mapper.getCharacterROMRangeStart() && address_16 <= mapper.getCharacterROMRangeEnd();
-
     }
 
     public int cpuReadByte(int address_16) {
