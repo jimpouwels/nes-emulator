@@ -18,7 +18,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private static final String BACKGROUND_COLOR = "0x022f8e";
     private final BufferedImage gameCanvas;
     private Bus nes;
-    private List<Olc6502.InstructionAtAddress> mapAsm;
+    private List<Olc6502.InstructionAtAddress> instructionLookup;
     private JTextPane textPane = new JTextPane();
     private boolean runningFullSpeed;
 
@@ -42,8 +42,9 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     public void setBus(Bus nes) {
         this.nes = nes;
-        mapAsm = nes.getCpu().disassemble(0x0000, 0xFFFF);
+        instructionLookup = nes.getCpu().disassemble(0x0000, 0xFFFF);
         nes.reset();
+        drawData();
     }
 
     @Override
@@ -145,7 +146,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     }
 
     private void drawData() {
-        DataRenderer.drawData(mapAsm, textPane, nes);
+        DataRenderer.drawData(instructionLookup, textPane, nes);
         repaint();
     }
 
