@@ -86,6 +86,22 @@ public class Olc6502 {
         return programCounter_16;
     }
 
+    public int getFlag(Flag flag) {
+        return (status_8 & flag.value_8) > 0 ? 1 : 0;
+    }
+
+    public int getAccumolatorRegister() {
+        return accumulatorRegister_8;
+    }
+
+    public int getXRegister() {
+        return xRegister_8;
+    }
+
+    public int getYRegister() {
+        return yRegister_8;
+    }
+
     private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
         if (nrOfBytes == -1) {
             return new int[0];
@@ -177,10 +193,6 @@ public class Olc6502 {
         int lowByte = readByte(address_16);
         int highByte = readByte(address_16 + 1);
         return (highByte << 8) | lowByte;
-    }
-
-    private int getFlag(Flag flag) {
-        return (status_8 & flag.value_8) > 0 ? 1 : 0;
     }
 
     private void setFlag(Flag flag) {

@@ -1,8 +1,8 @@
 package nl.pouwels.nes.ui;
 
 import nl.pouwels.nes.Bus;
+import nl.pouwels.nes.cpu.Flag;
 import nl.pouwels.nes.cpu.Olc6502;
-import nl.pouwels.nes.ppu.Color;
 import nl.pouwels.nes.ppu.Screen;
 import nl.pouwels.nes.ppu.Sprite;
 
@@ -33,15 +33,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
-        textPane.setBounds(800, 250, 370, 390);
-        Font f = new Font(Font.MONOSPACED, 0, 15);
-        textPane.setFont(f);
-        textPane.setForeground(java.awt.Color.WHITE);
-        textPane.setFocusable(false);
-        textPane.setVisible(true);
-        textPane.setBackground(java.awt.Color.decode(BACKGROUND_COLOR));
-        add(textPane);
-        grabFocus();
+        drawInfo();
         repaint();
     }
 
@@ -51,8 +43,6 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         AffineTransform imageSpaceTran = new AffineTransform();
         imageSpaceTran.scale(3f, 3f);
         g2.drawImage(gameCanvas, imageSpaceTran, null);
-//        g2.drawImage(patternTable1, 500, 500, null);
-//        g2.drawImage(patternTable2, 500, 500, null);
     }
 
     public void setBus(Bus nes) {
@@ -62,7 +52,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     }
 
     @Override
-    public void drawPixel(int x, int y, Color color) {
+    public void drawPixel(int x, int y, nl.pouwels.nes.ppu.Color color) {
         drawPixel(gameCanvas, x, y, color);
         if (x == 340 && y == 240) {
             repaint();
@@ -71,17 +61,10 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     @Override
     public void drawPatternTable(int tableIndex, Sprite sprite) {
-//        if (tableIndex == 0) {
-//            drawPatternTable1(sprite);
-//        } else if (tableIndex == 1) {
-//            drawPatternTable2(sprite);
-//        } else {
-//            throw new RuntimeException("Unknown table index");
-//        }
         repaint();
     }
 
-    public void drawPixel(BufferedImage canvas, int x, int y, Color color) {
+    public void drawPixel(BufferedImage canvas, int x, int y, nl.pouwels.nes.ppu.Color color) {
         int rgb = ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
         if (x < 256 && y < 240 && y > -1) {
             canvas.setRGB(x, y, rgb);
@@ -104,7 +87,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         frame.setVisible(true);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBackground(java.awt.Color.decode(BACKGROUND_COLOR));
+        setBackground(Color.decode(BACKGROUND_COLOR));
         setLayout(null);
     }
 
@@ -115,26 +98,81 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 nes.clock();
             } while (!nes.getCpu().isInstructionCompleted());
         }
-        int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
-        StyledDocument doc = textPane.getStyledDocument();
-        textPane.setText("");
+        try {
+            int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
+            StyledDocument doc = textPane.getStyledDocument();
+            textPane.setText("");
 
-        for (int i = -10; i < 10; i++) {
-            if ((index + i) >= 0) {
-                try {
+            Style statusStyle = textPane.addStyle(null, null);
+            StyleConstants.setBold(statusStyle, true);
+            doc.insertString(doc.getLength(), "STATUS:  ", statusStyle);
+
+            Style flagStyle = textPane.addStyle(null, null);
+            StyleConstants.setBold(flagStyle, true);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.CARRY) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "C", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.ZERO) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "Z", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.DISABLE_INTERRUPTS) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "I", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.DECIMAL_MODE) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "D", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.BREAK) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "B", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.UNUSED) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "U", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.OVERFLOW) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "O", flagStyle);
+            doc.insertString(doc.getLength(), "  ", statusStyle);
+            StyleConstants.setForeground(flagStyle, nes.getCpu().getFlag(Flag.NEGATIVE) == 1 ? Color.decode("0x008000") : Color.decode("0xB22222"));
+            doc.insertString(doc.getLength(), "N", flagStyle);
+
+            doc.insertString(doc.getLength(), "\n", null);
+            Style registerStyle = textPane.addStyle(null, null);
+            StyleConstants.setBold(registerStyle, true);
+            doc.insertString(doc.getLength(), "A: ", registerStyle);
+            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getAccumolatorRegister()), null);
+            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "X: ", registerStyle);
+            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getXRegister()), null);
+            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "Y: ", registerStyle);
+            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getYRegister()), null);
+
+            doc.insertString(doc.getLength(), "\n\n", null);
+            for (int i = -10; i < 10; i++) {
+                if ((index + i) >= 0) {
                     String line = mapAsm.get(index + i).line;
                     Style style = null;
                     if (i == 0) {
                         style = textPane.addStyle(null, null);
-                        StyleConstants.setForeground(style, java.awt.Color.cyan);
+                        StyleConstants.setForeground(style, Color.cyan);
                     }
-                    doc.insertString(doc.getLength(), "\n" + line, style);
-                } catch (BadLocationException ex) {
-                    ex.printStackTrace();
+                    doc.insertString(doc.getLength(), line + "\n", style);
+
                 }
             }
+            repaint();
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
         }
-        repaint();
+    }
+
+    private void drawInfo() {
+        textPane.setBounds(780, 10, 370, 390);
+        Font f = new Font(Font.MONOSPACED, 0, 15);
+        textPane.setFont(f);
+        textPane.setForeground(Color.WHITE);
+        textPane.setFocusable(false);
+        textPane.setVisible(true);
+        textPane.setBackground(Color.decode(BACKGROUND_COLOR));
+        add(textPane);
     }
 
     @Override
@@ -145,7 +183,4 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     public void keyReleased(KeyEvent e) {
     }
 
-    private void drawCode(int nLines) {
-
-    }
 }
