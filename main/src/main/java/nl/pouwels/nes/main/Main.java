@@ -20,7 +20,6 @@ public class Main {
         Bus nes = new Bus(cpu, new Olc2c02(screen));
         cpu.connectToBus(nes);
         nes.insertCartridge(cartridge);
-        nes.reset();
         screen.setBus(nes);
     }
 

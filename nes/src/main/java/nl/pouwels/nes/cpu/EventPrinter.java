@@ -1,5 +1,7 @@
 package nl.pouwels.nes.cpu;
 
+import static nl.pouwels.nes.utils.PrintUtilities.printAsHex;
+
 public abstract class EventPrinter implements EventHandler {
 
     private boolean isEnabled;
@@ -36,7 +38,4 @@ public abstract class EventPrinter implements EventHandler {
         return result.toString();
     }
 
-    private String printAsHex(int value, int charCount) {
-        return String.format("%0" + charCount + "x", value).toUpperCase();
-    }
 }

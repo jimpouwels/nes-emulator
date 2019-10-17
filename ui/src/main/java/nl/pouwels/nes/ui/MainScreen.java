@@ -1,6 +1,7 @@
 package nl.pouwels.nes.ui;
 
 import nl.pouwels.nes.Bus;
+import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Color;
 import nl.pouwels.nes.ppu.Screen;
 import nl.pouwels.nes.ppu.Sprite;
@@ -11,6 +12,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MainScreen extends JPanel implements Screen, KeyListener {
 
@@ -19,6 +22,8 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private BufferedImage patternTable1;
     private BufferedImage patternTable2;
     private Bus nes;
+    private List<Olc6502.InstructionAtAddress> mapAsm;
+    private JTextPane textPane = new JTextPane();
 
     public MainScreen() {
         renderWindow();
@@ -27,10 +32,16 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
+        textPane.setBounds(500, 20, 400, 500);
+        textPane.setFocusable(false);
+        textPane.setVisible(true);
+        add(textPane);
     }
 
     public void setBus(Bus nes) {
         this.nes = nes;
+        mapAsm = nes.getCpu().disassemble(0x0000, 0xFFFF);
+        nes.reset();
     }
 
     @Override
@@ -71,6 +82,16 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         }
     }
 
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        AffineTransform imageSpaceTran = new AffineTransform();
+        imageSpaceTran.scale(2.5f, 2.5f);
+        g2.drawImage(gameCanvas, imageSpaceTran, null);
+//        g2.drawImage(patternTable1, 500, 500, null);
+//        g2.drawImage(patternTable2, 500, 500, null);
+    }
+
     private void drawSprite(BufferedImage canvas, Sprite sprite) {
         for (int y = 0; y < sprite.numRows(); y++) {
             for (int x = 0; x < sprite.numCols(); x++) {
@@ -99,23 +120,25 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setLayout(null);
     }
 
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-        AffineTransform imageSpaceTran = new AffineTransform();
-        imageSpaceTran.scale(2.5f, 2.5f);
-        g2.drawImage(gameCanvas, imageSpaceTran, null);
-        g2.drawImage(patternTable1, 500, 500, null);
-        g2.drawImage(patternTable2, 500, 500, null);
-    }
-
     @Override
     public void keyTyped(KeyEvent e) {
         if (e.getExtendedKeyCode() == SPACEBAR) {
-            while (!nes.getCpu().isInstructionCompleted()) {
+            do {
                 nes.clock();
+            } while (!nes.getCpu().isInstructionCompleted());
+        }
+        int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
+        textPane.setText("");
+        for (int i = -10; i < 10; i++) {
+            if ((index + i) >= 0) {
+                String line = mapAsm.get(index + i).line;
+                if (i == 0) {
+                    line += " (CURRENT)";
+                }
+                textPane.setText(textPane.getText() + "\n" + line);
             }
         }
+        repaint();
     }
 
     @Override
@@ -124,5 +147,9 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+    }
+
+    private void drawCode(int nLines) {
+
     }
 }

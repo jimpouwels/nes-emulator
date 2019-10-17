@@ -4,6 +4,11 @@ import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.cpu.instruction.Instruction;
 import nl.pouwels.nes.utils.ByteUtilities;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static nl.pouwels.nes.utils.PrintUtilities.printAsHex;
+
 public class Olc6502 {
 
     private static final int STACK_ADDRESS = 0x0100;
@@ -75,6 +80,10 @@ public class Olc6502 {
 
     public boolean isInstructionCompleted() {
         return remainingCycles == 0;
+    }
+
+    public int getProgramCounter_16() {
+        return programCounter_16;
     }
 
     private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
@@ -1343,4 +1352,117 @@ public class Olc6502 {
     private Operation operation(String name, Instruction instruction, AddressingMode addressingMode, int cycles, int nrOfBytes) {
         return new Operation(name, instruction, addressingMode, cycles, nrOfBytes);
     }
+
+
+    public List<InstructionAtAddress> disassemble(int nStart, int nStop) {
+        int addr = nStart;
+        int value = 0x00, lo = 0x00, hi = 0x00;
+        List<InstructionAtAddress> mapLines = new ArrayList<>();
+        int line_addr = 0;
+
+        // Starting at the specified address we read an instruction
+        // byte, which in turn yields information from the lookup table
+        // as to how many additional bytes we need to read and what the
+        // addressing mode is. I need this info to assemble human readable
+        // syntax, which is different depending upon the addressing mode
+
+        // As the instruction is decoded, a std::string is assembled
+        // with the readable output
+        while (addr <= nStop) {
+            line_addr = addr;
+
+            // Prefix line with instruction address
+            String sInst = "$" + printAsHex(addr, 4) + ": ";
+
+            // Read instruction, and get its readable name
+            int opcode = readByte(addr);
+            addr++;
+            sInst += operationLookup[opcode].name + " ";
+
+            // Get oprands from desired locations, and form the
+            // instruction based upon its addressing mode. These
+            // routines mimmick the actual fetch routine of the
+            // 6502 in order to get accurate data as part of the
+            // instruction
+            if (operationLookup[opcode].addressingMode instanceof Imp) {
+                sInst += " {IMP}";
+            } else if (operationLookup[opcode].addressingMode instanceof Imm) {
+                value = readByte(addr);
+                addr++;
+                sInst += "#$" + printAsHex(value, 2) + " {IMM}";
+            } else if (operationLookup[opcode].addressingMode instanceof Zp0) {
+                lo = readByte(addr);
+                addr++;
+                hi = 0x00;
+                sInst += "$" + printAsHex(lo, 2) + " {ZP0}";
+            } else if (operationLookup[opcode].addressingMode instanceof Zpx) {
+                lo = readByte(addr);
+                addr++;
+                hi = 0x00;
+                sInst += "$" + printAsHex(lo, 2) + ", X {ZPX}";
+            } else if (operationLookup[opcode].addressingMode instanceof Zpy) {
+                lo = readByte(addr);
+                addr++;
+                hi = 0x00;
+                sInst += "$" + printAsHex(lo, 2) + ", Y {ZPY}";
+            } else if (operationLookup[opcode].addressingMode instanceof Izx) {
+                lo = readByte(addr);
+                addr++;
+                hi = 0x00;
+                sInst += "($" + printAsHex(lo, 2) + ", X) {IZX}";
+            } else if (operationLookup[opcode].addressingMode instanceof Izy) {
+                lo = readByte(addr);
+                addr++;
+                hi = 0x00;
+                sInst += "($" + printAsHex(lo, 2) + "), Y {IZY}";
+            } else if (operationLookup[opcode].addressingMode instanceof Abs) {
+                lo = readByte(addr);
+                addr++;
+                hi = readByte(addr);
+                addr++;
+                sInst += "$" + printAsHex((int) (hi << 8) | lo, 4) + " {ABS}";
+            } else if (operationLookup[opcode].addressingMode instanceof Abx) {
+                lo = readByte(addr);
+                addr++;
+                hi = readByte(addr);
+                addr++;
+                sInst += "$" + printAsHex((int) (hi << 8) | lo, 4) + ", X {ABX}";
+            } else if (operationLookup[opcode].addressingMode instanceof Aby) {
+                lo = readByte(addr);
+                addr++;
+                hi = readByte(addr);
+                addr++;
+                sInst += "$" + printAsHex((int) (hi << 8) | lo, 4) + ", Y {ABY}";
+            } else if (operationLookup[opcode].addressingMode instanceof Ind) {
+                lo = readByte(addr);
+                addr++;
+                hi = readByte(addr);
+                addr++;
+                sInst += "($" + printAsHex((int) (hi << 8) | lo, 4) + ") {IND}";
+            } else if (operationLookup[opcode].addressingMode instanceof Rel) {
+                value = readByte(addr);
+                addr++;
+                sInst += "$" + printAsHex(value, 2) + " [$" + printAsHex(addr + value, 4) + "] {REL}";
+            }
+
+            // Add the formed string to a std::map, using the instruction's
+            // address as the key. This makes it convenient to look for later
+            // as the instructions are variable in length, so a straight up
+            // incremental index is not sufficient.
+            mapLines.add(new InstructionAtAddress(line_addr, sInst));
+        }
+
+        return mapLines;
+    }
+
+    public class InstructionAtAddress {
+        public int address;
+        public String line;
+
+        public InstructionAtAddress(int addr, String line) {
+            this.address = addr;
+            this.line = line;
+        }
+    }
+
 }
