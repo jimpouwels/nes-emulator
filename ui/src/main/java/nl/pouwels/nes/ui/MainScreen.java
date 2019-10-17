@@ -45,6 +45,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         textPane.setVisible(true);
         textPane.setBackground(java.awt.Color.decode(BACKGROUND_COLOR));
         add(textPane);
+        grabFocus();
         repaint();
     }
 
