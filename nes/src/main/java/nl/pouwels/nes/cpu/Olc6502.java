@@ -102,6 +102,10 @@ public class Olc6502 {
         return yRegister_8;
     }
 
+    public int getStackPointer() {
+        return stackPointer_8;
+    }
+
     private int[] readInstructionOperands(int startAddress_16, int nrOfBytes) {
         if (nrOfBytes == -1) {
             return new int[0];

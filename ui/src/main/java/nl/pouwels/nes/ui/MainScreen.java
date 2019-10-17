@@ -136,6 +136,9 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             doc.insertString(doc.getLength(), "\n", null);
             Style registerStyle = textPane.addStyle(null, null);
             StyleConstants.setBold(registerStyle, true);
+            doc.insertString(doc.getLength(), "PC: ", registerStyle);
+            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getProgramCounter_16()), null);
+            doc.insertString(doc.getLength(), "\n", null);
             doc.insertString(doc.getLength(), "A: ", registerStyle);
             doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getAccumolatorRegister()), null);
             doc.insertString(doc.getLength(), "\n", null);
@@ -144,9 +147,13 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             doc.insertString(doc.getLength(), "\n", null);
             doc.insertString(doc.getLength(), "Y: ", registerStyle);
             doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getYRegister()), null);
+            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "SP: ", registerStyle);
+            doc.insertString(doc.getLength(), Integer.toString(nes.getCpu().getStackPointer()), null);
+            doc.insertString(doc.getLength(), "\n", null);
 
             doc.insertString(doc.getLength(), "\n\n", null);
-            for (int i = -10; i < 10; i++) {
+            for (int i = -13; i < 13; i++) {
                 if ((index + i) >= 0) {
                     String line = mapAsm.get(index + i).line;
                     Style style = null;
@@ -165,7 +172,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     }
 
     private void drawInfo() {
-        textPane.setBounds(780, 10, 370, 390);
+        textPane.setBounds(780, 10, 370, 630);
         Font f = new Font(Font.MONOSPACED, 0, 15);
         textPane.setFont(f);
         textPane.setForeground(Color.WHITE);
