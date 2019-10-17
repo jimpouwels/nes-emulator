@@ -7,6 +7,10 @@ import nl.pouwels.nes.ppu.Screen;
 import nl.pouwels.nes.ppu.Sprite;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -134,14 +138,21 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             } while (!nes.getCpu().isInstructionCompleted());
         }
         int index = mapAsm.indexOf(mapAsm.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
+        StyledDocument doc = textPane.getStyledDocument();
         textPane.setText("");
         for (int i = -10; i < 10; i++) {
             if ((index + i) >= 0) {
-                String line = mapAsm.get(index + i).line;
-                if (i == 0) {
-                    line += " (CURRENT)";
+                try {
+                    String line = mapAsm.get(index + i).line;
+                    Style style = null;
+                    if (i == 0) {
+                        style = textPane.addStyle(null, null);
+                        StyleConstants.setForeground(style, java.awt.Color.cyan);
+                    }
+                    doc.insertString(doc.getLength(), "\n" + line, style);
+                } catch (BadLocationException ex) {
+                    ex.printStackTrace();
                 }
-                textPane.setText(textPane.getText() + "\n" + line);
             }
         }
         repaint();
