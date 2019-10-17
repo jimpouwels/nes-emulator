@@ -208,7 +208,7 @@ public class Olc2c02 {
                 maskRegister.write(data_8);
                 break;
             case 0x0006: // write address
-                writeAddress(address_16, data_8);
+                writeAddress(data_8);
                 break;
             case 0x0007: // ppu write data
                 ppuWrite(cpuWrittenAddress_16, data_8);
@@ -260,12 +260,12 @@ public class Olc2c02 {
         return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 << 2) + pixelValue_8) & 0x3F];
     }
 
-    private void writeAddress(int address_16, int data_8) {
+    private void writeAddress(int data_8) {
         if (addressWriteMode == AddressWriteMode.LOW_BYTE) {
-            cpuWrittenAddress_16 = (address_16 & 0x00FF) | data_8;
+            cpuWrittenAddress_16 = (cpuWrittenAddress_16 & 0xFF00) | data_8;
             addressWriteMode = AddressWriteMode.HIGH_BYTE;
         } else {
-            cpuWrittenAddress_16 = (address_16 & 0xFF00) | data_8 << 8;
+            cpuWrittenAddress_16 = (cpuWrittenAddress_16 & 0x00FF) | data_8 << 8;
             addressWriteMode = AddressWriteMode.LOW_BYTE;
         }
     }
