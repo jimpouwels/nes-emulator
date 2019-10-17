@@ -59,15 +59,9 @@ public class Bus {
         } else if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
             return ram.cpuReadByte(address_16);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
-            return ppu.cpuRead(address_16 & 0x0007);
+            return ppu.cpuReadByte(address_16 & 0x0007);
         }
         return 0x00;
-    }
-
-    public void start() {
-        do {
-            clock();
-        } while (true);
     }
 
     public Olc2c02 getPpu() {

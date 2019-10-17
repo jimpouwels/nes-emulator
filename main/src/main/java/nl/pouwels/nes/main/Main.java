@@ -20,13 +20,8 @@ public class Main {
         Bus nes = new Bus(cpu, new Olc2c02(screen));
         cpu.connectToBus(nes);
         nes.insertCartridge(cartridge);
-        Runnable r = () -> {
-            System.out.println("Starting testrom...");
-            nes.reset();
-            nes.start();
-        };
-        new Thread(r).start();
-
+        nes.reset();
+        screen.setBus(nes);
     }
 
     static class LogFileEventPrinter extends EventPrinter {

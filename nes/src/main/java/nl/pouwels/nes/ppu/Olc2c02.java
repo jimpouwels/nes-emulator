@@ -168,14 +168,15 @@ public class Olc2c02 {
         return loadedPatternTables[tableIndex]; // FIXME: Can't we just load it once at startup?
     }
 
-    public int cpuRead(int address_16) {
+    public int cpuReadByte(int address_16) {
         int data_8 = 0x00;
         switch (address_16) {
             case 0x0000: // read control register
                 break;
             case 0x0001: // read mask register
                 break;
-            case 0x0003: // status register
+            case 0x0002: // status register
+                statusRegister.verticalBlank_1 = 1;
                 // the first 5 bits of the status register are unused, but it's 'likely' that in the hardware it's filled with the last databuffer value.
                 data_8 = statusRegister.getAsByte() | (dataBuffer_8 & 0x1F);
                 statusRegister.verticalBlank_1 = 0;

@@ -1,5 +1,6 @@
 package nl.pouwels.nes.ui;
 
+import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.ppu.Color;
 import nl.pouwels.nes.ppu.Screen;
 import nl.pouwels.nes.ppu.Sprite;
@@ -21,6 +22,11 @@ public class MainScreen extends JPanel implements Screen {
         gameCanvas = new BufferedImage(341, 261, BufferedImage.TYPE_INT_RGB);
     }
 
+    public void setBus(Bus nes) {
+        do {
+            nes.clock();
+        } while (true);
+    }
 
     @Override
     public void drawPixel(int x, int y, Color color) {
