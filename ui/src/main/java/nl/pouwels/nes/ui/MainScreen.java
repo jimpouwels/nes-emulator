@@ -182,6 +182,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         do {
             nes.clock();
         } while (!nes.getCpu().isInstructionCompleted());
+        leftPanel.repaint();
     }
 
     private void runFrame() {
