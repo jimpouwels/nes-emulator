@@ -6,6 +6,7 @@ import nl.pouwels.nes.ppu.Screen;
 import nl.pouwels.nes.ppu.Sprite;
 
 import javax.swing.*;
+import javax.swing.text.SimpleAttributeSet;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -39,7 +40,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         AffineTransform imageSpaceTran = new AffineTransform();
-        imageSpaceTran.scale(3f, 3f);
+        imageSpaceTran.scale(3.5f, 3.5f);
         g2.drawImage(gameCanvas, imageSpaceTran, null);
         g2.drawImage(patternTable1Canvas, 100, 100, null);
     }
@@ -131,23 +132,24 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     private void renderWindow() {
         JFrame frame = new JFrame("NES Emulator");
-        frame.setPreferredSize(new Dimension(1600, 675));
+        frame.setPreferredSize(new Dimension(1350, 870));
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
-        frame.setResizable(false);
+        frame.setResizable(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBackground(Color.decode(BACKGROUND_COLOR));
         setLayout(null);
     }
 
     private void drawInfoContainer() {
-        textPane.setBounds(780, 10, 370, 630);
+        textPane.setBounds(910, 10, 370, 600);
         Font f = new Font(Font.MONOSPACED, 0, 15);
         textPane.setFont(f);
         textPane.setForeground(Color.WHITE);
         textPane.setFocusable(false);
         textPane.setVisible(true);
+        textPane.setParagraphAttributes(new SimpleAttributeSet(), false);
         textPane.setBackground(Color.decode(BACKGROUND_COLOR));
         add(textPane);
     }

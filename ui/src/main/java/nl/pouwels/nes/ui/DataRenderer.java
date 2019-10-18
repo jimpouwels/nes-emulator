@@ -57,21 +57,21 @@ public class DataRenderer {
             StyleConstants.setBold(registerStyle, true);
             doc.insertString(doc.getLength(), "PC: ", registerStyle);
             doc.insertString(doc.getLength(), printAsHex(nes.getCpu().getProgramCounter_16(), 2), null);
-            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "   ", null);
             doc.insertString(doc.getLength(), "A: ", registerStyle);
             doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getAccumolatorRegister()), 2), null);
-            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "   ", null);
             doc.insertString(doc.getLength(), "X: ", registerStyle);
             doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getXRegister()), 2), null);
-            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "   ", null);
             doc.insertString(doc.getLength(), "Y: ", registerStyle);
             doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getYRegister()), 2), null);
-            doc.insertString(doc.getLength(), "\n", null);
+            doc.insertString(doc.getLength(), "   ", null);
             doc.insertString(doc.getLength(), "SP: ", registerStyle);
             doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getStackPointer()), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
 
-            doc.insertString(doc.getLength(), "\n\n", null);
+            doc.insertString(doc.getLength(), "\n", null);
             for (int i = -13; i < 13; i++) {
                 if ((index + i) >= 0) {
                     String line = instructionAtAddressList.get(index + i).line;
@@ -84,6 +84,7 @@ public class DataRenderer {
 
                 }
             }
+            StyleConstants.setLineSpacing(textPane.getInputAttributes(), -2f);
         } catch (BadLocationException | IndexOutOfBoundsException ex) {
             ex.printStackTrace();
         }
