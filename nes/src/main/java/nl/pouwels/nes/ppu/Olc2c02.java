@@ -143,29 +143,30 @@ public class Olc2c02 {
      * This means each byte in the MSB bit plane, is 8 bytes ahead of the corresponding byte in LSB bit plane.
      */
     public Sprite getPatternTable(int tableIndex, int pallette_8) {
+        int tableOffset = tableIndex * PATTERN_TABLE_SIZE_IN_KB;
         for (int tileY = 0; tileY < 16; tileY++) {
             for (int tileX = 0; tileX < 16; tileX++) {
                 int tileOffset = tileY * 256 + tileX * 16;
-                for (int tileRow = 0; tileRow < 8; tileRow++) {
-                    int tableOffset = tableIndex * PATTERN_TABLE_SIZE_IN_KB;
-                    int tileRowLsb_8 = ppuRead(tableOffset + tileOffset + tileRow);
-                    int tileRowMsb_8 = ppuRead(tableOffset + tileOffset + tileRow + 8);
-                    for (int tileColumn = 0; tileColumn < 8; tileColumn++) {
+                for (int pixelX = 0; pixelX < 8; pixelX++) {
+                    int pixelRowLsb = ppuRead(tableOffset + tileOffset + pixelX);
+                    int pixelRowMsb = ppuRead(tableOffset + tileOffset + pixelX + 8);
+                    for (int pixelY = 0; pixelY < 8; pixelY++) {
                         // combine each bit of the lsb with the msb, this way you get the pixelvalue for each column
-                        int pixelValue_8 = (tileRowLsb_8 & 0x01) + ((tileRowMsb_8 & 0x01) * 2); // msb bit 1 represents a 2
-                        tileRowLsb_8 >>= 1;
-                        tileRowMsb_8 >>= 1;
+                        int pixelValue_8 = (pixelRowLsb & 0x01) + ((pixelRowMsb & 0x01) * 2); // FIXME the *2 seems needed.
 
+                        // since we loaded an entire row of data, we shift all the bits to the right to get the next bit combination
+                        pixelRowLsb >>= 1;
+                        pixelRowMsb >>= 1;
                         loadedPatternTables[tableIndex].setPixel(
-                                tileX * 8 + (7 - tileColumn),
-                                tileY * 8 + tileRow,
+                                tileX * 8 + (7 - pixelY),
+                                tileY * 8 + pixelX,
                                 loadColorFromPallette(pallette_8, pixelValue_8));
                     }
                 }
             }
         }
         screen.drawPatternTable(tableIndex, loadedPatternTables[tableIndex]);
-        return loadedPatternTables[tableIndex]; // FIXME: Can't we just load it once at startup?
+        return loadedPatternTables[tableIndex]; // FIXME: Do we need to return and set a field? Guess not...
     }
 
     public int cpuReadByte(int address_16) {
