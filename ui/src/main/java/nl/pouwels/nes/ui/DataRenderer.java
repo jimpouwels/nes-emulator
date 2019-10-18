@@ -73,16 +73,16 @@ public class DataRenderer {
 
             doc.insertString(doc.getLength(), "\n", null);
             for (int i = -12; i < 12; i++) {
-                if ((index + i) >= 0) {
-                    String line = instructionAtAddressList.get(index + i).line;
-                    Style style = null;
-                    if (i == 0) {
-                        style = textPane.addStyle(null, null);
-                        StyleConstants.setForeground(style, Color.cyan);
-                    }
-                    doc.insertString(doc.getLength(), line + "\n", style);
-
+                int lineIndex = index + i;
+                lineIndex = Math.max(0, lineIndex);
+                lineIndex = Math.min(instructionAtAddressList.size() - 1, lineIndex);
+                String line = instructionAtAddressList.get(lineIndex).line;
+                Style style = null;
+                if (i == 0) {
+                    style = textPane.addStyle(null, null);
+                    StyleConstants.setForeground(style, Color.cyan);
                 }
+                doc.insertString(doc.getLength(), line + "\n", style);
             }
             StyleConstants.setLineSpacing(textPane.getInputAttributes(), -2f);
         } catch (BadLocationException | IndexOutOfBoundsException ex) {

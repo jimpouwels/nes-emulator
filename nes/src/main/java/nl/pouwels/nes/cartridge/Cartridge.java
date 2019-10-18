@@ -41,7 +41,7 @@ public class Cartridge {
 
             // FileType == 1
             nrOfProgramBanks = header.programRomChunks;
-            programMemory = new int[16384];
+            programMemory = new int[nrOfProgramBanks * 16384];
             programMemory = reader.readNextBytes(programMemory.length);
 
             nrOfCharacterBanks = header.characterRomChunks;

@@ -27,7 +27,6 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private LeftPanel leftPanel = new LeftPanel();
     private RightPanel rightPanel = new RightPanel();
 
-
     public MainScreen() {
         renderWindow();
         addKeyListener(this);
@@ -80,7 +79,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         public DataPanel() {
             setLayout(null);
             setBackground(Color.decode(BACKGROUND_COLOR));
-            textPane.setBounds(20, 10, 390, 550);
+            textPane.setBounds(20, 10, 500, 550);
             Font f = new Font(Font.MONOSPACED, 0, 15);
             textPane.setFont(f);
             textPane.setForeground(Color.WHITE);

@@ -36,6 +36,10 @@ public class Bus {
         if (systemClockCounter % 3 == 0) {
             cpu.clock();
         }
+        if (ppu.nonMaskableInterrupt) {
+            ppu.nonMaskableInterrupt = false;
+            cpu.nmi();
+        }
     }
 
     public void insertCartridge(Cartridge cartridge) {

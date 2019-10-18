@@ -11,11 +11,13 @@ public class Olc2c02 {
     private static final int PATTERN_TABLE_SIZE_IN_KB = FOUR_KB;
     private static final int PALLETTE_MEMORY_ADDRESS_START = 0x3F00;
     private static final int SIZE_IN_BYTES = 0x0008;
+
+    public boolean nonMaskableInterrupt;
     private boolean frameComplete;
     private AddressWriteMode addressWriteMode = AddressWriteMode.HIGH_BYTE;
     private int cpuWrittenAddress_16;
     private Cartridge cartridge;
-    private int cycles;
+    private int cycle;
     private int scanline;
     // reading the data from the ppu is delayed by 1 cycle, buffer it
     private int dataBuffer_8;
@@ -106,11 +108,22 @@ public class Olc2c02 {
     }
 
     public void clock() {
+        if (scanline == -1 && cycle == 1) {
+            statusRegister.verticalBlank_1 = 0;
+        }
+
+        if (scanline == 241 && cycle == 1) {
+            statusRegister.verticalBlank_1 = 1;
+            if (controlRegister.enable_Nmi_1 == 1) {
+                nonMaskableInterrupt = true;
+            }
+        }
+
         frameComplete = false;
-        screen.drawPixel(cycles, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
-        cycles++;
-        if (cycles >= 341) {
-            cycles = 0;
+        screen.drawPixel(cycle, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
+        cycle++;
+        if (cycle >= 341) {
+            cycle = 0;
             scanline++;
             if (scanline >= 261) {
                 scanline = -1;
@@ -177,7 +190,6 @@ public class Olc2c02 {
             case 0x0001: // read mask register
                 break;
             case 0x0002: // status register
-                statusRegister.verticalBlank_1 = 1;
                 // the first 5 bits of the status register are unused, but it's 'likely' that in the hardware it's filled with the last databuffer value.
                 data_8 = statusRegister.getAsByte() | (dataBuffer_8 & 0x1F);
                 statusRegister.verticalBlank_1 = 0;
