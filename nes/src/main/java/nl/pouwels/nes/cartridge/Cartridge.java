@@ -74,8 +74,9 @@ public class Cartridge {
     public void cpuWriteByte(int address_16, int data_8) {
         if (isInProgramRomRange(address_16)) {
             programMemory[mapper.mapToProgramROMAddress(address_16)] = data_8;
+        } else {
+            throw new RuntimeException("Address " + "%x" + address_16 + " is outside program ROM range");
         }
-        throw new RuntimeException("Address " + "%x" + address_16 + " is outside program ROM range");
     }
 
     public int ppuReadByte(int address_16) {
