@@ -165,7 +165,7 @@ public class Olc2c02 {
                     int pixelRowMsb = ppuRead(tableOffset + tileOffset + pixelX + 8);
                     for (int pixelY = 0; pixelY < 8; pixelY++) {
                         // combine each bit of the lsb with the msb, this way you get the pixelvalue for each column
-                        int pixelValue_8 = (pixelRowLsb & 0x01) + ((pixelRowMsb & 0x01) * 2); // FIXME the *2 seems needed.
+                        int pixelValue_8 = (pixelRowLsb & 0x01) + ((pixelRowMsb & 0x01) * 2);
 
                         // since we loaded an entire row of data, we shift all the bits to the right to get the next bit combination
                         pixelRowLsb >>= 1;

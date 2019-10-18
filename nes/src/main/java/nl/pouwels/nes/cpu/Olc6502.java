@@ -60,9 +60,9 @@ public class Olc6502 {
         if (remainingCycles == 0) {
             opcode_8 = readByte(programCounter_16);
             Operation operation = operationLookup[opcode_8];
-//            if (operation.instruction instanceof InvalidInstruction) {
-//                throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
-//            }
+            if (operation.instruction instanceof InvalidInstruction) {
+                throw new RuntimeException("Invalid instruction, opcode: " + opcode_8);
+            }
             setFlag(Flag.UNUSED);
             eventHandler.onNewInstruction(operation, opcode_8, programCounter_16, readInstructionOperands(programCounter_16, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
             programCounter_16++;
@@ -213,19 +213,26 @@ public class Olc6502 {
     }
 
     private void writeByteToStack(int data_8) {
-        write(STACK_ADDRESS + stackPointer_8--, data_8);
+        write(STACK_ADDRESS + stackPointer_8, data_8);
+        if (stackPointer_8 == 0x00) {
+            stackPointer_8 = 0xFF;
+        } else {
+            stackPointer_8--;
+        }
     }
 
     private int pullByteFromStack() {
-        stackPointer_8++;
+        if (stackPointer_8 == 0xFF) {
+            stackPointer_8 = 0x00;
+        } else {
+            stackPointer_8++;
+        }
         return readByte(STACK_ADDRESS + stackPointer_8);
     }
 
     private int pull2BytesFromStack() {
-        stackPointer_8++;
-        int lowByte = readByte(STACK_ADDRESS + stackPointer_8);
-        stackPointer_8++;
-        int highByte = readByte(STACK_ADDRESS + stackPointer_8);
+        int lowByte = pullByteFromStack();
+        int highByte = pullByteFromStack();
         return lowByte | highByte << 8;
     }
 

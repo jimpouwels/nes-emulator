@@ -23,7 +23,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private List<Olc6502.InstructionAtAddress> instructionLookup;
     private JTextPane textPane = new JTextPane();
     private boolean runningFullSpeed;
-    private int palletteIndex = 2;
+    private int palletteIndex = 0;
     private LeftPanel leftPanel = new LeftPanel();
     private RightPanel rightPanel = new RightPanel();
 
