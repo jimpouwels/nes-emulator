@@ -169,9 +169,8 @@ public class Olc2c02 {
     }
 
     public int cpuReadByte(int address_16) {
-        int registerAddress = address_16 & 0x0007;
         int data_8 = 0x00;
-        switch (registerAddress) {
+        switch (address_16 & 0x0007) {
             case 0x0000: // read control register
                 break;
             case 0x0001: // read mask register
@@ -199,8 +198,7 @@ public class Olc2c02 {
     }
 
     public void cpuWrite(int address_16, int data_8) {
-        int registerAddress = address_16 & 0x0007;
-        switch (registerAddress) {
+        switch (address_16 & 0x0007) {
             case 0x0000: // write control register
                 controlRegister.write(data_8);
                 break;
@@ -257,7 +255,7 @@ public class Olc2c02 {
      * you want to skip 8 bytes ahead.
      */
     private Color loadColorFromPallette(int pallette_8, int pixelValue_8) {
-        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 << 2) + pixelValue_8) & 0x3F];
+        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 * 4) + pixelValue_8) & 0x3F];
     }
 
     private void writeAddress(int data_8) {
