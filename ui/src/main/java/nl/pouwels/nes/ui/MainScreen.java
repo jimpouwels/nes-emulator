@@ -19,10 +19,12 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private static final String BACKGROUND_COLOR = "0x022f8e";
     private final BufferedImage gameCanvas;
     private final BufferedImage patternTable1Canvas;
+    private final BufferedImage patternTable2Canvas;
     private Bus nes;
     private List<Olc6502.InstructionAtAddress> instructionLookup;
     private JTextPane textPane = new JTextPane();
     private boolean runningFullSpeed;
+    private int palletteIndex = 0;
 
 
     public MainScreen() {
@@ -31,7 +33,8 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
-        patternTable1Canvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
+        patternTable1Canvas = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+        patternTable2Canvas = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
         drawInfoContainer();
         repaint();
     }
@@ -42,7 +45,11 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         AffineTransform imageSpaceTran = new AffineTransform();
         imageSpaceTran.scale(3.5f, 3.5f);
         g2.drawImage(gameCanvas, imageSpaceTran, null);
-        g2.drawImage(patternTable1Canvas, 100, 100, null);
+
+        AffineTransform patternTableTransform = new AffineTransform();
+        patternTableTransform.scale(2.2f, 2.2);
+        g2.drawImage(patternTable1Canvas, 910, 550, null);
+        g2.drawImage(patternTable2Canvas, 1100, 550, null);
     }
 
     public void setBus(Bus nes) {
@@ -67,7 +74,11 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             for (int x = 0; x < sprite.numRows(); x++) {
                 nl.pouwels.nes.ppu.Color pixel = sprite.getPixel(x, y);
                 int rgb = ((pixel.r & 0x0ff) << 16) | ((pixel.g & 0x0ff) << 8) | (pixel.b & 0x0ff);
-                patternTable1Canvas.setRGB(x, y, rgb);
+                if (tableIndex == 0) {
+                    patternTable1Canvas.setRGB(x, y, rgb);
+                } else if (tableIndex == 1) {
+                    patternTable2Canvas.setRGB(x, y, rgb);
+                }
             }
         }
         repaint();
@@ -92,6 +103,10 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 break;
             case ' ':
                 runProgram();
+                break;
+            case 'p':
+                rotatePallette();
+                break;
         }
     }
 
@@ -123,11 +138,24 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         Runnable patternTableLoader = () -> {
             try {
                 Thread.sleep(1000);
-                nes.getPpu().getPatternTable(0, 4);
+                loadPatternTables();
             } catch (InterruptedException e) {
             }
         };
         new Thread(patternTableLoader).start();
+    }
+
+    private void rotatePallette() {
+        palletteIndex++;
+        if (palletteIndex > 7) {
+            palletteIndex = 0;
+        }
+        loadPatternTables();
+    }
+
+    private void loadPatternTables() {
+        nes.getPpu().getPatternTable(0, palletteIndex);
+        nes.getPpu().getPatternTable(1, palletteIndex);
     }
 
     private void renderWindow() {
@@ -143,7 +171,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     }
 
     private void drawInfoContainer() {
-        textPane.setBounds(910, 10, 370, 600);
+        textPane.setBounds(910, 10, 370, 520);
         Font f = new Font(Font.MONOSPACED, 0, 15);
         textPane.setFont(f);
         textPane.setForeground(Color.WHITE);
