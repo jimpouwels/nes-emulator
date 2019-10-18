@@ -72,7 +72,7 @@ public class DataRenderer {
             doc.insertString(doc.getLength(), "\n", null);
 
             doc.insertString(doc.getLength(), "\n", null);
-            for (int i = -13; i < 13; i++) {
+            for (int i = -12; i < 12; i++) {
                 if ((index + i) >= 0) {
                     String line = instructionAtAddressList.get(index + i).line;
                     Style style = null;

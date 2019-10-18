@@ -18,13 +18,14 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     private static final String BACKGROUND_COLOR = "0x022f8e";
     private final BufferedImage gameCanvas;
-    private final BufferedImage patternTable1Canvas;
-    private final BufferedImage patternTable2Canvas;
+    private final BufferedImage patternTableCanvas;
     private Bus nes;
     private List<Olc6502.InstructionAtAddress> instructionLookup;
     private JTextPane textPane = new JTextPane();
     private boolean runningFullSpeed;
-    private int palletteIndex = 0;
+    private int palletteIndex = 2;
+    private LeftPanel leftPanel = new LeftPanel();
+    private RightPanel rightPanel = new RightPanel();
 
 
     public MainScreen() {
@@ -33,37 +34,103 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
-        patternTable1Canvas = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
-        patternTable2Canvas = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
-        drawInfoContainer();
-        repaint();
+        patternTableCanvas = new BufferedImage(256, 128, BufferedImage.TYPE_INT_RGB);
+        setLayout(new BorderLayout());
+        getRootPane().setLayout(null);
+
+        add(leftPanel, BorderLayout.WEST);
+        add(rightPanel, BorderLayout.EAST);
     }
 
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-        AffineTransform imageSpaceTran = new AffineTransform();
-        imageSpaceTran.scale(3.5f, 3.5f);
-        g2.drawImage(gameCanvas, imageSpaceTran, null);
+    class LeftPanel extends JPanel {
 
-        AffineTransform patternTableTransform = new AffineTransform();
-        patternTableTransform.scale(2.2f, 2.2);
-        g2.drawImage(patternTable1Canvas, 910, 550, null);
-        g2.drawImage(patternTable2Canvas, 1100, 550, null);
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            AffineTransform imageSpaceTran = new AffineTransform();
+            imageSpaceTran.scale(3.5f, 3.5f);
+            g2.drawImage(gameCanvas, imageSpaceTran, null);
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(895, 500);
+        }
+    }
+
+    class RightPanel extends JPanel {
+
+        public DataPanel dataPanel = new DataPanel();
+        public PatternTablePanel patternTablePanel = new PatternTablePanel();
+
+        public RightPanel() {
+            setLayout(new BorderLayout());
+            add(dataPanel, BorderLayout.NORTH);
+            add(patternTablePanel, BorderLayout.SOUTH);
+            setBackground(Color.decode(BACKGROUND_COLOR));
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(588, 900);
+        }
+    }
+
+    class DataPanel extends JPanel {
+        public DataPanel() {
+            setLayout(null);
+            setBackground(Color.decode(BACKGROUND_COLOR));
+            textPane.setBounds(20, 10, 390, 550);
+            Font f = new Font(Font.MONOSPACED, 0, 15);
+            textPane.setFont(f);
+            textPane.setForeground(Color.WHITE);
+            textPane.setFocusable(false);
+            textPane.setVisible(true);
+            textPane.setParagraphAttributes(new SimpleAttributeSet(), false);
+            textPane.setBackground(Color.decode(BACKGROUND_COLOR));
+            add(textPane);
+        }
+
+        public void drawData() {
+            DataRenderer.drawData(instructionLookup, textPane, nes);
+            repaint();
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(290, 540);
+        }
+    }
+
+    class PatternTablePanel extends JPanel {
+
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            AffineTransform patternTableTransform = new AffineTransform();
+            patternTableTransform.scale(2.3f, 2.3f);
+            g2.drawImage(patternTableCanvas, patternTableTransform, null);
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(290, 294);
+        }
+
     }
 
     public void setBus(Bus nes) {
         this.nes = nes;
         instructionLookup = nes.getCpu().disassemble(0x0000, 0xFFFF);
         nes.reset();
-        drawData();
+        rightPanel.dataPanel.drawData();
     }
 
     @Override
     public void drawPixel(int x, int y, nl.pouwels.nes.ppu.Color color) {
         drawPixel(gameCanvas, x, y, color);
         if (x == 340 && y == 240) {
-            drawData();
+            rightPanel.dataPanel.drawData();
             repaint();
         }
     }
@@ -75,13 +142,13 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 nl.pouwels.nes.ppu.Color pixel = sprite.getPixel(x, y);
                 int rgb = ((pixel.r & 0x0ff) << 16) | ((pixel.g & 0x0ff) << 8) | (pixel.b & 0x0ff);
                 if (tableIndex == 0) {
-                    patternTable1Canvas.setRGB(x, y, rgb);
+                    patternTableCanvas.setRGB(x, y, rgb);
                 } else if (tableIndex == 1) {
-                    patternTable2Canvas.setRGB(x, y, rgb);
+                    patternTableCanvas.setRGB(x + 128, y, rgb);
                 }
             }
         }
-        repaint();
+        rightPanel.patternTablePanel.repaint();
     }
 
     public void drawPixel(BufferedImage canvas, int x, int y, nl.pouwels.nes.ppu.Color color) {
@@ -96,7 +163,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         switch (e.getKeyChar()) {
             case 'i':
                 runInstruction();
-                drawData();
+                rightPanel.dataPanel.drawData();
                 break;
             case 'f':
                 runFrame();
@@ -160,31 +227,13 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
     private void renderWindow() {
         JFrame frame = new JFrame("NES Emulator");
-        frame.setPreferredSize(new Dimension(1350, 870));
+        frame.setPreferredSize(new Dimension(1483, 860));
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
         frame.setResizable(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBackground(Color.decode(BACKGROUND_COLOR));
         setLayout(null);
-    }
-
-    private void drawInfoContainer() {
-        textPane.setBounds(910, 10, 370, 520);
-        Font f = new Font(Font.MONOSPACED, 0, 15);
-        textPane.setFont(f);
-        textPane.setForeground(Color.WHITE);
-        textPane.setFocusable(false);
-        textPane.setVisible(true);
-        textPane.setParagraphAttributes(new SimpleAttributeSet(), false);
-        textPane.setBackground(Color.decode(BACKGROUND_COLOR));
-        add(textPane);
-    }
-
-    private void drawData() {
-        DataRenderer.drawData(instructionLookup, textPane, nes);
-        repaint();
     }
 
     @Override
