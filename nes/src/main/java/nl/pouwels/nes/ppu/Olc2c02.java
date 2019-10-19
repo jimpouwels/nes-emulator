@@ -150,14 +150,17 @@ public class Olc2c02 {
                             bgNextTileAttribute >>= 2;
                         }
                         bgNextTileAttribute &= 0x03;
+                        break;
                     case 4:
                         bgNextTileLsb_8 = ppuRead((controlRegister_8.patternBackground_1 << 12)
                                 + (bgNextTileId << 4)
                                 + (vRam_16.fineY_3));
+                        break;
                     case 6:
                         bgNextTileMsb_8 = ppuRead((controlRegister_8.patternBackground_1 << 12)
                                 + (bgNextTileId << 4)
                                 + vRam_16.fineY_3 + 8);
+                        break;
                     case 7:
                         incrementScrollX();
                         break;
@@ -426,7 +429,7 @@ public class Olc2c02 {
         } else if (isPalletteMemoryAddress(address_16)) {
             return loadPallette(address_16);
         }
-        throw new RuntimeException("cannot read");
+        return 0x00;
     }
 
     public void ppuWrite(int address_16, int data_8) {
@@ -462,8 +465,6 @@ public class Olc2c02 {
             }
         } else if (isPalletteMemoryAddress(address_16)) {
             writePallette(address_16, data_8);
-        } else {
-            throw new RuntimeException("cannot write");
         }
     }
 

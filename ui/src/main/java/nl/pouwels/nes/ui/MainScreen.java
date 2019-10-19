@@ -128,7 +128,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     @Override
     public void drawPixel(int x, int y, nl.pouwels.nes.ppu.Color color) {
         drawPixel(gameCanvas, x, y, color);
-        if (x == 340 && y == 240) {
+        if (x == 339 && y == 260) {
             rightPanel.dataPanel.drawData();
             repaint();
         }
@@ -153,10 +153,8 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     public void drawPixel(BufferedImage canvas, int x, int y, nl.pouwels.nes.ppu.Color color) {
         int rgb = ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
         if (x < 256 && y < 240 && y > -1) {
-            try {
+            if (x >= 0) {
                 canvas.setRGB(x, y, rgb);
-            } catch (Exception e) {
-                System.out.println("X: " + x + " Y: " + y);
             }
         }
     }
