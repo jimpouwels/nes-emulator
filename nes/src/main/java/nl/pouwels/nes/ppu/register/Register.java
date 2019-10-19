@@ -9,4 +9,6 @@ public abstract class Register {
     }
 
     public abstract int getAsByte();
+
+    public abstract void incrementWith(int incrementValue);
 }

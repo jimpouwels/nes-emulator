@@ -31,6 +31,7 @@ public class Mapper0 extends Mapper {
 
     @Override
     public int mapToProgramROMAddress(int address_16) {
+        // mask to 0x7FFF if 32Kb, mask with 0x3FFF in case of 16Kb
         return address_16 & (nrOfProgramBanks > 1 ? 0x7FFF : 0x3FFF);
     }
 

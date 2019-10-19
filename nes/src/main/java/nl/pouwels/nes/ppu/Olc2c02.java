@@ -2,6 +2,7 @@ package nl.pouwels.nes.ppu;
 
 import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.ppu.register.ControlRegister;
+import nl.pouwels.nes.ppu.register.LoopyRegister;
 import nl.pouwels.nes.ppu.register.MaskRegister;
 import nl.pouwels.nes.ppu.register.StatusRegister;
 
@@ -15,7 +16,6 @@ public class Olc2c02 {
     public boolean nonMaskableInterrupt;
     private boolean frameComplete;
     private AddressWriteMode addressWriteMode = AddressWriteMode.HIGH_BYTE;
-    private int cpuWrittenAddress_16;
     private Cartridge cartridge;
     private int cycle;
     private int scanline;
@@ -23,9 +23,17 @@ public class Olc2c02 {
     private int dataBuffer_8;
     private int address_16;
 
-    private ControlRegister controlRegister = new ControlRegister();
-    private MaskRegister maskRegister = new MaskRegister();
-    private StatusRegister statusRegister = new StatusRegister();
+    private ControlRegister controlRegister_8 = new ControlRegister();
+    private MaskRegister maskRegister_8 = new MaskRegister();
+    private StatusRegister statusRegister_8 = new StatusRegister();
+    private LoopyRegister vRam_16 = new LoopyRegister();
+    private LoopyRegister tRam_16 = new LoopyRegister();
+    private int fineX_8;
+
+    private int bgNextTileId;
+    private int bgNextTileAttribute;
+    private int bgNextTileLsb;
+    private int bgNextTileMsb;
 
     // memories
     private int[][] nameTablesMemory = new int[2][1024];
@@ -108,19 +116,51 @@ public class Olc2c02 {
     }
 
     public void clock() {
-        if (scanline == -1 && cycle == 1) {
-            statusRegister.verticalBlank_1 = 0;
+        if (scanline >= -1 && scanline < 240) {
+            if (scanline == -1 && cycle == 1) {
+                statusRegister_8.verticalBlank_1 = 0;
+            }
+            if ((cycle >= 2 && cycle < 258) || (cycle >= 321) && cycle < 338) {
+
+            }
+            if (cycle == 256) {
+                switch ((cycle - 1) % 8) {
+                    case 0:
+                        bgNextTileId = ppuRead(0x2000 | (vRam_16.getAsByte() & 0x0FFF));
+                        break;
+                    case 2:
+                        bgNextTileAttribute = ppuRead(0x23C0 | (vRam_16.nametableY_1 << 11)
+                                | (vRam_16.nametableX_1 << 10)
+                                | ((vRam_16.coarseY_5 >> 2) << 3)
+                                | (vRam_16.coarseX_5 >> 2));
+                        if ((vRam_16.coarseY_5 & 0x02) > 0) {
+                            bgNextTileAttribute >>= 4;
+                        }
+                        if ((vRam_16.coarseX_5 & 0x02) > 0) {
+                            bgNextTileAttribute >>= 2;
+                        }
+                        bgNextTileAttribute &= 0x03;
+                    case 4:
+                        bgNextTileLsb = ppuRead((controlRegister_8.patternBackground_1 << 12)
+                                + (bgNextTileId << 4)
+                                + (vRam_16.fineY_3) + 0);
+                    case 6:
+                        bgNextTileMsb = ppuRead((controlRegister_8.patternBackground_1 << 12)
+                                + (bgNextTileId << 4)
+                                + vRam_16.fineY_3 + 8);
+                    case 7:
+                }
+            }
         }
 
         if (scanline == 241 && cycle == 1) {
-            statusRegister.verticalBlank_1 = 1;
-            if (controlRegister.enable_Nmi_1 == 1) {
+            statusRegister_8.verticalBlank_1 = 1;
+            if (controlRegister_8.enable_Nmi_1 == 1) {
                 nonMaskableInterrupt = true;
             }
         }
 
         frameComplete = false;
-        screen.drawPixel(cycle, scanline, colorPallette[((Math.random() % 2) > 0.5) ? 0x3F : 0x30]);
         cycle++;
         if (cycle >= 341) {
             cycle = 0;
@@ -191,20 +231,20 @@ public class Olc2c02 {
                 break;
             case 0x0002: // status register
                 // the first 5 bits of the status register are unused, but it's 'likely' that in the hardware it's filled with the last databuffer value.
-                data_8 = statusRegister.getAsByte() | (dataBuffer_8 & 0x1F);
-                statusRegister.verticalBlank_1 = 0;
+                data_8 = statusRegister_8.getAsByte() | (dataBuffer_8 & 0x1F);
+                statusRegister_8.verticalBlank_1 = 0;
                 addressWriteMode = AddressWriteMode.HIGH_BYTE;
                 break;
             case 0x0007: // ppu read data
                 // delayed data retrieval
                 data_8 = dataBuffer_8;
-                dataBuffer_8 = ppuRead(cpuWrittenAddress_16);
+                dataBuffer_8 = ppuRead(vRam_16.getAsByte());
 
                 // the pallette memory can return the data within the same clockcycle, no delay
-                if (isPalletteMemoryAddress(cpuWrittenAddress_16)) {
+                if (isPalletteMemoryAddress(vRam_16.getAsByte())) {
                     data_8 = dataBuffer_8;
                 }
-                cpuWrittenAddress_16++;
+                vRam_16.incrementWith(controlRegister_8.incrementMode_1 > 0 ? 32 : 1); // if increment mode, increment on Y axis (32 tiles).
                 break;
         }
         return data_8;
@@ -213,17 +253,30 @@ public class Olc2c02 {
     public void cpuWrite(int address_16, int data_8) {
         switch (address_16 & 0x0007) {
             case 0x0000: // write control register
-                controlRegister.write(data_8);
+                controlRegister_8.write(data_8);
+                tRam_16.nametableX_1 = controlRegister_8.nametableX_1;
+                tRam_16.nametableY_1 = controlRegister_8.nametableY_1;
                 break;
             case 0x0001: // write mask register
-                maskRegister.write(data_8);
+                maskRegister_8.write(data_8);
+                break;
+            case 0x0005:
+                if (addressWriteMode == AddressWriteMode.HIGH_BYTE) {
+                    fineX_8 = data_8 & 0x07; // FIXME: Mask needed?
+                    tRam_16.coarseX_5 = data_8 >> 3;
+                    addressWriteMode = AddressWriteMode.LOW_BYTE;
+                } else {
+                    tRam_16.fineY_3 = data_8 & 0x07;
+                    tRam_16.coarseY_5 = data_8 >> 3;
+                    addressWriteMode = AddressWriteMode.HIGH_BYTE;
+                }
                 break;
             case 0x0006: // write address
                 writeAddress(data_8);
                 break;
             case 0x0007: // ppu write data
-                ppuWrite(cpuWrittenAddress_16, data_8);
-                cpuWrittenAddress_16++;
+                ppuWrite(vRam_16.getAsByte(), data_8);
+                vRam_16.incrementWith(controlRegister_8.incrementMode_1 > 0 ? 32 : 1); // if increment mode, increment on Y axis (32 tiles).
                 break;
         }
     }
@@ -236,7 +289,28 @@ public class Olc2c02 {
             // the second index is the remaining bits
             return patternMemory[(address_16 & 0x1000) >> 12][address_16 & 0x0FFF];
         } else if (isNameTableAddress(address_16)) {
-
+            if (isGameScrollingHorizontally()) { // vertically mirrored
+                // the mask with 0x03FF is to map the address on 1kb array range
+                if (address_16 >= 0x0000 && address_16 <= 0x03FF) { // reading from left top table
+                    return nameTablesMemory[0][address_16 & 0x03FF]; // loading from 'left top' table
+                } else if (address_16 >= 0x0400 && address_16 <= 0x07FF) { // reading from right top table
+                    return nameTablesMemory[1][address_16 & 0x03FF]; // loading from 'right top' table
+                } else if (address_16 >= 0x0800 & address_16 <= 0x0BFF) { // reading from bottom left table
+                    return nameTablesMemory[0][address_16 & 0x03FF]; // loading from 'left top' table
+                } else if (address_16 >= 0x0C00 && address_16 <= 0x0FFF) { // reading from right bottom table
+                    return nameTablesMemory[1][address_16 & 0x03FF]; // loading from 'right top' table
+                }
+            } else if (isGameScrollingVertically()) {
+                if (address_16 >= 0x0000 && address_16 <= 0x03FF) { // reading from left top table
+                    return nameTablesMemory[0][address_16 & 0x03FF]; // loading from 'left top' table
+                } else if (address_16 >= 0x0400 && address_16 <= 0x07FF) { // reading from right top table
+                    return nameTablesMemory[0][address_16 & 0x03FF]; // loading from 'left top' table
+                } else if (address_16 >= 0x0800 & address_16 <= 0x0BFF) { // reading from bottom left table
+                    return nameTablesMemory[1][address_16 & 0x03FF]; // loading from 'left bottom' table
+                } else if (address_16 >= 0x0C00 && address_16 <= 0x0FFF) { // reading from right bottom table
+                    return nameTablesMemory[1][address_16 & 0x03FF]; // loading from 'left bottom' table
+                }
+            }
         } else if (isPalletteMemoryAddress(address_16)) {
             return loadPallette(address_16);
         }
@@ -251,7 +325,28 @@ public class Olc2c02 {
             // the second index is the remaining bits
             patternMemory[(address_16 & 0x1000) >> 12][address_16 & 0x0FFF] = data_8;
         } else if (isNameTableAddress(address_16)) {
-
+            if (isGameScrollingHorizontally()) { // vertically mirrored
+                // the mask with 0x03FF is to map the address on 1kb array range
+                if (address_16 >= 0x0000 && address_16 <= 0x03FF) { // reading from left top table
+                    nameTablesMemory[0][address_16 & 0x03FF] = data_8; // loading from 'left top' table
+                } else if (address_16 >= 0x0400 && address_16 <= 0x07FF) { // reading from right top table
+                    nameTablesMemory[1][address_16 & 0x03FF] = data_8; // loading from 'right top' table
+                } else if (address_16 >= 0x0800 & address_16 <= 0x0BFF) { // reading from bottom left table
+                    nameTablesMemory[0][address_16 & 0x03FF] = data_8; // loading from 'left top' table
+                } else if (address_16 >= 0x0C00 && address_16 <= 0x0FFF) { // reading from right bottom table
+                    nameTablesMemory[1][address_16 & 0x03FF] = data_8; // loading from 'right top' table
+                }
+            } else if (isGameScrollingVertically()) {
+                if (address_16 >= 0x0000 && address_16 <= 0x03FF) { // reading from left top table
+                    nameTablesMemory[0][address_16 & 0x03FF] = data_8; // loading from 'left top' table
+                } else if (address_16 >= 0x0400 && address_16 <= 0x07FF) { // reading from right top table
+                    nameTablesMemory[0][address_16 & 0x03FF] = data_8; // loading from 'left top' table
+                } else if (address_16 >= 0x0800 & address_16 <= 0x0BFF) { // reading from bottom left table
+                    nameTablesMemory[1][address_16 & 0x03FF] = data_8; // loading from 'left bottom' table
+                } else if (address_16 >= 0x0C00 && address_16 <= 0x0FFF) { // reading from right bottom table
+                    nameTablesMemory[1][address_16 & 0x03FF] = data_8; // loading from 'left bottom' table
+                }
+            }
         } else if (isPalletteMemoryAddress(address_16)) {
             writePallette(address_16, data_8);
         } else {
@@ -271,12 +366,21 @@ public class Olc2c02 {
         return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 * 4) + pixelValue_8) & 0x3F];
     }
 
+    private boolean isGameScrollingHorizontally() {
+        return cartridge.nametableMirroringMode == NametableMirroringMode.VERTICAL;
+    }
+
+    private boolean isGameScrollingVertically() {
+        return cartridge.nametableMirroringMode == NametableMirroringMode.HORIZONTAL;
+    }
+
     private void writeAddress(int data_8) {
         if (addressWriteMode == AddressWriteMode.LOW_BYTE) {
-            cpuWrittenAddress_16 = (cpuWrittenAddress_16 & 0xFF00) | data_8;
+            tRam_16.write((tRam_16.getAsByte() & 0xFF00) | data_8);
+            vRam_16.write(tRam_16.getAsByte());
             addressWriteMode = AddressWriteMode.HIGH_BYTE;
         } else {
-            cpuWrittenAddress_16 = (cpuWrittenAddress_16 & 0x00FF) | data_8 << 8;
+            tRam_16.write((tRam_16.getAsByte() & 0x00FF) | data_8 << 8);
             addressWriteMode = AddressWriteMode.LOW_BYTE;
         }
     }

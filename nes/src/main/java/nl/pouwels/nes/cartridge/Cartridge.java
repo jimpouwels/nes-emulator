@@ -2,6 +2,7 @@ package nl.pouwels.nes.cartridge;
 
 import nl.pouwels.nes.mappers.Mapper;
 import nl.pouwels.nes.mappers.Mapper0;
+import nl.pouwels.nes.ppu.NametableMirroringMode;
 import nl.pouwels.nes.utils.ByteUtilities;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.nio.file.Paths;
 
 public class Cartridge {
 
+    public NametableMirroringMode nametableMirroringMode;
     private Mapper mapper;
     private int[] programMemory;
     private int[] characterMemory;
@@ -38,6 +40,7 @@ public class Cartridge {
                 reader.skipBytes(512);
             }
             mapperId = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
+            nametableMirroringMode = (header.mapper1 & 0x01) > 0 ? NametableMirroringMode.VERTICAL : NametableMirroringMode.HORIZONTAL;
 
             // FileType == 1
             nrOfProgramBanks = header.programRomChunks;

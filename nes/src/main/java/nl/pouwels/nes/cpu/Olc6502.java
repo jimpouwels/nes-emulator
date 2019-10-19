@@ -65,7 +65,7 @@ public class Olc6502 {
             }
             setFlag(Flag.UNUSED);
             eventHandler.onNewInstruction(operation, opcode_8, programCounter_16, readInstructionOperands(programCounter_16, operation.nrOfBytes), accumulatorRegister_8, xRegister_8, yRegister_8, status_8, stackPointer_8, clockCount);
-            programCounter_16++;
+            increaseProgramCounter();
             remainingCycles = operation.cycles;
             // the addressMode returns 1, if it requires an additional clockcycle because a memory page was crossed.
             int additionalCycle1 = operation.addressingMode.set();
@@ -244,6 +244,14 @@ public class Olc6502 {
         return fetched_8; // FIXME: Do we need this as a field? Can't we just have a local variable? Try out later.
     }
 
+    private void increaseProgramCounter() {
+        if (programCounter_16 == 0xFFFF) {
+            programCounter_16 = 0x0000;
+        } else {
+            programCounter_16++;
+        }
+    }
+
     //================================  ADDRESSING MODES ====================================
 
     public abstract class AddressingMode {
@@ -251,8 +259,10 @@ public class Olc6502 {
         public abstract int set();
 
         int read16BitAddressWithOffset(int offset) {
-            int low_8 = readByte(programCounter_16++);
-            int high_8 = readByte(programCounter_16++);
+            int low_8 = readByte(programCounter_16);
+            increaseProgramCounter();
+            int high_8 = readByte(programCounter_16);
+            increaseProgramCounter();
 
             addrAbs_16 = high_8 << 8 | low_8;
             addrAbs_16 = addrAbs_16 + offset & 0xFFFF; // mask if exceeds address range
@@ -278,7 +288,8 @@ public class Olc6502 {
     private class Imm extends AddressingMode {
         @Override
         public int set() {
-            addrAbs_16 = programCounter_16++;
+            addrAbs_16 = programCounter_16;
+            increaseProgramCounter();
             return 0;
         }
 
@@ -305,7 +316,8 @@ public class Olc6502 {
     private class Zp0 extends AddressingMode {
         @Override
         public int set() {
-            addrAbs_16 = readByte(programCounter_16++);
+            addrAbs_16 = readByte(programCounter_16);
+            increaseProgramCounter();
             return 0;
         }
 
@@ -317,7 +329,8 @@ public class Olc6502 {
     private class Zpx extends AddressingMode {
         @Override
         public int set() {
-            int value_8 = readByte(programCounter_16++) + xRegister_8;
+            int value_8 = readByte(programCounter_16) + xRegister_8;
+            increaseProgramCounter();
             addrAbs_16 = value_8 & 0x00FF;
             return 0;
         }
@@ -329,7 +342,8 @@ public class Olc6502 {
     private class Zpy extends AddressingMode {
         @Override
         public int set() {
-            int value_8 = readByte(programCounter_16++) + yRegister_8;
+            int value_8 = readByte(programCounter_16) + yRegister_8;
+            increaseProgramCounter();
             addrAbs_16 = value_8 & 0x00FF;
             return 0;
         }
@@ -371,8 +385,10 @@ public class Olc6502 {
     private class Ind extends AddressingMode {
         @Override
         public int set() {
-            int pointerLow_8 = readByte(programCounter_16++);
-            int pointerHigh_8 = readByte(programCounter_16++);
+            int pointerLow_8 = readByte(programCounter_16);
+            increaseProgramCounter();
+            int pointerHigh_8 = readByte(programCounter_16);
+            increaseProgramCounter();
 
             int pointer_16 = pointerHigh_8 << 8 | pointerLow_8;
             if (isHardwareBug(pointerLow_8)) {
@@ -394,7 +410,8 @@ public class Olc6502 {
     private class Izx extends AddressingMode {
         @Override
         public int set() {
-            int pointer_8 = readByte(programCounter_16++);
+            int pointer_8 = readByte(programCounter_16);
+            increaseProgramCounter();
 
             int low_8 = readByte((pointer_8 + xRegister_8) & 0x00FF);
             int high_8 = readByte((pointer_8 + xRegister_8 + 1) & 0x00FF);
@@ -410,7 +427,8 @@ public class Olc6502 {
     private class Izy extends AddressingMode {
         @Override
         public int set() {
-            int pointer_8 = readByte(programCounter_16++);
+            int pointer_8 = readByte(programCounter_16);
+            increaseProgramCounter();
 
             int low_8 = readByte(pointer_8);
             int high_8 = readByte((pointer_8 + 1) & 0xFF);
@@ -432,7 +450,8 @@ public class Olc6502 {
     private class Rel extends AddressingMode {
         @Override
         public int set() {
-            addrRel_16 = readByte(programCounter_16++);
+            addrRel_16 = readByte(programCounter_16);
+            increaseProgramCounter();
             if ((addrRel_16 & 0x80) != 0) {
                 addrRel_16 |= 0xFFFFFF00;
             }
@@ -740,7 +759,7 @@ public class Olc6502 {
     private class Brk extends Instruction {
         @Override
         public int execute() {
-            programCounter_16++;
+            increaseProgramCounter();
             setFlag(Flag.DISABLE_INTERRUPTS);
             write2BytesToStack(programCounter_16);
             setFlag(Flag.BREAK);
@@ -1145,7 +1164,7 @@ public class Olc6502 {
         @Override
         public int execute() {
             programCounter_16 = pull2BytesFromStack();
-            programCounter_16++;
+            increaseProgramCounter();
             return 0;
         }
     }
