@@ -12,6 +12,7 @@ public class Olc2c02 {
     private static final int PATTERN_TABLE_SIZE_IN_KB = FOUR_KB;
     private static final int PALLETTE_MEMORY_ADDRESS_START = 0x3F00;
     private static final int SIZE_IN_BYTES = 0x0008;
+    private static final int NAMETABLE_MEMORY_RANGE_START = 0x2000;
 
     public boolean nonMaskableInterrupt;
     private boolean frameComplete;
@@ -138,7 +139,7 @@ public class Olc2c02 {
                         bgNextTileId = ppuRead(0x2000 | (vRam_16.getAsByte() & 0x0FFF));
                         break;
                     case 2:
-                        bgNextTileAttribute = ppuRead(0x23C0
+                        bgNextTileAttribute = ppuRead(NAMETABLE_MEMORY_RANGE_START + 0x03C0
                                 | (vRam_16.nametableY_1 << 11)
                                 | (vRam_16.nametableX_1 << 10)
                                 | ((vRam_16.coarseY_5 >> 2) << 3)
@@ -222,72 +223,6 @@ public class Olc2c02 {
                 frameComplete = true;
             }
         }
-    }
-
-    private void loadBackgroundShifters() {
-        bgShifterPatternLow_8 = (bgShifterPatternLow_8 & 0xFF00) | bgNextTileLsb_8;
-        bgShifterPatternHigh_8 = (bgShifterPatternHigh_8 & 0xFF00) | bgNextTileMsb_8;
-
-        bgShifterAttributeLow_8 = (bgShifterAttributeLow_8 & 0xFF00) | (((bgNextTileAttribute & 0b01) > 0) ? 0xFF : 0x00);
-        bgShifterAttributeHigh_8 = (bgShifterAttributeHigh_8 & 0xFF00) | (((bgNextTileAttribute & 0b10) > 0) ? 0xFF : 0x00);
-    }
-
-    private void updateShifters() {
-        if (maskRegister_8.renderBackground_1 > 0) {
-            bgShifterPatternLow_8 <<= 1;
-            bgShifterPatternHigh_8 <<= 1;
-
-            bgShifterAttributeLow_8 <<= 1;
-            bgShifterAttributeHigh_8 <<= 1;
-        }
-    }
-
-    private void incrementScrollX() {
-        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
-            if (vRam_16.coarseX_5 == 31) {
-                vRam_16.coarseX_5 = 0;
-                vRam_16.nametableX_1 = ~vRam_16.nametableX_1;
-            } else {
-                vRam_16.coarseX_5++;
-            }
-        }
-    }
-
-    private void incrementScrollY() {
-        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
-            if (vRam_16.fineY_3 < 7) {
-                vRam_16.fineY_3++;
-            } else {
-                vRam_16.fineY_3 = 0;
-                if (vRam_16.coarseY_5 == 29) {
-                    vRam_16.coarseY_5 = 0;
-                    vRam_16.nametableY_1 = ~vRam_16.nametableY_1;
-                } else if (vRam_16.coarseY_5 == 31) {
-                    vRam_16.coarseY_5 = 0;
-                } else {
-                    vRam_16.coarseY_5++;
-                }
-            }
-        }
-    }
-
-    private void transferAddressX() {
-        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
-            vRam_16.nametableX_1 = tRam_16.nametableX_1;
-            vRam_16.coarseX_5 = tRam_16.coarseX_5;
-        }
-    }
-
-    private void transferAddressY() {
-        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
-            vRam_16.fineY_3 = tRam_16.fineY_3;
-            vRam_16.nametableY_1 = tRam_16.nametableY_1;
-            vRam_16.coarseY_5 = tRam_16.coarseY_5;
-        }
-    }
-
-    public void connectCartridge(Cartridge cartridge) {
-        this.cartridge = cartridge;
     }
 
     /**
@@ -528,11 +463,77 @@ public class Olc2c02 {
     }
 
     private boolean isNameTableAddress(int address_16) {
-        return address_16 >= 0x2000 && address_16 <= 0x3EFF;
+        return address_16 >= NAMETABLE_MEMORY_RANGE_START && address_16 <= 0x3EFF;
     }
 
     private boolean isPalletteMemoryAddress(int address_16) {
         return address_16 >= 0x3F00 && address_16 <= 0x3FFF;
+    }
+
+    private void loadBackgroundShifters() {
+        bgShifterPatternLow_8 = (bgShifterPatternLow_8 & 0xFF00) | bgNextTileLsb_8;
+        bgShifterPatternHigh_8 = (bgShifterPatternHigh_8 & 0xFF00) | bgNextTileMsb_8;
+
+        bgShifterAttributeLow_8 = (bgShifterAttributeLow_8 & 0xFF00) | (((bgNextTileAttribute & 0b01) > 0) ? 0xFF : 0x00);
+        bgShifterAttributeHigh_8 = (bgShifterAttributeHigh_8 & 0xFF00) | (((bgNextTileAttribute & 0b10) > 0) ? 0xFF : 0x00);
+    }
+
+    private void updateShifters() {
+        if (maskRegister_8.renderBackground_1 > 0) {
+            bgShifterPatternLow_8 <<= 1;
+            bgShifterPatternHigh_8 <<= 1;
+
+            bgShifterAttributeLow_8 <<= 1;
+            bgShifterAttributeHigh_8 <<= 1;
+        }
+    }
+
+    private void incrementScrollX() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            if (vRam_16.coarseX_5 == 31) {
+                vRam_16.coarseX_5 = 0;
+                vRam_16.nametableX_1 = ~vRam_16.nametableX_1;
+            } else {
+                vRam_16.coarseX_5++;
+            }
+        }
+    }
+
+    private void incrementScrollY() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            if (vRam_16.fineY_3 < 7) {
+                vRam_16.fineY_3++;
+            } else {
+                vRam_16.fineY_3 = 0;
+                if (vRam_16.coarseY_5 == 29) {
+                    vRam_16.coarseY_5 = 0;
+                    vRam_16.nametableY_1 = ~vRam_16.nametableY_1;
+                } else if (vRam_16.coarseY_5 == 31) {
+                    vRam_16.coarseY_5 = 0;
+                } else {
+                    vRam_16.coarseY_5++;
+                }
+            }
+        }
+    }
+
+    private void transferAddressX() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            vRam_16.nametableX_1 = tRam_16.nametableX_1;
+            vRam_16.coarseX_5 = tRam_16.coarseX_5;
+        }
+    }
+
+    private void transferAddressY() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            vRam_16.fineY_3 = tRam_16.fineY_3;
+            vRam_16.nametableY_1 = tRam_16.nametableY_1;
+            vRam_16.coarseY_5 = tRam_16.coarseY_5;
+        }
+    }
+
+    public void connectCartridge(Cartridge cartridge) {
+        this.cartridge = cartridge;
     }
 
     private int mapToInternalRange(int address_16) {
