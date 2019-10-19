@@ -12,10 +12,10 @@ public class LoopyRegister extends Register {
     public void write(int data_8) {
         coarseX_5 = data_8 & 0x31;
         coarseY_5 = (data_8 >> 5) & 0x31;
-        nametableX_1 = getBitValue(data_8, 9);
-        nametableY_1 = getBitValue(data_8, 10);
+        nametableX_1 = getBitValue(data_8, 10);
         nametableY_1 = getBitValue(data_8, 11);
-        unused_1 = getBitValue(data_8, 12);
+        nametableY_1 = getBitValue(data_8, 12);
+        unused_1 = getBitValue(data_8, 13);
     }
 
     @Override
