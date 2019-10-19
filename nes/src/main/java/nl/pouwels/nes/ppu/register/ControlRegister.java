@@ -26,4 +26,9 @@ public class ControlRegister extends Register {
     public int getAsByte() {
         return 0;
     }
+
+    @Override
+    public void incrementWith(int incrementValue) {
+
+    }
 }

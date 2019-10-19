@@ -14,4 +14,9 @@ public class StatusRegister extends Register {
     public int getAsByte() {
         return unused_5 | (spriteOverflow_1 << 5) | (spriteZeroHit_1 << 6) | (verticalBlank_1 << 7);
     }
+
+    @Override
+    public void incrementWith(int incrementValue) {
+
+    }
 }

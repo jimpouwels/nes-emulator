@@ -11,14 +11,16 @@ public class LoopyRegister extends Register {
     @Override
     public void write(int data_8) {
         coarseX_5 = data_8 & 0x31;
-        coarseX_5 = (data_8 >> 5) & 0x31;
-        nametableX_1 = getBitValue(data_8, 10);
+        coarseY_5 = (data_8 >> 5) & 0x31;
+        nametableX_1 = getBitValue(data_8, 9);
+        nametableY_1 = getBitValue(data_8, 10);
         nametableY_1 = getBitValue(data_8, 11);
+        unused_1 = getBitValue(data_8, 12);
     }
 
     @Override
     public int getAsByte() {
-        return coarseX_5 | (coarseY_5 << 5) | (nametableX_1 << 11) | (nametableY_1 << 12) | (fineY_3 << 13) | (unused_1 << 16);
+        return coarseX_5 | (coarseY_5 << 5) | (nametableX_1 << 10) | (nametableY_1 << 11) | (fineY_3 << 12) | (unused_1 << 15);
     }
 
     @Override

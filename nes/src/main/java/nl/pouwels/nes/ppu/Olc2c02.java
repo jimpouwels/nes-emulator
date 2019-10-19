@@ -32,8 +32,13 @@ public class Olc2c02 {
 
     private int bgNextTileId;
     private int bgNextTileAttribute;
-    private int bgNextTileLsb;
-    private int bgNextTileMsb;
+    private int bgNextTileLsb_8;
+    private int bgNextTileMsb_8;
+
+    private int bgShifterPatternLow_8;
+    private int bgShifterPatternHigh_8;
+    private int bgShifterAttributeLow_8;
+    private int bgShifterAttributeHigh_8;
 
     // memories
     private int[][] nameTablesMemory = new int[2][1024];
@@ -117,19 +122,24 @@ public class Olc2c02 {
 
     public void clock() {
         if (scanline >= -1 && scanline < 240) {
+
+            if (scanline == 0 && cycle == 0) {
+                // "Odd Frame" cycle skip
+                cycle = 1;
+            }
             if (scanline == -1 && cycle == 1) {
                 statusRegister_8.verticalBlank_1 = 0;
             }
             if ((cycle >= 2 && cycle < 258) || (cycle >= 321) && cycle < 338) {
-
-            }
-            if (cycle == 256) {
+                updateShifters();
                 switch ((cycle - 1) % 8) {
                     case 0:
+                        loadBackgroundShifters();
                         bgNextTileId = ppuRead(0x2000 | (vRam_16.getAsByte() & 0x0FFF));
                         break;
                     case 2:
-                        bgNextTileAttribute = ppuRead(0x23C0 | (vRam_16.nametableY_1 << 11)
+                        bgNextTileAttribute = ppuRead(0x23C0
+                                | (vRam_16.nametableY_1 << 11)
                                 | (vRam_16.nametableX_1 << 10)
                                 | ((vRam_16.coarseY_5 >> 2) << 3)
                                 | (vRam_16.coarseX_5 >> 2));
@@ -141,24 +151,63 @@ public class Olc2c02 {
                         }
                         bgNextTileAttribute &= 0x03;
                     case 4:
-                        bgNextTileLsb = ppuRead((controlRegister_8.patternBackground_1 << 12)
+                        bgNextTileLsb_8 = ppuRead((controlRegister_8.patternBackground_1 << 12)
                                 + (bgNextTileId << 4)
-                                + (vRam_16.fineY_3) + 0);
+                                + (vRam_16.fineY_3));
                     case 6:
-                        bgNextTileMsb = ppuRead((controlRegister_8.patternBackground_1 << 12)
+                        bgNextTileMsb_8 = ppuRead((controlRegister_8.patternBackground_1 << 12)
                                 + (bgNextTileId << 4)
                                 + vRam_16.fineY_3 + 8);
                     case 7:
+                        incrementScrollX();
+                        break;
+                }
+            }
+
+            if (cycle == 256) {
+                incrementScrollY();
+            }
+            if (cycle == 257) {
+                loadBackgroundShifters();
+                transferAddressX();
+            }
+            if (cycle == 338 || cycle == 340) {
+                bgNextTileId = ppuRead(0x2000 | (vRam_16.getAsByte() & 0x0FFF));
+            }
+
+            if (scanline == -1 && cycle >= 280 && cycle < 305) {
+                transferAddressY();
+            }
+        }
+
+        if (scanline == 240) {
+            // Post rendering scanline - Do Nothing!
+        }
+
+        if (scanline >= 241 && scanline < 261) {
+            if (scanline == 241 && cycle == 1) {
+                statusRegister_8.verticalBlank_1 = 1;
+                if (controlRegister_8.enable_Nmi_1 == 1) {
+                    nonMaskableInterrupt = true;
                 }
             }
         }
 
-        if (scanline == 241 && cycle == 1) {
-            statusRegister_8.verticalBlank_1 = 1;
-            if (controlRegister_8.enable_Nmi_1 == 1) {
-                nonMaskableInterrupt = true;
-            }
+        int bgPixel = 0x00;
+        int bgPalette = 0x00;
+
+        if (maskRegister_8.renderBackground_1 > 0) {
+            int bitMux = 0x8000 >> fineX_8;
+            int p0Pixel = (bgShifterPatternLow_8 & bitMux) > 0 ? 1 : 0;
+            int p1Pixel = (bgShifterPatternHigh_8 & bitMux) > 0 ? 1 : 0;
+            bgPixel = (p1Pixel << 1) | p0Pixel;
+
+            int bgPalette0 = (bgShifterAttributeLow_8 & bitMux) > 0 ? 1 : 0;
+            int bgPalette1 = (bgShifterAttributeHigh_8 & bitMux) > 0 ? 1 : 0;
+            bgPalette = (bgPalette1 << 1) | bgPalette0;
         }
+
+        screen.drawPixel(cycle - 1, scanline, loadColorFromPallette(bgPalette, bgPixel));
 
         frameComplete = false;
         cycle++;
@@ -169,6 +218,68 @@ public class Olc2c02 {
                 scanline = -1;
                 frameComplete = true;
             }
+        }
+    }
+
+    private void loadBackgroundShifters() {
+        bgShifterPatternLow_8 = (bgShifterPatternLow_8 & 0xFF00) | bgNextTileLsb_8;
+        bgShifterPatternHigh_8 = (bgShifterPatternHigh_8 & 0xFF00) | bgNextTileMsb_8;
+
+        bgShifterAttributeLow_8 = (bgShifterAttributeLow_8 & 0xFF00) | (((bgNextTileAttribute & 0b01) > 0) ? 0xFF : 0x00);
+        bgShifterAttributeHigh_8 = (bgShifterAttributeHigh_8 & 0xFF00) | (((bgNextTileAttribute & 0b10) > 0) ? 0xFF : 0x00);
+    }
+
+    private void updateShifters() {
+        if (maskRegister_8.renderBackground_1 > 0) {
+            bgShifterPatternLow_8 <<= 1;
+            bgShifterPatternHigh_8 <<= 1;
+
+            bgShifterAttributeLow_8 <<= 1;
+            bgShifterAttributeHigh_8 <<= 1;
+        }
+    }
+
+    private void incrementScrollX() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            if (vRam_16.coarseX_5 == 31) {
+                vRam_16.coarseX_5 = 0;
+                vRam_16.nametableX_1 = ~vRam_16.nametableX_1;
+            } else {
+                vRam_16.coarseX_5++;
+            }
+        }
+    }
+
+    private void incrementScrollY() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            if (vRam_16.fineY_3 < 7) {
+                vRam_16.fineY_3++;
+            } else {
+                vRam_16.fineY_3 = 0;
+                if (vRam_16.coarseY_5 == 29) {
+                    vRam_16.coarseY_5 = 0;
+                    vRam_16.nametableY_1 = ~vRam_16.nametableY_1;
+                } else if (vRam_16.coarseY_5 == 31) {
+                    vRam_16.coarseY_5 = 0;
+                } else {
+                    vRam_16.coarseY_5++;
+                }
+            }
+        }
+    }
+
+    private void transferAddressX() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            vRam_16.nametableX_1 = tRam_16.nametableX_1;
+            vRam_16.coarseX_5 = tRam_16.coarseX_5;
+        }
+    }
+
+    private void transferAddressY() {
+        if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
+            vRam_16.fineY_3 = tRam_16.fineY_3;
+            vRam_16.nametableY_1 = tRam_16.nametableY_1;
+            vRam_16.coarseY_5 = tRam_16.coarseY_5;
         }
     }
 
@@ -289,6 +400,7 @@ public class Olc2c02 {
             // the second index is the remaining bits
             return patternMemory[(address_16 & 0x1000) >> 12][address_16 & 0x0FFF];
         } else if (isNameTableAddress(address_16)) {
+            address_16 &= 0x0FFF;
             if (isGameScrollingHorizontally()) { // vertically mirrored
                 // the mask with 0x03FF is to map the address on 1kb array range
                 if (address_16 >= 0x0000 && address_16 <= 0x03FF) { // reading from left top table
@@ -325,6 +437,7 @@ public class Olc2c02 {
             // the second index is the remaining bits
             patternMemory[(address_16 & 0x1000) >> 12][address_16 & 0x0FFF] = data_8;
         } else if (isNameTableAddress(address_16)) {
+            address_16 &= 0x0FFF;
             if (isGameScrollingHorizontally()) { // vertically mirrored
                 // the mask with 0x03FF is to map the address on 1kb array range
                 if (address_16 >= 0x0000 && address_16 <= 0x03FF) { // reading from left top table
