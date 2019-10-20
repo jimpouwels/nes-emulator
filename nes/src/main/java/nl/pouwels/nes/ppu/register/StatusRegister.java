@@ -8,10 +8,11 @@ public class StatusRegister extends Register {
 
     @Override
     public void write(int data_8) {
+
     }
 
     @Override
-    public int getAsByte() {
+    public int get() {
         return unused_5 | (spriteOverflow_1 << 5) | (spriteZeroHit_1 << 6) | (verticalBlank_1 << 7);
     }
 

@@ -18,7 +18,6 @@ import static nl.pouwels.nes.utils.PrintUtilities.printAsHex;
 public class DataRenderer {
     public static void drawData(List<Olc6502.InstructionAtAddress> instructionAtAddressList, JTextPane textPane, Bus nes) {
         try {
-            int index = instructionAtAddressList.indexOf(instructionAtAddressList.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList()).get(0));
             StyledDocument doc = textPane.getStyledDocument();
             textPane.setText("");
 
@@ -71,20 +70,24 @@ public class DataRenderer {
             doc.insertString(doc.getLength(), printAsHex((nes.getCpu().getStackPointer()), 2), null);
             doc.insertString(doc.getLength(), "\n", null);
 
-            doc.insertString(doc.getLength(), "\n", null);
-            for (int i = -12; i < 12; i++) {
-                int lineIndex = index + i;
-                lineIndex = Math.max(0, lineIndex);
-                lineIndex = Math.min(instructionAtAddressList.size() - 1, lineIndex);
-                String line = instructionAtAddressList.get(lineIndex).line;
-                Style style = null;
-                if (i == 0) {
-                    style = textPane.addStyle(null, null);
-                    StyleConstants.setForeground(style, Color.cyan);
+            List<Olc6502.InstructionAtAddress> instructions = instructionAtAddressList.stream().filter(i -> i.address == nes.getCpu().getProgramCounter_16()).collect(Collectors.toList());
+            if (!instructions.isEmpty()) {
+                int index = instructionAtAddressList.indexOf(instructions.get(0));
+                doc.insertString(doc.getLength(), "\n", null);
+                for (int i = -12; i < 12; i++) {
+                    int lineIndex = index + i;
+                    lineIndex = Math.max(0, lineIndex);
+                    lineIndex = Math.min(instructionAtAddressList.size() - 1, lineIndex);
+                    String line = instructionAtAddressList.get(lineIndex).line;
+                    Style style = null;
+                    if (i == 0) {
+                        style = textPane.addStyle(null, null);
+                        StyleConstants.setForeground(style, Color.cyan);
+                    }
+                    doc.insertString(doc.getLength(), line + "\n", style);
                 }
-                doc.insertString(doc.getLength(), line + "\n", style);
+                StyleConstants.setLineSpacing(textPane.getInputAttributes(), -2f);
             }
-            StyleConstants.setLineSpacing(textPane.getInputAttributes(), -2f);
         } catch (BadLocationException | IndexOutOfBoundsException ex) {
             ex.printStackTrace();
         }

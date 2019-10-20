@@ -11,7 +11,6 @@ public class Olc2c02 {
     private static final int FOUR_KB = 0x1000;
     private static final int PATTERN_TABLE_SIZE_IN_KB = FOUR_KB;
     private static final int PALLETTE_MEMORY_ADDRESS_START = 0x3F00;
-    private static final int SIZE_IN_BYTES = 0x0008;
     private static final int NAMETABLE_MEMORY_RANGE_START = 0x2000;
 
     public boolean nonMaskableInterrupt;
@@ -22,7 +21,6 @@ public class Olc2c02 {
     private int scanline;
     // reading the data from the ppu is delayed by 1 cycle, buffer it
     private int dataBuffer_8;
-    private int address_16;
 
     private ControlRegister controlRegister_8 = new ControlRegister();
     private MaskRegister maskRegister_8 = new MaskRegister();
@@ -121,6 +119,27 @@ public class Olc2c02 {
         this.screen = screen;
     }
 
+    public void reset() {
+        fineX_8 = 0x00;
+        addressWriteMode = AddressWriteMode.HIGH_BYTE;
+        dataBuffer_8 = 0x00;
+        scanline = 0;
+        cycle = 0;
+        bgNextTileId = 0x00;
+        bgNextTileAttribute = 0x00;
+        bgNextTileLsb_8 = 0x00;
+        bgNextTileMsb_8 = 0x00;
+        bgShifterPatternLow_8 = 0x0000;
+        bgShifterPatternHigh_8 = 0x0000;
+        bgShifterAttributeLow_8 = 0x0000;
+        bgShifterAttributeHigh_8 = 0x0000;
+        statusRegister_8.write(0);
+        maskRegister_8.write(0);
+        controlRegister_8.write(0);
+        vRam_16.write(0);
+        tRam_16.write(0);
+    }
+
     public void clock() {
         if (scanline >= -1 && scanline < 240) {
 
@@ -136,7 +155,7 @@ public class Olc2c02 {
                 switch ((cycle - 1) % 8) {
                     case 0:
                         loadBackgroundShifters();
-                        bgNextTileId = ppuRead(0x2000 | (vRam_16.getAsByte() & 0x0FFF));
+                        bgNextTileId = ppuRead(0x2000 | (vRam_16.get() & 0x0FFF));
                         break;
                     case 2:
                         bgNextTileAttribute = ppuRead(NAMETABLE_MEMORY_RANGE_START + 0x03C0
@@ -176,7 +195,7 @@ public class Olc2c02 {
                 transferAddressX();
             }
             if (cycle == 338 || cycle == 340) {
-                bgNextTileId = ppuRead(0x2000 | (vRam_16.getAsByte() & 0x0FFF));
+                bgNextTileId = ppuRead(0x2000 | (vRam_16.get() & 0x0FFF));
             }
 
             if (scanline == -1 && cycle >= 280 && cycle < 305) {
@@ -191,7 +210,7 @@ public class Olc2c02 {
         if (scanline >= 241 && scanline < 261) {
             if (scanline == 241 && cycle == 1) {
                 statusRegister_8.verticalBlank_1 = 1;
-                if (controlRegister_8.enable_Nmi_1 == 1) {
+                if (controlRegister_8.enableNmi_1 == 1) {
                     nonMaskableInterrupt = true;
                 }
             }
@@ -200,7 +219,7 @@ public class Olc2c02 {
         int bgPixel = 0x00;
         int bgPalette = 0x00;
 
-        if (maskRegister_8.renderBackground_1 > 0) {
+        if (maskRegister_8.renderBackground_1 == 1) {
             int bitMux = 0x8000 >> fineX_8;
             int p0Pixel = (bgShifterPatternLow_8 & bitMux) > 0 ? 1 : 0;
             int p1Pixel = (bgShifterPatternHigh_8 & bitMux) > 0 ? 1 : 0;
@@ -280,17 +299,17 @@ public class Olc2c02 {
                 break;
             case 0x0002: // status register
                 // the first 5 bits of the status register are unused, but it's 'likely' that in the hardware it's filled with the last databuffer value.
-                data_8 = statusRegister_8.getAsByte() | (dataBuffer_8 & 0x1F);
+                data_8 = statusRegister_8.get() & 0xE0 | (dataBuffer_8 & 0x1F);
                 statusRegister_8.verticalBlank_1 = 0;
                 addressWriteMode = AddressWriteMode.HIGH_BYTE;
                 break;
             case 0x0007: // ppu read data
                 // delayed data retrieval
                 data_8 = dataBuffer_8;
-                dataBuffer_8 = ppuRead(vRam_16.getAsByte());
+                dataBuffer_8 = ppuRead(vRam_16.get());
 
                 // the pallette memory can return the data within the same clockcycle, no delay
-                if (isPalletteMemoryAddress(vRam_16.getAsByte())) {
+                if (isPalletteMemoryAddress(vRam_16.get())) {
                     data_8 = dataBuffer_8;
                 }
                 vRam_16.incrementWith(controlRegister_8.incrementMode_1 > 0 ? 32 : 1); // if increment mode, increment on Y axis (32 tiles).
@@ -321,16 +340,24 @@ public class Olc2c02 {
                 }
                 break;
             case 0x0006: // write address
-                writeAddress(data_8);
+                if (addressWriteMode == AddressWriteMode.LOW_BYTE) {
+                    tRam_16.write((tRam_16.get() & 0xFF00) | data_8);
+                    vRam_16.write(tRam_16.get());
+                    addressWriteMode = AddressWriteMode.HIGH_BYTE;
+                } else {
+                    tRam_16.write(((data_8 & 0x3F) << 8) | (tRam_16.get() & 0x00FF));
+                    addressWriteMode = AddressWriteMode.LOW_BYTE;
+                }
                 break;
             case 0x0007: // ppu write data
-                ppuWrite(vRam_16.getAsByte(), data_8);
-                vRam_16.incrementWith(controlRegister_8.incrementMode_1 > 0 ? 32 : 1); // if increment mode, increment on Y axis (32 tiles).
+                ppuWrite(vRam_16.get(), data_8);
+                vRam_16.incrementWith(controlRegister_8.incrementMode_1 == 1 ? 32 : 1); // if increment mode, increment on Y axis (32 tiles).
                 break;
         }
     }
 
     public int ppuRead(int address_16) {
+        address_16 &= 0x3FFF;
         if (cartridge.isInCharacterRomRange(address_16)) {
             return cartridge.ppuReadByte(address_16);
         } else if (isPatternMemoryAddress(address_16)) {
@@ -368,6 +395,7 @@ public class Olc2c02 {
     }
 
     public void ppuWrite(int address_16, int data_8) {
+        address_16 &= 0x3FFF;
         if (cartridge.isInCharacterRomRange(address_16)) {
             cartridge.ppuWriteByte(address_16, data_8);
         } else if (isPatternMemoryAddress(address_16)) {
@@ -423,20 +451,9 @@ public class Olc2c02 {
         return cartridge.nametableMirroringMode == NametableMirroringMode.HORIZONTAL;
     }
 
-    private void writeAddress(int data_8) {
-        if (addressWriteMode == AddressWriteMode.LOW_BYTE) {
-            tRam_16.write((tRam_16.getAsByte() & 0xFF00) | data_8);
-            vRam_16.write(tRam_16.getAsByte());
-            addressWriteMode = AddressWriteMode.HIGH_BYTE;
-        } else {
-            tRam_16.write((tRam_16.getAsByte() & 0x00FF) | data_8 << 8);
-            addressWriteMode = AddressWriteMode.LOW_BYTE;
-        }
-    }
-
     private int loadPallette(int address_16) {
         int palletteIndex = toPalletteIndex(address_16);
-        return paletteTableMemory[palletteIndex];
+        return paletteTableMemory[palletteIndex] & (maskRegister_8.grayScale_1 == 1 ? 0x30 : 0x3F);
     }
 
     private void writePallette(int address_16, int data_8) {
@@ -534,9 +551,5 @@ public class Olc2c02 {
 
     public void connectCartridge(Cartridge cartridge) {
         this.cartridge = cartridge;
-    }
-
-    private int mapToInternalRange(int address_16) {
-        return address_16 & (SIZE_IN_BYTES - 1);
     }
 }

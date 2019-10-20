@@ -28,6 +28,7 @@ public class Bus {
 
     public void reset() {
         cpu.reset();
+        ppu.reset();
         systemClockCounter = 0;
     }
 

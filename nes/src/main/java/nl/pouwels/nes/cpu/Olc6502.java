@@ -161,7 +161,7 @@ public class Olc6502 {
      * Non maskable interrupt request.
      */
     public void nmi() {
-        writeByteToStack(programCounter_16);
+        write2BytesToStack(programCounter_16);
 
         clearFlag(Flag.BREAK);
         setFlag(Flag.UNUSED);
@@ -265,7 +265,7 @@ public class Olc6502 {
             increaseProgramCounter();
 
             addrAbs_16 = high_8 << 8 | low_8;
-            addrAbs_16 = addrAbs_16 + offset & 0xFFFF; // mask if exceeds address range
+            addrAbs_16 = (addrAbs_16 + offset) & 0xFFFF; // mask if exceeds address range
 
             if ((addrAbs_16 & 0xFF00) != (high_8 << 8)) {
                 return 1;
@@ -392,13 +392,9 @@ public class Olc6502 {
 
             int pointer_16 = pointerHigh_8 << 8 | pointerLow_8;
             if (isHardwareBug(pointerLow_8)) {
-                int newHigh_8 = readByte(pointer_16 & 0xFF00);
-                int newLow_8 = readByte(pointer_16);
-                addrAbs_16 = newHigh_8 << 8 | newLow_8;
+                addrAbs_16 = (readByte(pointer_16 & 0xFF00) << 8) | readByte(pointer_16 + 0);
             } else {
-                int newHigh_8 = readByte(pointer_16 + 1);
-                int newLow_8 = readByte(pointer_16);
-                addrAbs_16 = newHigh_8 << 8 | newLow_8;
+                addrAbs_16 = (readByte(pointer_16 + 1) << 8) | readByte(pointer_16 + 0);
             }
             return 0;
         }
@@ -452,7 +448,7 @@ public class Olc6502 {
         public int set() {
             addrRel_16 = readByte(programCounter_16);
             increaseProgramCounter();
-            if ((addrRel_16 & 0x80) != 0) {
+            if ((addrRel_16 & 0x80) > 0) {
                 addrRel_16 |= 0xFFFFFF00;
             }
             return 0;
@@ -712,7 +708,6 @@ public class Olc6502 {
             fetch();
             int value = fetched_8 << 1;
             updateCarryBitToValueOfBit8(value);
-            value = ByteUtilities.unsetBit(value, 8);
             updateZeroFlag(value);
             updateNegativeFlag(value);
             if (operationLookup[opcode_8].addressingMode instanceof Imp) { // FIXME: Can't we just pass the addressingMode on this method as a param? Try out later.
@@ -987,7 +982,7 @@ public class Olc6502 {
         @Override
         public int execute() {
             fetch();
-            accumulatorRegister_8 = fetched_8;
+            accumulatorRegister_8 = fetched_8 & 0xFF;
             updateNegativeFlag(accumulatorRegister_8);
             updateZeroFlag(accumulatorRegister_8);
             return 1;
@@ -1330,7 +1325,7 @@ public class Olc6502 {
     //================================  UTILITIES  ==========================================
 
     private void updateZeroFlag(int value) {
-        if (value == 0x00) {
+        if ((value & 0x00FF) == 0x00) {
             setFlag(Flag.ZERO);
         } else {
             clearFlag(Flag.ZERO);

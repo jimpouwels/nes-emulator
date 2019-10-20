@@ -8,7 +8,7 @@ public abstract class Register {
         return (data_8 >> bitIndex) & 0x01;
     }
 
-    public abstract int getAsByte();
+    public abstract int get();
 
     public abstract void incrementWith(int incrementValue);
 }

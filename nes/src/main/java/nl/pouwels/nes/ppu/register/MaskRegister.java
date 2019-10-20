@@ -23,7 +23,7 @@ public class MaskRegister extends Register {
     }
 
     @Override
-    public int getAsByte() {
+    public int get() {
         return 0;
     }
 

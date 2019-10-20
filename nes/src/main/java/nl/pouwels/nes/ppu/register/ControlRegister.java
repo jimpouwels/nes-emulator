@@ -8,7 +8,7 @@ public class ControlRegister extends Register {
     public int patternBackground_1;
     public int spriteSize_1;
     public int slaveMode_1; // unused
-    public int enable_Nmi_1;
+    public int enableNmi_1;
 
     @Override
     public void write(int data_8) {
@@ -19,11 +19,11 @@ public class ControlRegister extends Register {
         patternBackground_1 = getBitValue(data_8, 4);
         spriteSize_1 = getBitValue(data_8, 5);
         slaveMode_1 = getBitValue(data_8, 6);
-        enable_Nmi_1 = getBitValue(data_8, 7);
+        enableNmi_1 = getBitValue(data_8, 7);
     }
 
     @Override
-    public int getAsByte() {
+    public int get() {
         return 0;
     }
 
