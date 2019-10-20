@@ -9,11 +9,14 @@ public class Bus {
     private static final int RAM_RANGE_END = 0x1FFF;
     private static final int PPU_RANGE_START = 0x2000;
     private static final int PPU_RANGE_END = 0x3FFF;
+
+    public int[] controllers_8 = new int[2];
     private final Ram ram;
     private int systemClockCounter;
     private Olc6502 cpu;
     private Olc2c02 ppu;
     private Cartridge cartridge;
+    private int[] controllersState_8 = new int[2];
 
     public Bus(Olc6502 cpu, Olc2c02 ppu) {
         this.cpu = cpu;
@@ -55,6 +58,8 @@ public class Bus {
             ram.cpuWrite(address_16, data_8);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             ppu.cpuWrite(address_16, data_8);
+        } else if (address_16 >= 0x4016 && address_16 <= 0x4017) { // FIXME, controller input, extract method
+            controllersState_8[address_16 & 0x01] = controllers_8[address_16 & 0x01];
         }
     }
 
@@ -65,6 +70,10 @@ public class Bus {
             return ram.cpuReadByte(address_16);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             return ppu.cpuReadByte(address_16);
+        } else if (address_16 >= 0x4016 && address_16 <= 0x4017) { // FIXME, controller input, extract method
+            int data = (controllersState_8[address_16 & 0x01] & 0x80) > 0 ? 1 : 0;
+            controllersState_8[address_16 & 0x01] <<= 1; // shift to the left to get the next buttons state on the next read
+            return data;
         }
         return 0x00;
     }

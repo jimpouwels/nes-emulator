@@ -178,6 +178,70 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         }
     }
 
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        switch (keyCode) {
+            case KeyEvent.VK_UP:
+                nes.controllers_8[0] |= 0x08;
+                break;
+            case KeyEvent.VK_DOWN:
+                nes.controllers_8[0] |= 0x04;
+                break;
+            case KeyEvent.VK_LEFT:
+                nes.controllers_8[0] |= 0x02;
+                break;
+            case KeyEvent.VK_RIGHT:
+                nes.controllers_8[0] |= 0x01;
+                break;
+        }
+        switch (e.getKeyChar()) {
+            case 'a':
+                nes.controllers_8[0] |= 0x20;
+                break;
+            case 's':
+                nes.controllers_8[0] |= 0x10;
+                break;
+            case 'z':
+                nes.controllers_8[0] |= 0x40;
+            case 'x':
+                nes.controllers_8[0] |= 0x80;
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        switch (keyCode) {
+            case KeyEvent.VK_UP:
+                nes.controllers_8[0] &= ~0x08;
+                break;
+            case KeyEvent.VK_DOWN:
+                nes.controllers_8[0] &= ~0x04;
+                break;
+            case KeyEvent.VK_LEFT:
+                nes.controllers_8[0] &= ~0x02;
+                break;
+            case KeyEvent.VK_RIGHT:
+                nes.controllers_8[0] &= ~0x01;
+                break;
+        }
+        switch (e.getKeyChar()) {
+            case 'a':
+                nes.controllers_8[0] &= ~0x20;
+                break;
+            case 's':
+                nes.controllers_8[0] &= ~0x10;
+                break;
+            case 'z':
+                nes.controllers_8[0] &= ~0x40;
+            case 'x':
+                nes.controllers_8[0] &= ~0x80;
+                break;
+        }
+    }
+
     private void runInstruction() {
         runningFullSpeed = false;
         do {
@@ -236,14 +300,6 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         frame.setResizable(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
     }
 
 }
