@@ -164,10 +164,8 @@ public class Olc2c02 {
             }
             if (scanline == -1 && cycle == 1) {
                 statusRegister_8.verticalBlank_1 = 0;
-
-                statusRegister_8.spriteOverflow_1 = 0;
-
                 statusRegister_8.spriteZeroHit_1 = 0;
+                statusRegister_8.spriteOverflow_1 = 0;
 
                 for (int i = 0; i < 8; i++) {
                     spriteShifterPatternLow[i] = 0;
@@ -388,6 +386,9 @@ public class Olc2c02 {
                     fgPriority = (spriteScanlines[i].attribute & 0x20) == 0 ? 1 : 0;
 
                     if (fgPixel != 0) {
+                        if (i == 0) {
+                            spriteZeroBeingRendered = true;
+                        }
                         break;
                     }
                 }

@@ -11,18 +11,19 @@ public class Bus {
     private static final int PPU_RANGE_END = 0x3FFF;
 
     public int[] controllers_8 = new int[2];
+    private int[] controllersState_8 = new int[2];
     private final Ram ram;
     private int systemClockCounter;
     private Olc6502 cpu;
     private Olc2c02 ppu;
     private Cartridge cartridge;
-    private int[] controllersState_8 = new int[2];
 
     private int dmaPage;
     private int dmaAddress;
     private int dmaData;
     private boolean dmaTransfer;
     private boolean dmaDummy;
+    private int tickLimiter;
 
     public Bus(Olc6502 cpu, Olc2c02 ppu) {
         this.cpu = cpu;
@@ -42,6 +43,12 @@ public class Bus {
     }
 
     public void clock() {
+        if (tickLimiter < 20) {
+            tickLimiter++;
+            return;
+        } else {
+            tickLimiter = 0;
+        }
         ppu.clock();
         if (systemClockCounter % 3 == 0) {
             if (!dmaTransfer) {

@@ -228,7 +228,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 break;
         }
         switch (e.getKeyChar()) {
-            case 'a':
+            case  'a':
                 nes.controllers_8[0] &= ~0x20;
                 break;
             case 's':
