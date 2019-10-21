@@ -18,6 +18,12 @@ public class Bus {
     private Cartridge cartridge;
     private int[] controllersState_8 = new int[2];
 
+    private int dmaPage;
+    private int dmaAddress;
+    private int dmaData;
+    private boolean dmaTransfer;
+    private boolean dmaDummy;
+
     public Bus(Olc6502 cpu, Olc2c02 ppu) {
         this.cpu = cpu;
         this.ppu = ppu;
@@ -38,12 +44,32 @@ public class Bus {
     public void clock() {
         ppu.clock();
         if (systemClockCounter % 3 == 0) {
-            cpu.clock();
+            if (!dmaTransfer) {
+                cpu.clock();
+            } else {
+                if (dmaDummy) {
+                    if (systemClockCounter % 2 == 1) {
+                        dmaDummy = false;
+                    }
+                } else {
+                    if (systemClockCounter % 2 == 0) {
+                        dmaData = cpuReadByte((dmaPage << 8) | dmaAddress, false);
+                    } else {
+                        ppu.objectAttributeMemory[(dmaAddress - (dmaAddress % 4)) / 4].set(dmaAddress % 4, dmaData);
+                        dmaAddress++;
+                        if (dmaAddress > 255) {
+                            dmaTransfer = false;
+                            dmaDummy = true;
+                        }
+                    }
+                }
+            }
         }
         if (ppu.nonMaskableInterrupt) {
             ppu.nonMaskableInterrupt = false;
             cpu.nmi();
         }
+        systemClockCounter++;
     }
 
     public void insertCartridge(Cartridge cartridge) {
@@ -58,6 +84,10 @@ public class Bus {
             ram.cpuWrite(address_16, data_8);
         } else if (address_16 >= PPU_RANGE_START && address_16 <= PPU_RANGE_END) {
             ppu.cpuWrite(address_16, data_8);
+        } else if (address_16 == 0x4014) {
+            dmaPage = data_8;
+            dmaAddress = 0x00;
+            dmaTransfer = true;
         } else if (address_16 >= 0x4016 && address_16 <= 0x4017) { // FIXME, controller input, extract method
             controllersState_8[address_16 & 0x01] = controllers_8[address_16 & 0x01];
         }

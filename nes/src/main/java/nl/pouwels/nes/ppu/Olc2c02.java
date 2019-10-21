@@ -43,12 +43,27 @@ public class Olc2c02 {
     private int[][] nameTablesMemory = new int[2][1024];
     private int[] paletteTableMemory = new int[32];
     private int[][] patternMemory = new int[2][4096];
+    public ObjectAttributeEntry[] objectAttributeMemory = new ObjectAttributeEntry[64];
+
+    private ObjectAttributeEntry[] spriteScanlines = new ObjectAttributeEntry[8];
+    private int spriteCount;
+
+    private int[] spriteShifterPatternLow = new int[8];
+    private int[] spriteShifterPatternHigh = new int[8];
+
+    private boolean spriteZeroHitPossible = false;
+    private boolean spriteZeroBeingRendered = false;
+
+    private int oamAddress_8;
 
     private Color[] colorPallette = new Color[0x40];
     private Sprite[] loadedPatternTables = {new Sprite(128, 128), new Sprite(128, 128)};
     private Screen screen;
 
     public Olc2c02(Screen screen) {
+        for (int i = 0; i < objectAttributeMemory.length; i++) {
+            objectAttributeMemory[i] = new ObjectAttributeEntry();
+        }
         colorPallette[0x00] = new Color(84, 84, 84);
         colorPallette[0x01] = new Color(0, 30, 116);
         colorPallette[0x02] = new Color(8, 16, 144);
@@ -149,6 +164,15 @@ public class Olc2c02 {
             }
             if (scanline == -1 && cycle == 1) {
                 statusRegister_8.verticalBlank_1 = 0;
+
+                statusRegister_8.spriteOverflow_1 = 0;
+
+                statusRegister_8.spriteZeroHit_1 = 0;
+
+                for (int i = 0; i < 8; i++) {
+                    spriteShifterPatternLow[i] = 0;
+                    spriteShifterPatternHigh[i] = 0;
+                }
             }
             if ((cycle >= 2 && cycle < 258) || (cycle >= 321) && cycle < 338) {
                 updateShifters();
@@ -201,6 +225,123 @@ public class Olc2c02 {
             if (scanline == -1 && cycle >= 280 && cycle < 305) {
                 transferAddressY();
             }
+
+            // foreground rendering
+            if (cycle == 257 && scanline >= 0) {
+                spriteScanlines = new ObjectAttributeEntry[8];
+                for (int i = 0; i < spriteScanlines.length; i++) {
+                    spriteScanlines[i] = new ObjectAttributeEntry();
+                }
+                for (ObjectAttributeEntry oae : spriteScanlines) {
+                    oae.y_8 = 0xFF;
+                }
+                spriteCount = 0;
+
+                for (int i = 0; i < 8; i++) {
+                    spriteShifterPatternLow[i] = 0;
+                    spriteShifterPatternHigh[i] = 0;
+                }
+
+                int oamEntry = 0;
+
+                spriteZeroHitPossible = false;
+
+                while (oamEntry < 64 && spriteCount < 9) {
+                    int signedScanline = scanline;
+                    if (signedScanline > 0x7FFF) {
+                        signedScanline &= 0x7FFF;
+                        signedScanline -= (signedScanline * 2);
+                    }
+                    int signedY = objectAttributeMemory[oamEntry].y_8;
+                    if (signedY > 0x7FF) {
+                        signedY &= 0x7FF;
+                        signedY -= (signedY * 2);
+                    }
+                    int diff = signedScanline - signedY;
+                    if (diff >= 0 && diff < ((controlRegister_8.spriteSize_1 == 1) ? 16 : 8)) {
+                        if (spriteCount < 8) {
+                            if (oamEntry == 0) {
+                                spriteZeroHitPossible = true;
+                            }
+                            ObjectAttributeEntry entry = new ObjectAttributeEntry();
+                            entry.x_8 = objectAttributeMemory[oamEntry].x_8;
+                            entry.attribute = objectAttributeMemory[oamEntry].attribute;
+                            entry.id_8 = objectAttributeMemory[oamEntry].id_8;
+                            entry.y_8 = objectAttributeMemory[oamEntry].y_8;
+                            spriteScanlines[spriteCount] = entry;
+                            spriteCount++;
+                        }
+                    }
+                    oamEntry++;
+                }
+                statusRegister_8.spriteOverflow_1 = spriteCount > 8 ? 1 : 0;
+            }
+
+            if (cycle == 340) {
+                for (int i = 0; i < spriteCount; i++) {
+                    int spritePatternBitsLow_8;
+                    int spritePatternBitsHigh_8;
+                    int spritePatternAddressLow_16;
+                    int spritePatternAddressHigh_16;
+
+                    if (!(controlRegister_8.spriteSize_1 == 1)) { // 8x8
+                        if (!((spriteScanlines[i].attribute & 0x80) > 0)) {
+                            // sprite not flipped
+                            spritePatternAddressLow_16 =
+                                    (controlRegister_8.patternSprite_1 << 12)
+                                            | (spriteScanlines[i].id_8 << 4)
+                                            | (scanline - spriteScanlines[i].y_8);
+                        } else {
+                            // sprite upside down
+                            spritePatternAddressLow_16 =
+                                    (controlRegister_8.patternSprite_1 << 12)
+                                            | (spriteScanlines[i].id_8 << 4)
+                                            | (7 - (scanline - spriteScanlines[i].y_8));
+                        }
+                    } else { // 8x16
+                        if (!((spriteScanlines[i].attribute & 0x80) > 0)) {
+                            // sprite not flipped
+                            if (scanline - spriteScanlines[i].y_8 < 8) {
+                                // reading top half of tile
+                                spritePatternAddressLow_16 =
+                                        ((spriteScanlines[i].id_8 & 0x01) << 12)
+                                                | ((spriteScanlines[i].id_8 & 0xFE) << 4)
+                                                | ((scanline - spriteScanlines[i].y_8) & 0x07);
+                            } else {
+                                // reading bottom half of tile
+                                spritePatternAddressLow_16 =
+                                        ((spriteScanlines[i].id_8 & 0x01) << 12)
+                                                | (((spriteScanlines[i].id_8 & 0xFE) + 1) << 4)
+                                                | ((scanline - spriteScanlines[i].y_8) & 0x07);
+                            }
+                        } else {
+                            // sprite upside down
+                            if (scanline - spriteScanlines[i].y_8 < 8) {
+                                spritePatternAddressLow_16 =
+                                        ((spriteScanlines[i].id_8 & 0x01) << 12)
+                                                | (((spriteScanlines[i].id_8 & 0xFE) + 1) << 4)
+                                                | (7 - (scanline - spriteScanlines[i].y_8) & 0x07);
+                            } else {
+                                spritePatternAddressLow_16 =
+                                        ((spriteScanlines[i].id_8 & 0x01) << 12)
+                                                | ((spriteScanlines[i].id_8 & 0xFE) << 4)
+                                                | (7 - (scanline - spriteScanlines[i].y_8) & 0x07);
+                            }
+                        }
+                    }
+                    spritePatternAddressHigh_16 = spritePatternAddressLow_16 + 8;
+                    spritePatternBitsLow_8 = ppuRead(spritePatternAddressLow_16);
+                    spritePatternBitsHigh_8 = ppuRead(spritePatternAddressHigh_16);
+
+                    if ((spriteScanlines[i].attribute & 0x40) > 0) {
+                        spritePatternBitsLow_8 = flipByte(spritePatternBitsLow_8);
+                        spritePatternBitsHigh_8 = flipByte(spritePatternBitsHigh_8);
+                    }
+
+                    spriteShifterPatternLow[i] = spritePatternBitsLow_8;
+                    spriteShifterPatternHigh[i] = spritePatternBitsHigh_8;
+                }
+            }
         }
 
         if (scanline == 240) {
@@ -230,7 +371,66 @@ public class Olc2c02 {
             bgPalette = (bgPalette1 << 1) | bgPalette0;
         }
 
-        screen.drawPixel(cycle - 1, scanline, loadColorFromPallette(bgPalette, bgPixel));
+        int fgPixel = 0;
+        int fgPalette = 0;
+        int fgPriority = 0;
+
+        if (maskRegister_8.renderSprites_1 == 1) {
+
+            spriteZeroBeingRendered = false;
+
+            for (int i = 0; i < spriteCount; i++) {
+                if (spriteScanlines[i].x_8 == 0) {
+                    int fgPixelLow = (spriteShifterPatternLow[i] & 0x80) > 0 ? 1 : 0;
+                    int fgPixelHigh = (spriteShifterPatternHigh[i] & 0x80) > 0 ? 1 : 0;
+                    fgPixel = (fgPixelHigh << 1) | fgPixelLow;
+                    fgPalette = (spriteScanlines[i].attribute & 0x03) + 0x04;
+                    fgPriority = (spriteScanlines[i].attribute & 0x20) == 0 ? 1 : 0;
+
+                    if (fgPixel != 0) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        int pixel = 0;
+        int palette = 0;
+
+        if (bgPixel == 0 && fgPixel == 0) {
+            pixel = 0;
+            palette = 0;
+        } else if (bgPixel == 0 && fgPixel > 0) {
+            pixel = fgPixel;
+            palette = fgPalette;
+        } else if (bgPixel > 0 & fgPixel == 0) {
+            pixel = bgPixel;
+            palette = bgPalette;
+        } else if (bgPixel > 0 & fgPixel > 0) {
+            if (fgPriority == 1) {
+                pixel = fgPixel;
+                palette = fgPalette;
+            } else {
+                pixel = bgPixel;
+                palette = bgPalette;
+            }
+
+            if (spriteZeroHitPossible && spriteZeroBeingRendered) {
+                if ((maskRegister_8.renderBackground_1 & maskRegister_8.renderSprites_1) == 1) {
+                    if (~(maskRegister_8.renderBackgroundLeft_1 | maskRegister_8.renderSpritesLeft_1) == 1) {
+                        if (cycle >= 9 && cycle < 258) {
+                            statusRegister_8.spriteZeroHit_1 = 1;
+                        }
+                    } else {
+                        if (cycle >= 1 && cycle < 258) {
+                            statusRegister_8.spriteZeroHit_1 = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        screen.drawPixel(cycle - 1, scanline, loadColorFromPallette(palette, pixel));
 
         frameComplete = false;
         cycle++;
@@ -242,6 +442,14 @@ public class Olc2c02 {
                 frameComplete = true;
             }
         }
+
+    }
+
+    private int flipByte(int byteToFlip) {
+        byteToFlip = (byteToFlip & 0xF0) >> 4 | (byteToFlip & 0x0F) << 4;
+        byteToFlip = (byteToFlip & 0xCC) >> 2 | (byteToFlip & 0x33) << 2;
+        byteToFlip = (byteToFlip & 0xAA) >> 1 | (byteToFlip & 0x55) << 1;
+        return byteToFlip;
     }
 
     /**
@@ -303,6 +511,9 @@ public class Olc2c02 {
                 statusRegister_8.verticalBlank_1 = 0;
                 addressWriteMode = AddressWriteMode.HIGH_BYTE;
                 break;
+            case 0x0004:
+                data_8 = objectAttributeMemory[(oamAddress_8 - (oamAddress_8 % 4)) / 4].get(oamAddress_8 % 4);
+                break;
             case 0x0007: // ppu read data
                 // delayed data retrieval
                 data_8 = dataBuffer_8;
@@ -327,6 +538,12 @@ public class Olc2c02 {
                 break;
             case 0x0001: // write mask register
                 maskRegister_8.write(data_8);
+                break;
+            case 0x0003:
+                oamAddress_8 = data_8;
+                break;
+            case 0x0004:
+                objectAttributeMemory[(oamAddress_8 - (oamAddress_8 % 4)) / 4].set(oamAddress_8 % 4, data_8);
                 break;
             case 0x0005:
                 if (addressWriteMode == AddressWriteMode.HIGH_BYTE) {
@@ -502,6 +719,16 @@ public class Olc2c02 {
 
             bgShifterAttributeLow_8 <<= 1;
             bgShifterAttributeHigh_8 <<= 1;
+        }
+        if (maskRegister_8.renderSprites_1 > 0 && cycle >= 1 && cycle < 258) {
+            for (int i = 0; i < spriteCount; i++) {
+                if (spriteScanlines[i].x_8 > 0) {
+                    spriteScanlines[i].x_8--;
+                } else {
+                    spriteShifterPatternLow[i] <<= 1;
+                    spriteShifterPatternHigh[i] <<= 1;
+                }
+            }
         }
     }
 
