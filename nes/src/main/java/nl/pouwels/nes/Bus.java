@@ -43,12 +43,7 @@ public class Bus {
     }
 
     public void clock() {
-        if (tickLimiter < 20) {
-            tickLimiter++;
-            return;
-        } else {
-            tickLimiter = 0;
-        }
+        if (slowDownTickSpeed()) return;
         ppu.clock();
         if (systemClockCounter % 3 == 0) {
             if (!dmaTransfer) {
@@ -121,5 +116,15 @@ public class Bus {
 
     public Olc6502 getCpu() {
         return cpu;
+    }
+
+    private boolean slowDownTickSpeed() {
+        if (tickLimiter < 30) {
+            tickLimiter++;
+            return true;
+        } else {
+            tickLimiter = 0;
+        }
+        return false;
     }
 }

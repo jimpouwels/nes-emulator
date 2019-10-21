@@ -202,10 +202,10 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             case 's':
                 nes.controllers_8[0] |= 0x10;
                 break;
-            case 'z':
+            case 'x':
                 nes.controllers_8[0] |= 0x40;
                 break;
-            case 'x':
+            case 'z':
                 nes.controllers_8[0] |= 0x80;
                 break;
         }
@@ -235,10 +235,10 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             case 's':
                 nes.controllers_8[0] &= ~0x10;
                 break;
-            case 'z':
+            case 'x':
                 nes.controllers_8[0] &= ~0x40;
                 break;
-            case 'x':
+            case 'z':
                 nes.controllers_8[0] &= ~0x80;
                 break;
         }
