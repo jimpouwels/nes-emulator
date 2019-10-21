@@ -228,7 +228,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 break;
         }
         switch (e.getKeyChar()) {
-            case  'a':
+            case 'a':
                 nes.controllers_8[0] &= ~0x20;
                 break;
             case 's':
@@ -297,7 +297,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
-        frame.setResizable(true);
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
     }
