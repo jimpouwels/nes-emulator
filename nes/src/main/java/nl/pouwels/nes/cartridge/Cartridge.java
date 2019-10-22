@@ -2,6 +2,7 @@ package nl.pouwels.nes.cartridge;
 
 import nl.pouwels.nes.mappers.Mapper;
 import nl.pouwels.nes.mappers.Mapper0;
+import nl.pouwels.nes.mappers.Mapper3;
 import nl.pouwels.nes.ppu.NametableMirroringMode;
 import nl.pouwels.nes.utils.ByteUtilities;
 
@@ -19,6 +20,7 @@ public class Cartridge {
     private int mapperId;
     private int nrOfProgramBanks;
     private int nrOfCharacterBanks;
+    private int bankRegister_8;
 
     public Cartridge(String filename) {
         loadCartridge(filename);
@@ -36,23 +38,29 @@ public class Cartridge {
             header.tvSystem1 = reader.readNextByte();
             header.tvSystem2 = reader.readNextByte();
             header.unused = reader.readNextString(5);
-            if (ByteUtilities.isBitSet(header.mapper1, 4)) {
+            if (ByteUtilities.isBitSet(header.mapper1, 3)) {
                 reader.skipBytes(512);
             }
             mapperId = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
             nametableMirroringMode = (header.mapper1 & 0x01) > 0 ? NametableMirroringMode.VERTICAL : NametableMirroringMode.HORIZONTAL;
 
-            // FileType == 1
             nrOfProgramBanks = header.programRomChunks;
             programMemory = new int[nrOfProgramBanks * 16384];
             programMemory = reader.readNextBytes(programMemory.length);
 
             nrOfCharacterBanks = header.characterRomChunks;
-            characterMemory = new int[8192];
+            characterMemory = new int[nrOfCharacterBanks * 8192];
             characterMemory = reader.readNextBytes(characterMemory.length);
 
-            if (mapperId == 0) {
-                mapper = new Mapper0(nrOfProgramBanks, nrOfCharacterBanks);
+            switch (mapperId) {
+                case 0:
+                    mapper = new Mapper0(nrOfProgramBanks, nrOfCharacterBanks);
+                    break;
+                case 3:
+                    mapper = new Mapper3(nrOfProgramBanks, nrOfCharacterBanks);
+                    break;
+                default:
+                    throw new RuntimeException("Unsupported mapper " + mapperId);
             }
         } catch (IOException e) {
             throw new RuntimeException("Error loading ROM '" + filename + "'", e);
@@ -76,7 +84,7 @@ public class Cartridge {
 
     public void cpuWriteByte(int address_16, int data_8) {
         if (isInProgramRomRange(address_16)) {
-            programMemory[mapper.mapToProgramROMAddress(address_16)] = data_8;
+            bankRegister_8 = data_8;
         } else {
             throw new RuntimeException("Address " + "%x" + address_16 + " is outside program ROM range");
         }
@@ -84,14 +92,14 @@ public class Cartridge {
 
     public int ppuReadByte(int address_16) {
         if (isInCharacterRomRange(address_16)) {
-            return characterMemory[mapper.mapToCharacterROMAddress(address_16)];
+            return characterMemory[mapper.mapToCharacterROMAddress(address_16, bankRegister_8)];
         }
         throw new RuntimeException("Address " + "%x" + address_16 + " is outside Character ROM range");
     }
 
     public void ppuWriteByte(int address_16, int data_8) {
         if (isInCharacterRomRange(address_16)) {
-            characterMemory[mapper.mapToCharacterROMAddress(address_16)] = data_8;
+            characterMemory[mapper.mapToCharacterROMAddress(address_16, bankRegister_8)] = data_8;
         } else {
             throw new RuntimeException("Address " + "%x" + address_16 + " is outside Character ROM range");
         }

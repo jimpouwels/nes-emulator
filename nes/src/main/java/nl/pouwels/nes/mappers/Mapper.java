@@ -20,6 +20,6 @@ public abstract class Mapper {
 
     public abstract int mapToProgramROMAddress(int address_16);
 
-    public abstract int mapToCharacterROMAddress(int address_16);
+    public abstract int mapToCharacterROMAddress(int address_16, int bankRegister);
 
 }

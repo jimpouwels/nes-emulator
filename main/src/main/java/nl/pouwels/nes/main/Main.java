@@ -15,7 +15,7 @@ public class Main {
     public static void main(String... args) {
         MainScreen screen = new MainScreen();
         screen.setVisible(true);
-        Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("smb.nes").getPath());
+        Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("mapper3/cybernoid.nes").getPath());
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(false));
         Bus nes = new Bus(cpu, new Olc2c02(screen));
         cpu.connectToBus(nes);

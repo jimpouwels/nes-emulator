@@ -3,9 +3,9 @@ package nl.pouwels.nes.mappers;
 /**
  * The pattern memory is 8kb
  */
-public class Mapper0 extends Mapper {
+public class Mapper3 extends Mapper {
 
-    public Mapper0(int nrOfProgramBanks, int nrOfCharacterBanks) {
+    public Mapper3(int nrOfProgramBanks, int nrOfCharacterBanks) {
         super(nrOfProgramBanks, nrOfCharacterBanks);
     }
 
@@ -37,7 +37,10 @@ public class Mapper0 extends Mapper {
 
     @Override
     public int mapToCharacterROMAddress(int address_16, int bankRegister_8) {
-        return address_16;
+        if (bankRegister_8 > 0) {
+            System.out.println("Bank " + bankRegister_8);
+        }
+        return address_16 + (bankRegister_8 * 8192);
     }
 
 }
