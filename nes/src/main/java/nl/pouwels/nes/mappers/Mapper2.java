@@ -1,8 +1,5 @@
 package nl.pouwels.nes.mappers;
 
-/**
- * The pattern memory is 8kb
- */
 public class Mapper2 extends Mapper {
 
     public Mapper2(int nrOfProgramBanks, int nrOfCharacterBanks) {
