@@ -18,8 +18,8 @@ public abstract class Mapper {
 
     public abstract int getCharacterROMRangeEnd();
 
-    public abstract int mapToProgramROMAddress(int address_16);
+    public abstract int mapToProgramROMAddress(int address_16, int bankRegister_8);
 
-    public abstract int mapToCharacterROMAddress(int address_16, int bankRegister);
+    public abstract int mapToCharacterROMAddress(int address_16, int bankRegister_8);
 
 }

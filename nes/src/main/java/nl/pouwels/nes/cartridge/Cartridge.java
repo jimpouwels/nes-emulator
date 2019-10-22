@@ -2,6 +2,7 @@ package nl.pouwels.nes.cartridge;
 
 import nl.pouwels.nes.mappers.Mapper;
 import nl.pouwels.nes.mappers.Mapper0;
+import nl.pouwels.nes.mappers.Mapper2;
 import nl.pouwels.nes.mappers.Mapper3;
 import nl.pouwels.nes.ppu.NametableMirroringMode;
 import nl.pouwels.nes.utils.ByteUtilities;
@@ -49,12 +50,17 @@ public class Cartridge {
             programMemory = reader.readNextBytes(programMemory.length);
 
             nrOfCharacterBanks = header.characterRomChunks;
-            characterMemory = new int[nrOfCharacterBanks * 8192];
-            characterMemory = reader.readNextBytes(characterMemory.length);
+            characterMemory = reader.readNextBytes(nrOfCharacterBanks * 8192);
+            if (characterMemory.length == 0) {
+                characterMemory = new int[8192];
+            }
 
             switch (mapperId) {
                 case 0:
                     mapper = new Mapper0(nrOfProgramBanks, nrOfCharacterBanks);
+                    break;
+                case 2:
+                    mapper = new Mapper2(nrOfProgramBanks, nrOfCharacterBanks);
                     break;
                 case 3:
                     mapper = new Mapper3(nrOfProgramBanks, nrOfCharacterBanks);
@@ -77,7 +83,7 @@ public class Cartridge {
 
     public int cpuReadByte(int address_16) {
         if (isInProgramRomRange(address_16)) {
-            return programMemory[mapper.mapToProgramROMAddress(address_16)];
+            return programMemory[mapper.mapToProgramROMAddress(address_16, bankRegister_8)];
         }
         throw new RuntimeException("Address " + "%x" + address_16 + " is outside program ROM range");
     }
