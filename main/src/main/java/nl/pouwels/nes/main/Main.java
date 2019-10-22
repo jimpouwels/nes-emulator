@@ -2,6 +2,7 @@ package nl.pouwels.nes.main;
 
 import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.cartridge.Cartridge;
+import nl.pouwels.nes.cartridge.CartridgeLoader;
 import nl.pouwels.nes.cpu.EventPrinter;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
@@ -15,7 +16,7 @@ public class Main {
     public static void main(String... args) {
         MainScreen screen = new MainScreen();
         screen.setVisible(true);
-        Cartridge cartridge = new Cartridge(Main.class.getClassLoader().getResource("mapper2/ducktales.nes").getPath());
+        Cartridge cartridge = CartridgeLoader.loadCartridge(Main.class.getClassLoader().getResource("mapper3/cybernoid.nes").getPath());
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(false));
         Bus nes = new Bus(cpu, new Olc2c02(screen));
         cpu.connectToBus(nes);

@@ -1,6 +1,7 @@
 package nl.pouwels.nes;
 
 import nl.pouwels.nes.cartridge.Cartridge;
+import nl.pouwels.nes.cartridge.CartridgeLoader;
 import nl.pouwels.nes.cpu.EventPrinter;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Color;
@@ -44,7 +45,7 @@ public class NesTest {
     @Test
     public void runNesTest() throws IOException {
         List<String> expectedLines = Files.readAllLines(Paths.get(getClass().getClassLoader().getResource("golden_log.txt").getPath()));
-        Cartridge cartridge = new Cartridge(getClass().getClassLoader().getResource("nestest.nes").getPath());
+        Cartridge cartridge = CartridgeLoader.loadCartridge(getClass().getClassLoader().getResource("nestest.nes").getPath());
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(true));
         Bus bus = new Bus(cpu, new Olc2c02(new DummyScreen()));
         cpu.connectToBus(bus);
