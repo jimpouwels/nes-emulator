@@ -4,10 +4,11 @@ import nl.pouwels.nes.cartridge.registers.BankSelectRegister;
 
 public class Mapper3 extends Mapper {
 
+    private int nrOfProgramBanks;
     private BankSelectRegister bankSelectRegister;
 
-    public Mapper3(int nrOfProgramBanks, int nrOfCharacterBanks, BankSelectRegister bankSelectRegister) {
-        super(nrOfProgramBanks, nrOfCharacterBanks);
+    public Mapper3(int nrOfProgramBanks, BankSelectRegister bankSelectRegister) {
+        this.nrOfProgramBanks = nrOfProgramBanks;
         this.bankSelectRegister = bankSelectRegister;
     }
 

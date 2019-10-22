@@ -2,8 +2,10 @@ package nl.pouwels.nes.cartridge.mappers;
 
 public class Mapper0 extends Mapper {
 
-    public Mapper0(int nrOfProgramBanks, int nrOfCharacterBanks) {
-        super(nrOfProgramBanks, nrOfCharacterBanks);
+    private int nrOfProgramBanks;
+
+    public Mapper0(int nrOfProgramBanks) {
+        this.nrOfProgramBanks = nrOfProgramBanks;
     }
 
     @Override

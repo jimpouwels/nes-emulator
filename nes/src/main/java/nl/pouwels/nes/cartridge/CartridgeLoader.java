@@ -44,13 +44,13 @@ public class CartridgeLoader {
 
             switch (mapperId) {
                 case 0:
-                    return new NROMCartridge(new Mapper0(nrOfProgramBanks, nrOfCharacterBanks), programMemory, characterMemory, nametableMirroringMode);
+                    return new NROMCartridge(new Mapper0(nrOfProgramBanks), programMemory, characterMemory, nametableMirroringMode);
                 case 2:
                     BankSelectRegister bankSelectRegisterMapper2 = new BankSelectRegister();
-                    return new UROMCartridge(new Mapper2(nrOfProgramBanks, nrOfCharacterBanks, bankSelectRegisterMapper2), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper2);
+                    return new UROMCartridge(new Mapper2(nrOfProgramBanks, bankSelectRegisterMapper2), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper2);
                 case 3:
                     BankSelectRegister bankSelectRegisterMapper3 = new BankSelectRegister();
-                    return new CNRomCartidge(new Mapper3(nrOfProgramBanks, nrOfCharacterBanks, bankSelectRegisterMapper3), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper3);
+                    return new CNRomCartidge(new Mapper3(nrOfProgramBanks, bankSelectRegisterMapper3), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper3);
                 default:
                     throw new RuntimeException("Unsupported mapper " + mapperId);
             }
