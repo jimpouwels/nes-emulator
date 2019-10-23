@@ -49,8 +49,4 @@ public class TxROMCartridge extends Cartridge {
         System.out.println("BLAAA");
     }
 
-    @Override
-    public void reset() {
-        mmc3Registers.reset();
-    }
 }

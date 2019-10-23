@@ -33,9 +33,4 @@ public class UROMCartridge extends Cartridge {
         characterMemory[mapper.mapToCharacterROMAddress(address_16)] = data_8;
     }
 
-    @Override
-    public void reset() {
-
-    }
-
 }

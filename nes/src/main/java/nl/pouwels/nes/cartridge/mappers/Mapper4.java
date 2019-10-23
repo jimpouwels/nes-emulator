@@ -12,11 +12,7 @@ public class Mapper4 extends Mapper {
 
     public Mapper4(MMC3Registers mmc3Registers, int programMemorySizeInBytes) {
         this.mmc3Registers = mmc3Registers;
-        pgrBankCount = programMemorySizeInBytes / 0x2000;
-        pgrMappings[0] = 0;
-        pgrMappings[1] = 1;
-        pgrMappings[2] = pgrBankCount - 2;
-        pgrMappings[3] = pgrBankCount - 1;
+        this.pgrBankCount = programMemorySizeInBytes / 0x2000;
     }
 
     @Override
