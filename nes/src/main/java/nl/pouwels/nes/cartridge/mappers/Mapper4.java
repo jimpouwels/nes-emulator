@@ -5,101 +5,68 @@ import nl.pouwels.nes.cartridge.registers.MMC3Registers;
 public class Mapper4 extends Mapper {
 
     private MMC3Registers mmc3Registers;
-    private int nrOfProgramBanks;
 
-    public Mapper4(MMC3Registers mmc3Registers, int nrOfProgramBanks) {
+    private int[] characterBankPointer = new int[8];
+    private int[] pgrMappings = new int[4];
+    private final int pgrBankCount;
+
+    public Mapper4(MMC3Registers mmc3Registers, int programMemorySizeInBytes) {
         this.mmc3Registers = mmc3Registers;
-        this.nrOfProgramBanks = nrOfProgramBanks;
+        pgrBankCount = programMemorySizeInBytes / 0x2000;
+        pgrMappings[0] = 0;
+        pgrMappings[1] = 1;
+        pgrMappings[2] = pgrBankCount - 2;
+        pgrMappings[3] = pgrBankCount - 1;
     }
 
     @Override
     public int mapToProgramROMAddress(int address_16) {
-        int bankOffset = 0x0000;
-        int addressMinus = 0x0000;
-        if (address_16 >= 0x8000 && address_16 <= 0x9FFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x40) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[6];
-            } else {
-                bankOffset = nrOfProgramBanks - 3;
-            }
-            addressMinus = address_16 - 0x8000;
-        } else if (address_16 >= 0xA000 && address_16 <= 0xBFFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x40) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[7];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[7];
-            }
-            addressMinus = address_16 - 0xA000;
-        } else if (address_16 >= 0xC000 && address_16 <= 0xDFFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x40) == 0) {
-                bankOffset = nrOfProgramBanks - 3;
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[6];
-            }
-            addressMinus = address_16 - 0xC000;
-        } else if (address_16 >= 0xE000 && address_16 <= 0xFFFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x40) == 0) {
-                bankOffset = nrOfProgramBanks - 2;
-            } else {
-                bankOffset = nrOfProgramBanks - 2;
-            }
-            addressMinus = address_16 - 0xE000;
+        int prgMode = (mmc3Registers.bankSelect_8 >> 6) & 0x01;
+
+        if (prgMode == 0x00) {
+            pgrMappings[0] = mmc3Registers.bankRegisters[6];
+            pgrMappings[1] = mmc3Registers.bankRegisters[7];
+            pgrMappings[2] = pgrBankCount - 2;
+            pgrMappings[3] = pgrBankCount - 1;
+        } else {
+            pgrMappings[0] = pgrBankCount - 2;
+            pgrMappings[1] = mmc3Registers.bankRegisters[7];
+            pgrMappings[2] = mmc3Registers.bankRegisters[6];
+            pgrMappings[3] = pgrBankCount - 1;
         }
-        return (bankOffset * 0x2000) + (address_16 - addressMinus);
+        int bank = (address_16 - 0x8000) / 0x2000;
+        int rest = (address_16 - 0x8000) % 0x2000;
+        int mappedBank = pgrMappings[bank];
+        return (mappedBank) * 0x2000 + rest;
     }
 
     @Override
     public int mapToCharacterROMAddress(int address_16) {
-        int bankOffset = 0x0000;
-        if (address_16 >= 0x0000 && address_16 <= 0x03FF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[0];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[2];
-            }
-        } else if (address_16 >= 0x0400 && address_16 <= 0x07FF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[0];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[3];
-            }
-        } else if (address_16 >= 0x0800 && address_16 <= 0x0BFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[1];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[4];
-            }
-        } else if (address_16 >= 0x0C00 && address_16 <= 0x0FFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[1];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[5];
-            }
-        } else if (address_16 >= 0x1000 && address_16 <= 0x13FF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[2];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[0];
-            }
-        } else if (address_16 >= 0x1400 && address_16 <= 0x17FF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[3];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[0];
-            }
-        } else if (address_16 >= 0x1800 && address_16 <= 0x1BFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[4];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[1];
-            }
-        } else if (address_16 >= 0x1C00 && address_16 <= 0x1FFF) {
-            if ((mmc3Registers.bankSelect_8 & 0x80) == 0) {
-                bankOffset = mmc3Registers.bankRegisters[5];
-            } else {
-                bankOffset = mmc3Registers.bankRegisters[1];
-            }
+        int chrMode = (mmc3Registers.bankSelect_8 >> 7) & 0x01;
+
+        if (chrMode == 0x00) {
+            characterBankPointer[0] = mmc3Registers.bankRegisters[0] & 0xfe;
+            characterBankPointer[1] = mmc3Registers.bankRegisters[0] | 0x01;
+            characterBankPointer[2] = mmc3Registers.bankRegisters[1] & 0xfe;
+            characterBankPointer[3] = mmc3Registers.bankRegisters[1] | 0x01;
+            characterBankPointer[4] = mmc3Registers.bankRegisters[2];
+            characterBankPointer[5] = mmc3Registers.bankRegisters[3];
+            characterBankPointer[6] = mmc3Registers.bankRegisters[4];
+            characterBankPointer[7] = mmc3Registers.bankRegisters[5];
+
+        } else {
+            characterBankPointer[0] = mmc3Registers.bankRegisters[2];
+            characterBankPointer[1] = mmc3Registers.bankRegisters[3];
+            characterBankPointer[2] = mmc3Registers.bankRegisters[4];
+            characterBankPointer[3] = mmc3Registers.bankRegisters[5];
+            characterBankPointer[4] = mmc3Registers.bankRegisters[0] & 0xfe;
+            characterBankPointer[5] = mmc3Registers.bankRegisters[0] | 0x01;
+            characterBankPointer[6] = mmc3Registers.bankRegisters[1] & 0xfe;
+            characterBankPointer[7] = mmc3Registers.bankRegisters[1] | 0x01;
         }
-        return (bankOffset * 0x2000) + address_16;
+        int bank = address_16 / 0x0400;
+        int rest = address_16 % 0x0400;
+        int mappedBank = characterBankPointer[bank];
+        return mappedBank * 0x0400 + rest;
     }
 }

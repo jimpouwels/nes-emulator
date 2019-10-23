@@ -55,7 +55,7 @@ public class CartridgeLoader {
                     return new CNRomCartidge(new Mapper3(nrOfProgramBanks, bankSelectRegisterMapper3), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper3);
                 case 4:
                     MMC3Registers mmc3Registers = new MMC3Registers();
-                    return new TxROMCartridge(new Mapper4(mmc3Registers, nrOfProgramBanks), programMemory, characterMemory, nametableMirroringMode, mmc3Registers);
+                    return new TxROMCartridge(new Mapper4(mmc3Registers, programMemory.length), programMemory, characterMemory, nametableMirroringMode, mmc3Registers);
                 default:
                     throw new RuntimeException("Unsupported mapper " + mapperId);
             }

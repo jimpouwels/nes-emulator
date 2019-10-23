@@ -28,4 +28,9 @@ public class NROMCartridge extends Cartridge {
     public void ppuWriteByte(int address_16, int data_8) {
         characterMemory[mapper.mapToCharacterROMAddress(address_16)] = data_8;
     }
+
+    @Override
+    public void reset() {
+
+    }
 }
