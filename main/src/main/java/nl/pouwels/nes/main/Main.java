@@ -16,9 +16,9 @@ public class Main {
     public static void main(String... args) {
         MainScreen screen = new MainScreen();
         screen.setVisible(true);
-        Cartridge cartridge = CartridgeLoader.loadCartridge(Main.class.getClassLoader().getResource("mapper4/smb2.nes").getPath());
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(false));
         Bus nes = new Bus(cpu, new Olc2c02(screen));
+        Cartridge cartridge = CartridgeLoader.loadCartridge(Main.class.getClassLoader().getResource("mapper4/smb3.nes").getPath(), nes);
         cpu.connectToBus(nes);
         nes.insertCartridge(cartridge);
         screen.setBus(nes);

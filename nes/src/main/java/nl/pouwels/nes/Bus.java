@@ -42,6 +42,10 @@ public class Bus {
         systemClockCounter = 0;
     }
 
+    public void irq() {
+        cpu.requestIrq();
+    }
+
     public void clock() {
         if (slowDownTickSpeed()) return;
         ppu.clock();

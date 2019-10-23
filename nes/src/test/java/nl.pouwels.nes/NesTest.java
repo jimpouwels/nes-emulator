@@ -45,9 +45,9 @@ public class NesTest {
     @Test
     public void runNesTest() throws IOException {
         List<String> expectedLines = Files.readAllLines(Paths.get(getClass().getClassLoader().getResource("golden_log.txt").getPath()));
-        Cartridge cartridge = CartridgeLoader.loadCartridge(getClass().getClassLoader().getResource("nestest.nes").getPath());
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(true));
         Bus bus = new Bus(cpu, new Olc2c02(new DummyScreen()));
+        Cartridge cartridge = CartridgeLoader.loadCartridge(getClass().getClassLoader().getResource("nestest.nes").getPath(), bus);
         cpu.connectToBus(bus);
         bus.insertCartridge(cartridge);
         bus.reset(0xC000);

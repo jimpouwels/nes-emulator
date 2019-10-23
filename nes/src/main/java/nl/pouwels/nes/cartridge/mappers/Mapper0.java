@@ -18,4 +18,9 @@ public class Mapper0 extends Mapper {
         return address_16;
     }
 
+    @Override
+    public void scanlineSignal() {
+
+    }
+
 }

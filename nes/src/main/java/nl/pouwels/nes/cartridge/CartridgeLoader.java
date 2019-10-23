@@ -1,5 +1,6 @@
 package nl.pouwels.nes.cartridge;
 
+import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.cartridge.mappers.Mapper0;
 import nl.pouwels.nes.cartridge.mappers.Mapper2;
 import nl.pouwels.nes.cartridge.mappers.Mapper3;
@@ -14,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class CartridgeLoader {
-    public static Cartridge loadCartridge(String filename) {
+    public static Cartridge loadCartridge(String filename, Bus nes) {
         try {
             INesFormatHeader header = new INesFormatHeader();
 
@@ -55,7 +56,7 @@ public class CartridgeLoader {
                     return new CNRomCartidge(new Mapper3(nrOfProgramBanks, bankSelectRegisterMapper3), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper3);
                 case 4:
                     MMC3Registers mmc3Registers = new MMC3Registers();
-                    return new TxROMCartridge(new Mapper4(mmc3Registers, programMemory.length), programMemory, characterMemory, nametableMirroringMode, mmc3Registers);
+                    return new TxROMCartridge(new Mapper4(mmc3Registers, programMemory.length, nes), programMemory, characterMemory, nametableMirroringMode, mmc3Registers);
                 default:
                     throw new RuntimeException("Unsupported mapper " + mapperId);
             }

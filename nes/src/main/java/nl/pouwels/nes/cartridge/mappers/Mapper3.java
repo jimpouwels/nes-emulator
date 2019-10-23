@@ -22,4 +22,9 @@ public class Mapper3 extends Mapper {
         return address_16 + (bankSelectRegister.getBankSelectRegister() * 8192);
     }
 
+    @Override
+    public void scanlineSignal() {
+
+    }
+
 }

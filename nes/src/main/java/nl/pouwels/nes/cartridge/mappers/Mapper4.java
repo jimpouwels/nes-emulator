@@ -1,5 +1,6 @@
 package nl.pouwels.nes.cartridge.mappers;
 
+import nl.pouwels.nes.Bus;
 import nl.pouwels.nes.cartridge.registers.MMC3Registers;
 
 public class Mapper4 extends Mapper {
@@ -9,10 +10,13 @@ public class Mapper4 extends Mapper {
     private int[] characterBankPointer = new int[8];
     private int[] pgrMappings = new int[4];
     private final int pgrBankCount;
+    public int irqCounter;
+    private Bus nes;
 
-    public Mapper4(MMC3Registers mmc3Registers, int programMemorySizeInBytes) {
+    public Mapper4(MMC3Registers mmc3Registers, int programMemorySizeInBytes, Bus nes) {
         this.mmc3Registers = mmc3Registers;
         this.pgrBankCount = programMemorySizeInBytes / 0x2000;
+        this.nes = nes;
     }
 
     @Override
@@ -65,4 +69,20 @@ public class Mapper4 extends Mapper {
         int mappedBank = characterBankPointer[bank];
         return mappedBank * 0x0400 + rest;
     }
+
+    @Override
+    public void scanlineSignal() {
+        if (irqCounter == 0 || mmc3Registers.irqReload_8 > 0) {
+            irqCounter = mmc3Registers.irqLatch_8;
+            mmc3Registers.irqReload_8 = 0;
+        } else {
+            irqCounter--;
+        }
+
+        if (irqCounter == 0 && mmc3Registers.irqEnable) {
+//            nes.irq();
+            mmc3Registers.irqReload_8 = 1;
+        }
+    }
+
 }

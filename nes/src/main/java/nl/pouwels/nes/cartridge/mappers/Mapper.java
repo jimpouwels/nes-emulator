@@ -6,4 +6,5 @@ public abstract class Mapper {
 
     public abstract int mapToCharacterROMAddress(int address_16);
 
+    public abstract void scanlineSignal();
 }

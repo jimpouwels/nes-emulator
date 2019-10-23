@@ -54,6 +54,7 @@ public class Olc2c02 {
     private boolean spriteZeroHitPossible = false;
     private boolean spriteZeroBeingRendered = false;
 
+
     private int oamAddress_8;
 
     private Color[] colorPallette = new Color[0x40];
@@ -340,6 +341,11 @@ public class Olc2c02 {
                     spriteShifterPatternHigh[i] = spritePatternBitsHigh_8;
                 }
             }
+
+            if (cycle == 260 && (maskRegister_8.renderBackground_1 == 1 || maskRegister_8.renderSprites_1 == 1)) {
+                cartridge.mapper.scanlineSignal();
+            }
+
         }
 
         if (scanline == 240) {

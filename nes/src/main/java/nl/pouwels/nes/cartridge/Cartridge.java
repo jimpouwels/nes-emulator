@@ -6,7 +6,7 @@ import nl.pouwels.nes.ppu.NametableMirroringMode;
 public abstract class Cartridge {
 
     public NametableMirroringMode nametableMirroringMode;
-    Mapper mapper;
+    public Mapper mapper;
     int[] programMemory;
     int[] characterMemory;
 
