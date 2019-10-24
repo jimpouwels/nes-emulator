@@ -32,4 +32,14 @@ public class CNRomCartidge extends Cartridge {
         characterMemory[mapper.mapToCharacterROMAddress(address_16)] = data_8;
     }
 
+    @Override
+    public void cpuWriteByteToRam(int address_16, int data_8) {
+
+    }
+
+    @Override
+    public int cpuReadByteFromRam(int address_16) {
+        return 0;
+    }
+
 }

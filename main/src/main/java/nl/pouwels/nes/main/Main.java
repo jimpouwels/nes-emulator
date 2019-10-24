@@ -18,7 +18,7 @@ public class Main {
         screen.setVisible(true);
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(false));
         Bus nes = new Bus(cpu, new Olc2c02(screen));
-        Cartridge cartridge = CartridgeLoader.loadCartridge(Main.class.getClassLoader().getResource("mapper2/ducktales.nes").getPath(), nes);
+        Cartridge cartridge = CartridgeLoader.loadCartridge(Main.class.getClassLoader().getResource("mapper4/smb3.nes").getPath(), nes);
         cpu.connectToBus(nes);
         nes.insertCartridge(cartridge);
         screen.setBus(nes);

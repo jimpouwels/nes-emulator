@@ -21,6 +21,10 @@ public abstract class Cartridge {
         return address_16 >= 0x8000 && address_16 <= 0xFFFF;
     }
 
+    public boolean isInProgramRamRange(int address_16) {
+        return address_16 >= 0x6000 && address_16 <= 0x7FFF;
+    }
+
     public boolean isInCharacterRomRange(int address_16) {
         return address_16 >= 0x0000 && address_16 <= 0x1FFF;
     }
@@ -32,4 +36,8 @@ public abstract class Cartridge {
     public abstract int ppuReadByte(int address_16);
 
     public abstract void ppuWriteByte(int address_16, int data_8);
+
+    public abstract void cpuWriteByteToRam(int address_16, int data_8);
+
+    public abstract int cpuReadByteFromRam(int address_16);
 }

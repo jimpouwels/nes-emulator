@@ -84,7 +84,9 @@ public class Bus {
     }
 
     public void cpuWriteByte(int address_16, int data_8) {
-        if (cartridge.isInProgramRomRange(address_16)) {
+        if (cartridge.isInProgramRamRange(address_16)) {
+            cartridge.cpuWriteByteToRam(address_16, data_8);
+        } else if (cartridge.isInProgramRomRange(address_16)) {
             cartridge.cpuWriteByte(address_16, data_8);
         } else if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
             ram.cpuWrite(address_16, data_8);
@@ -100,7 +102,9 @@ public class Bus {
     }
 
     public int cpuReadByte(int address_16, boolean readOnly) {
-        if (cartridge.isInProgramRomRange(address_16)) {
+        if (cartridge.isInProgramRamRange(address_16)) {
+            return cartridge.cpuReadByteFromRam(address_16);
+        } else if (cartridge.isInProgramRomRange(address_16)) {
             return cartridge.cpuReadByte(address_16);
         } else if (address_16 >= RAM_RANGE_START && address_16 <= RAM_RANGE_END) {
             return ram.cpuReadByte(address_16);

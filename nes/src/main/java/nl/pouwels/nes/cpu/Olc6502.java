@@ -58,10 +58,10 @@ public class Olc6502 {
     }
 
     public void clock() {
+        if (irqRequested) {
+            irq();
+        }
         if (remainingCycles == 0) {
-            if (irqRequested) {
-                irq();
-            }
             opcode_8 = readByte(programCounter_16);
             Operation operation = operationLookup[opcode_8];
             if (operation.instruction instanceof InvalidInstruction) {

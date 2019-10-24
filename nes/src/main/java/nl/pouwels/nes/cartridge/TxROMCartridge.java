@@ -7,6 +7,7 @@ import nl.pouwels.nes.ppu.NametableMirroringMode;
 
 public class TxROMCartridge extends Cartridge {
     private MMC3Registers mmc3Registers;
+    private int[] programRamMemory = new int[8192];
 
     public TxROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, MMC3Registers mmc3Registers) {
         super(mapper, programMemory, characterMemory, nametableMirroringMode);
@@ -29,7 +30,7 @@ public class TxROMCartridge extends Cartridge {
             mmc3Registers.irqLatch_8 = data_8;
         } else if (address_16 >= 0xC001 && address_16 <= 0xDFFF && (address_16 % 2 != 0)) {
             mmc3Registers.irqReload_8 = data_8;
-            ((Mapper4) mapper).irqCounter = 0; // FIXME: NEEDED?
+            ((Mapper4) mapper).irqCounter = 0;
         } else if (address_16 >= 0xE000 && address_16 <= 0xFFFE && (address_16 % 2 == 0)) {
             mmc3Registers.irqEnable = false;
         } else if (address_16 >= 0xE001 && address_16 <= 0xFFFF && (address_16 % 2 != 0)) {
@@ -49,7 +50,16 @@ public class TxROMCartridge extends Cartridge {
 
     @Override
     public void ppuWriteByte(int address_16, int data_8) {
-        System.out.println("BLAAA");
+    }
+
+    @Override
+    public void cpuWriteByteToRam(int address_16, int data_8) {
+        programRamMemory[address_16 - 0x6000] = data_8;
+    }
+
+    @Override
+    public int cpuReadByteFromRam(int address_16) {
+        return programRamMemory[address_16 - 0x6000];
     }
 
 }

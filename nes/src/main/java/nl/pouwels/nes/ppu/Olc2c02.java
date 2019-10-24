@@ -159,6 +159,9 @@ public class Olc2c02 {
     public void clock() {
         if (scanline >= -1 && scanline < 240) {
 
+            if (cycle == 260 && (maskRegister_8.renderBackground_1 == 1 || maskRegister_8.renderSprites_1 == 1)) {
+                cartridge.mapper.scanlineSignal();
+            }
             if (scanline == 0 && cycle == 0) {
                 // "Odd Frame" cycle skip
                 cycle = 1;
@@ -341,10 +344,6 @@ public class Olc2c02 {
                 }
             }
 
-            if (cycle == 260 && (maskRegister_8.renderBackground_1 == 1 || maskRegister_8.renderSprites_1 == 1)) {
-                cartridge.mapper.scanlineSignal();
-            }
-
         }
 
         if (scanline == 240) {
@@ -423,7 +422,7 @@ public class Olc2c02 {
 
             if (spriteZeroHitPossible && spriteZeroBeingRendered) {
                 if ((maskRegister_8.renderBackground_1 & maskRegister_8.renderSprites_1) == 1) {
-                    if (~(maskRegister_8.renderBackgroundLeft_1 | maskRegister_8.renderSpritesLeft_1) == 1) {
+                    if ((maskRegister_8.renderBackgroundLeft_1 | maskRegister_8.renderSpritesLeft_1) > 1) {
                         if (cycle >= 9 && cycle < 258) {
                             statusRegister_8.spriteZeroHit_1 = 1;
                         }
