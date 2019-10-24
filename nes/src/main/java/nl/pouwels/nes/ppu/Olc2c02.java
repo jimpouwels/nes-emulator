@@ -663,7 +663,7 @@ public class Olc2c02 {
      * pallette_8 * 4 happens because each pallette has 4 bytes, so when we choose pallette 2,
      * you want to skip 8 bytes ahead.
      */
-    private Color loadColorFromPallette(int pallette_8, int pixelValue_8) {
+    public Color loadColorFromPallette(int pallette_8, int pixelValue_8) {
         return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 * 4) + pixelValue_8) & 0x3F];
     }
 

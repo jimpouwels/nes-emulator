@@ -33,7 +33,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         setFocusable(true);
         requestFocusInWindow();
         gameCanvas = new BufferedImage(256, 240, BufferedImage.TYPE_INT_RGB);
-        patternTableCanvas = new BufferedImage(256, 128, BufferedImage.TYPE_INT_RGB);
+        patternTableCanvas = new BufferedImage(256, 160, BufferedImage.TYPE_INT_RGB);
         setLayout(new BorderLayout());
         getRootPane().setLayout(null);
 
@@ -79,7 +79,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         public DataPanel() {
             setLayout(null);
             setBackground(Color.decode(BACKGROUND_COLOR));
-            textPane.setBounds(20, 10, 500, 550);
+            textPane.setBounds(20, 10, 500, 500);
             Font f = new Font(Font.MONOSPACED, 0, 15);
             textPane.setFont(f);
             textPane.setForeground(Color.WHITE);
@@ -97,7 +97,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(290, 540);
+            return new Dimension(290, 500);
         }
     }
 
@@ -113,7 +113,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
 
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(290, 294);
+            return new Dimension(290, 328);
         }
 
     }
@@ -139,24 +139,11 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         for (int y = 0; y < sprite.numCols(); y++) {
             for (int x = 0; x < sprite.numRows(); x++) {
                 nl.pouwels.nes.ppu.Color pixel = sprite.getPixel(x, y);
-                int rgb = ((pixel.r & 0x0ff) << 16) | ((pixel.g & 0x0ff) << 8) | (pixel.b & 0x0ff);
-                if (tableIndex == 0) {
-                    patternTableCanvas.setRGB(x, y, rgb);
-                } else if (tableIndex == 1) {
-                    patternTableCanvas.setRGB(x + 128, y, rgb);
-                }
+                int rgb = toRgb(pixel);
+                patternTableCanvas.setRGB(tableIndex * 128 + x, y + 10, rgb);
             }
         }
         rightPanel.patternTablePanel.repaint();
-    }
-
-    public void drawPixel(BufferedImage canvas, int x, int y, nl.pouwels.nes.ppu.Color color) {
-        int rgb = ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
-        if (x < 256 && y < 240 && y > -1) {
-            if (x >= 0) {
-                canvas.setRGB(x, y, rgb);
-            }
-        }
     }
 
     @Override
@@ -244,6 +231,19 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
         }
     }
 
+    private void drawPixel(BufferedImage canvas, int x, int y, nl.pouwels.nes.ppu.Color color) {
+        int rgb = toRgb(color);
+        if (x < 256 && y < 240 && y > -1) {
+            if (x >= 0) {
+                canvas.setRGB(x, y, rgb);
+            }
+        }
+    }
+
+    private int toRgb(nl.pouwels.nes.ppu.Color color) {
+        return ((color.r & 0x0ff) << 16) | ((color.g & 0x0ff) << 8) | (color.b & 0x0ff);
+    }
+
     private void runInstruction() {
         runningFullSpeed = false;
         do {
@@ -263,6 +263,12 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     }
 
     private void runProgram() {
+        runCpuInALoop();
+        drawPatternTableInALoop();
+        drawPaletteSelectorInALoop();
+    }
+
+    private void runCpuInALoop() {
         runningFullSpeed = !runningFullSpeed;
         Runnable runnable = () -> {
             do {
@@ -270,6 +276,9 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             } while (runningFullSpeed);
         };
         new Thread(runnable).start();
+    }
+
+    private void drawPatternTableInALoop() {
         Runnable patternTableLoader = () -> {
             try {
                 Thread.sleep(1000);
@@ -281,6 +290,34 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             }
         };
         new Thread(patternTableLoader).start();
+    }
+
+    private void drawPaletteSelectorInALoop() {
+        Runnable patternTableLoader = () -> {
+            try {
+                while (true) {
+                    drawPalettes();
+                    Thread.sleep(20);
+                }
+            } catch (InterruptedException e) {
+            }
+        };
+        new Thread(patternTableLoader).start();
+    }
+
+    private void drawPalettes() {
+        Graphics graphics = patternTableCanvas.getGraphics();
+        int colorBlockWidth = 8;
+        int colorBlockHeight = 10;
+        for (int p = 0; p < 8; p++) {
+            for (int s = 0; s < 4; s++) {
+                nl.pouwels.nes.ppu.Color color = nes.getPpu().loadColorFromPallette(p, s);
+                graphics.setColor(new Color(color.r, color.g, color.b));
+                graphics.fillRect(p * (colorBlockWidth * 3) + s * colorBlockWidth, 0, colorBlockWidth, colorBlockHeight);
+            }
+        }
+        graphics.setColor(Color.RED);
+        graphics.drawRect(palletteIndex * (colorBlockWidth * 4), 0, (colorBlockWidth * 4), colorBlockHeight);
     }
 
     private void rotatePallette() {
