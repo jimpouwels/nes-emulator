@@ -181,7 +181,7 @@ public class Olc2c02 {
                         bgNextTileId = ppuRead(0x2000 | (vRam_16.get() & 0x0FFF));
                         break;
                     case 2:
-                        bgNextTileAttribute = ppuRead(NAMETABLE_MEMORY_RANGE_START + 0x03C0
+                        bgNextTileAttribute = ppuRead((NAMETABLE_MEMORY_RANGE_START + 0x03C0)
                                 | (vRam_16.nametableY_1 << 11)
                                 | (vRam_16.nametableX_1 << 10)
                                 | ((vRam_16.coarseY_5 >> 2) << 3)
@@ -227,7 +227,6 @@ public class Olc2c02 {
 
             // foreground rendering
             if (cycle == 257 && scanline >= 0) {
-                spriteScanlines = new ObjectAttributeEntry[8];
                 for (int i = 0; i < spriteScanlines.length; i++) {
                     spriteScanlines[i] = new ObjectAttributeEntry();
                 }
@@ -743,7 +742,7 @@ public class Olc2c02 {
         if (maskRegister_8.renderBackground_1 > 0 || maskRegister_8.renderSprites_1 > 0) {
             if (vRam_16.coarseX_5 == 31) {
                 vRam_16.coarseX_5 = 0;
-                vRam_16.nametableX_1 = ~vRam_16.nametableX_1;
+                vRam_16.nametableX_1 = vRam_16.nametableX_1 > 0 ? 0 : 1;
             } else {
                 vRam_16.coarseX_5++;
             }
@@ -758,7 +757,7 @@ public class Olc2c02 {
                 vRam_16.fineY_3 = 0;
                 if (vRam_16.coarseY_5 == 29) {
                     vRam_16.coarseY_5 = 0;
-                    vRam_16.nametableY_1 = ~vRam_16.nametableY_1;
+                    vRam_16.nametableY_1 = vRam_16.nametableY_1 > 0 ? 0 : 1;
                 } else if (vRam_16.coarseY_5 == 31) {
                     vRam_16.coarseY_5 = 0;
                 } else {

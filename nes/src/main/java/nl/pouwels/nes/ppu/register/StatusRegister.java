@@ -8,12 +8,11 @@ public class StatusRegister extends Register {
 
     @Override
     public void write(int data_8) {
-
     }
 
     @Override
     public int get() {
-        return unused_5 | (spriteOverflow_1 << 5) | (spriteZeroHit_1 << 6) | (verticalBlank_1 << 7);
+        return (verticalBlank_1 << 7) | (spriteZeroHit_1 << 6) | (spriteOverflow_1 << 5) | unused_5;
     }
 
     @Override
