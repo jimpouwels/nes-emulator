@@ -23,7 +23,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     private List<Olc6502.InstructionAtAddress> instructionLookup;
     private JTextPane textPane = new JTextPane();
     private boolean runningFullSpeed;
-    private int palletteIndex = 0;
+    private int palletteIndex;
     private LeftPanel leftPanel = new LeftPanel();
     private RightPanel rightPanel = new RightPanel();
 
@@ -140,7 +140,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
             for (int x = 0; x < sprite.numRows(); x++) {
                 nl.pouwels.nes.ppu.Color pixel = sprite.getPixel(x, y);
                 int rgb = toRgb(pixel);
-                patternTableCanvas.setRGB(tableIndex * 128 + x, y + 10, rgb);
+                patternTableCanvas.setRGB(tableIndex * 128 + x, y + 15, rgb);
             }
         }
         rightPanel.patternTablePanel.repaint();
@@ -306,18 +306,24 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
     }
 
     private void drawPalettes() {
+        Color bgColor = Color.decode(BACKGROUND_COLOR);
+        for (int i = 0; i < 256; i++) {
+            for (int j = 0; j < 15; j++) {
+                patternTableCanvas.setRGB(i, j, bgColor.getRGB());
+            }
+        }
         Graphics graphics = patternTableCanvas.getGraphics();
-        int colorBlockWidth = 8;
+        int colorBlockWidth = 6;
         int colorBlockHeight = 10;
         for (int p = 0; p < 8; p++) {
             for (int s = 0; s < 4; s++) {
                 nl.pouwels.nes.ppu.Color color = nes.getPpu().loadColorFromPallette(p, s);
                 graphics.setColor(new Color(color.r, color.g, color.b));
-                graphics.fillRect(p * (colorBlockWidth * 3) + s * colorBlockWidth, 0, colorBlockWidth, colorBlockHeight);
+                graphics.fillRect((colorBlockWidth + p * (colorBlockWidth * 5) + s * colorBlockWidth), 0, colorBlockWidth, colorBlockHeight);
             }
         }
         graphics.setColor(Color.RED);
-        graphics.drawRect(palletteIndex * (colorBlockWidth * 4), 0, (colorBlockWidth * 4), colorBlockHeight);
+        graphics.drawRect(colorBlockWidth + palletteIndex * (colorBlockWidth * 5), 0, (colorBlockWidth * 4), colorBlockHeight);
     }
 
     private void rotatePallette() {

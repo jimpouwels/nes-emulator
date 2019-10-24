@@ -664,7 +664,7 @@ public class Olc2c02 {
      * you want to skip 8 bytes ahead.
      */
     public Color loadColorFromPallette(int pallette_8, int pixelValue_8) {
-        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 * 4) + pixelValue_8) & 0x3F];
+        return colorPallette[ppuRead(PALLETTE_MEMORY_ADDRESS_START + (pallette_8 << 2) + pixelValue_8) & 0x3F];
     }
 
     private boolean isGameScrollingHorizontally() {

@@ -72,7 +72,7 @@ public class Mapper4 extends Mapper {
 
     @Override
     public void scanlineSignal() {
-        if (irqCounter == 0 || mmc3Registers.irqReload_8 > 0) {
+        if (mmc3Registers.irqReload_8 > 0) {
             irqCounter = mmc3Registers.irqLatch_8;
             mmc3Registers.irqReload_8 = 0;
         } else {
@@ -80,8 +80,8 @@ public class Mapper4 extends Mapper {
         }
 
         if (irqCounter == 0 && mmc3Registers.irqEnable) {
-//            nes.irq();
             mmc3Registers.irqReload_8 = 1;
+            nes.irq();
         }
     }
 
