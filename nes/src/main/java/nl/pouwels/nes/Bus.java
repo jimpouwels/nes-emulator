@@ -24,6 +24,7 @@ public class Bus {
     private boolean dmaTransfer;
     private boolean dmaDummy;
     private int tickLimiter;
+    private boolean irqRequested;
 
     public Bus(Olc6502 cpu, Olc2c02 ppu) {
         this.cpu = cpu;
@@ -43,7 +44,7 @@ public class Bus {
     }
 
     public void irq() {
-        cpu.requestIrq();
+        irqRequested = true;
     }
 
     public void clock() {
@@ -51,7 +52,12 @@ public class Bus {
         ppu.clock();
         if (systemClockCounter % 3 == 0) {
             if (!dmaTransfer) {
-                cpu.clock();
+                if (irqRequested) {
+                    cpu.irq();
+                    irqRequested = false;
+                } else {
+                    cpu.clock();
+                }
             } else {
                 if (dmaDummy) {
                     if (systemClockCounter % 2 == 1) {

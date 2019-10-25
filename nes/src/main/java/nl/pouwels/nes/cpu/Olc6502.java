@@ -47,7 +47,6 @@ public class Olc6502 {
             operation("BEQ", new Beq(), new Rel(), 2, 2), operation("SBC", new Sbc(), new Izy(), 5, 2), unknown(), unknown(), operation("*NOP", new Nop(), new Imp(), 4, 1), operation("SBC", new Sbc(), new Zpx(), 4, 2), operation("INC", new Inc(), new Zpx(), 6, 2), unknown(), operation("SED", new Sed(), new Imp(), 2), operation("SBC", new Sbc(), new Aby(), 4, 3), operation("*NOP", new Nop(), new Imp(), 2, 1), unknown(), operation("*NOP", new Nop(), new Imp(), 4, 1), operation("SBC", new Sbc(), new Abx(), 4, 3), operation("INC", new Inc(), new Abx(), 7, 3), unknown()
     };
     private EventHandler eventHandler;
-    private boolean irqRequested;
 
     public Olc6502(EventPrinter eventHandler) {
         this.eventHandler = eventHandler;
@@ -58,9 +57,6 @@ public class Olc6502 {
     }
 
     public void clock() {
-        if (irqRequested) {
-            irq();
-        }
         if (remainingCycles == 0) {
             opcode_8 = readByte(programCounter_16);
             Operation operation = operationLookup[opcode_8];
@@ -159,7 +155,6 @@ public class Olc6502 {
 
             remainingCycles = 7;
         }
-        irqRequested = false;
     }
 
     /**
@@ -255,10 +250,6 @@ public class Olc6502 {
         } else {
             programCounter_16++;
         }
-    }
-
-    public void requestIrq() {
-        this.irqRequested = true;
     }
 
     //================================  ADDRESSING MODES ====================================
