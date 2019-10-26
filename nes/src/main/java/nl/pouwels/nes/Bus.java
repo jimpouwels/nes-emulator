@@ -55,9 +55,8 @@ public class Bus {
                 if (irqRequested) {
                     cpu.irq();
                     irqRequested = false;
-                } else {
-                    cpu.clock();
                 }
+                cpu.clock();
             } else {
                 if (dmaDummy) {
                     if (systemClockCounter % 2 == 1) {
