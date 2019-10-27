@@ -1,5 +1,6 @@
 package nl.pouwels.nes;
 
+import nl.pouwels.nes.apu.Rp2a0x;
 import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cpu.Olc6502;
 import nl.pouwels.nes.ppu.Olc2c02;
@@ -16,6 +17,7 @@ public class Bus {
     private int systemClockCounter;
     private Olc6502 cpu;
     private Olc2c02 ppu;
+    private Rp2a0x apu;
     private Cartridge cartridge;
 
     private int dmaPage;
@@ -26,9 +28,10 @@ public class Bus {
     private int tickLimiter;
     private boolean irqRequested;
 
-    public Bus(Olc6502 cpu, Olc2c02 ppu) {
+    public Bus(Olc6502 cpu, Olc2c02 ppu, Rp2a0x apu) {
         this.cpu = cpu;
         this.ppu = ppu;
+        this.apu = apu;
         this.ram = new Ram();
     }
 
@@ -57,6 +60,7 @@ public class Bus {
                     irqRequested = false;
                 }
                 cpu.clock();
+                apu.clock();
             } else {
                 if (dmaDummy) {
                     if (systemClockCounter % 2 == 1) {
@@ -89,7 +93,9 @@ public class Bus {
     }
 
     public void cpuWriteByte(int address_16, int data_8) {
-        if (cartridge.isInProgramRamRange(address_16)) {
+        if (apu.isInRange(address_16)) {
+            apu.cpuWrite(address_16, data_8);
+        } else if (cartridge.isInProgramRamRange(address_16)) {
             cartridge.cpuWriteByteToRam(address_16, data_8);
         } else if (cartridge.isInProgramRomRange(address_16)) {
             cartridge.cpuWriteByte(address_16, data_8);

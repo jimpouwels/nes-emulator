@@ -6,8 +6,8 @@ import nl.pouwels.nes.ppu.NametableMirroringMode;
 
 public class NROMCartridge extends Cartridge {
 
-    public NROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode) {
-        super(mapper, programMemory, characterMemory, nametableMirroringMode);
+    public NROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, TvSystem tvSystem) {
+        super(mapper, programMemory, characterMemory, nametableMirroringMode, tvSystem);
     }
 
     @Override

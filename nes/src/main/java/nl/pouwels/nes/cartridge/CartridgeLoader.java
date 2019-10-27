@@ -45,18 +45,20 @@ public class CartridgeLoader {
                 characterMemory = new int[8192];
             }
 
+            TvSystem tvSystem = header.tvSystem1 == 0 ? TvSystem.NTSC : TvSystem.PAL;
+
             switch (mapperId) {
                 case 0:
-                    return new NROMCartridge(new Mapper0(nrOfProgramBanks), programMemory, characterMemory, nametableMirroringMode);
+                    return new NROMCartridge(new Mapper0(nrOfProgramBanks), programMemory, characterMemory, nametableMirroringMode, tvSystem);
                 case 2:
                     BankSelectRegister bankSelectRegisterMapper2 = new BankSelectRegister();
-                    return new UROMCartridge(new Mapper2(nrOfProgramBanks, bankSelectRegisterMapper2), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper2);
+                    return new UROMCartridge(new Mapper2(nrOfProgramBanks, bankSelectRegisterMapper2), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper2, tvSystem);
                 case 3:
                     BankSelectRegister bankSelectRegisterMapper3 = new BankSelectRegister();
-                    return new CNRomCartidge(new Mapper3(nrOfProgramBanks, bankSelectRegisterMapper3), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper3);
+                    return new CNRomCartidge(new Mapper3(nrOfProgramBanks, bankSelectRegisterMapper3), programMemory, characterMemory, nametableMirroringMode, bankSelectRegisterMapper3, tvSystem);
                 case 4:
                     MMC3Registers mmc3Registers = new MMC3Registers();
-                    return new TxROMCartridge(new Mapper4(mmc3Registers, programMemory.length, nes), programMemory, characterMemory, nametableMirroringMode, mmc3Registers);
+                    return new TxROMCartridge(new Mapper4(mmc3Registers, programMemory.length, nes), programMemory, characterMemory, nametableMirroringMode, mmc3Registers, tvSystem);
                 default:
                     throw new RuntimeException("Unsupported mapper " + mapperId);
             }

@@ -8,8 +8,8 @@ public class UROMCartridge extends Cartridge {
 
     private BankSelectRegister bankSelectRegister;
 
-    public UROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, BankSelectRegister bankSelectRegister) {
-        super(mapper, programMemory, characterMemory, nametableMirroringMode);
+    public UROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, BankSelectRegister bankSelectRegister, TvSystem tvSystem) {
+        super(mapper, programMemory, characterMemory, nametableMirroringMode, tvSystem);
         this.bankSelectRegister = bankSelectRegister;
     }
 

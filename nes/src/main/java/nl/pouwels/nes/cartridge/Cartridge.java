@@ -10,7 +10,7 @@ public abstract class Cartridge {
     int[] programMemory;
     int[] characterMemory;
 
-    public Cartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode) {
+    public Cartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, TvSystem tvSystem) {
         this.mapper = mapper;
         this.programMemory = programMemory;
         this.characterMemory = characterMemory;

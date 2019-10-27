@@ -1,6 +1,7 @@
 package nl.pouwels.nes.main;
 
 import nl.pouwels.nes.Bus;
+import nl.pouwels.nes.apu.Rp2a0x;
 import nl.pouwels.nes.cartridge.Cartridge;
 import nl.pouwels.nes.cartridge.CartridgeLoader;
 import nl.pouwels.nes.cpu.EventPrinter;
@@ -17,7 +18,7 @@ public class Main {
         MainScreen screen = new MainScreen();
         screen.setVisible(true);
         Olc6502 cpu = new Olc6502(new LogFileEventPrinter(false));
-        Bus nes = new Bus(cpu, new Olc2c02(screen));
+        Bus nes = new Bus(cpu, new Olc2c02(screen), new Rp2a0x());
         Cartridge cartridge = CartridgeLoader.loadCartridge(Main.class.getClassLoader().getResource("mapper0/smb.nes").getPath(), nes);
         cpu.connectToBus(nes);
         nes.insertCartridge(cartridge);

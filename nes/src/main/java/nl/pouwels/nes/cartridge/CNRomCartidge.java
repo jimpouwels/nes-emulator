@@ -7,8 +7,8 @@ import nl.pouwels.nes.ppu.NametableMirroringMode;
 public class CNRomCartidge extends Cartridge {
     private BankSelectRegister bankSelectRegister;
 
-    public CNRomCartidge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, BankSelectRegister bankSelectRegister) {
-        super(mapper, programMemory, characterMemory, nametableMirroringMode);
+    public CNRomCartidge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, BankSelectRegister bankSelectRegister, TvSystem tvSystem) {
+        super(mapper, programMemory, characterMemory, nametableMirroringMode, tvSystem);
         this.bankSelectRegister = bankSelectRegister;
     }
 

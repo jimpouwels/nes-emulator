@@ -9,8 +9,8 @@ public class TxROMCartridge extends Cartridge {
     private MMC3Registers mmc3Registers;
     private int[] programRamMemory = new int[8192];
 
-    public TxROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, MMC3Registers mmc3Registers) {
-        super(mapper, programMemory, characterMemory, nametableMirroringMode);
+    public TxROMCartridge(Mapper mapper, int[] programMemory, int[] characterMemory, NametableMirroringMode nametableMirroringMode, MMC3Registers mmc3Registers, TvSystem tvSystem) {
+        super(mapper, programMemory, characterMemory, nametableMirroringMode, tvSystem);
         this.mmc3Registers = mmc3Registers;
     }
 
