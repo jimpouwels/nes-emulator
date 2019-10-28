@@ -284,7 +284,7 @@ public class MainScreen extends JPanel implements Screen, KeyListener {
                 Thread.sleep(1000);
                 while (true) {
                     loadPatternTables();
-                    Thread.sleep(1000);
+                    Thread.sleep(20);
                 }
             } catch (InterruptedException e) {
             }
